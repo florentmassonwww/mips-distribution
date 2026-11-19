@@ -1,0 +1,403 @@
+{
+  "scenario": "club-gate",
+  "description": "Gate check at the desk by badge: allow, flag (arrears) or deny; events of the day; device list; signed device endpoint rejects unsigned calls.",
+  "transcript": [
+    {
+      "step": "login u_cs_accueil",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_accueil"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "login u_cs_admin",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "members",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/members"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_cs_accueil",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_accueil"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "gate active 0d",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/gate/check",
+        "body": {
+          "credential": "B00001"
+        }
+      },
+      "status": 200,
+      "response": {
+        "memberId": "<mbr#1>",
+        "overdueMinor": 0,
+        "overdueDays": 0,
+        "decision": "allow",
+        "reason": "Compte à jour.",
+        "member": {
+          "id": "<mbr#1>",
+          "number": "00001",
+          "name": "Aditi Ramdin (démo)",
+          "status": "active",
+          "reference": "CSD-00001-94",
+          "portalPath": "/membre/gi7wIT2qaJVeeij_la8FLg"
+        }
+      }
+    },
+    {
+      "step": "gate active 250d",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/gate/check",
+        "body": {
+          "credential": "B00006"
+        }
+      },
+      "status": 200,
+      "response": {
+        "memberId": "<mbr#2>",
+        "overdueMinor": 1310000,
+        "overdueDays": 250,
+        "decision": "flag",
+        "reason": "Entrée signalée : 13100.00 MUR en retard de 250 jour(s).",
+        "member": {
+          "id": "<mbr#2>",
+          "number": "00006",
+          "name": "Nitin Gopaul (démo)",
+          "status": "active",
+          "reference": "CSD-00006-79",
+          "portalPath": "/membre/pVXbRh5qnHS7ACO5PyM3FQ"
+        }
+      }
+    },
+    {
+      "step": "gate suspended 615d",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/gate/check",
+        "body": {
+          "credential": "B00014"
+        }
+      },
+      "status": 200,
+      "response": {
+        "decision": "deny",
+        "reason": "Membre suspendu par le club.",
+        "memberId": "<mbr#3>",
+        "overdueMinor": 0,
+        "overdueDays": 0,
+        "member": {
+          "id": "<mbr#3>",
+          "number": "00014",
+          "name": "Gérard Maurel (démo)",
+          "status": "suspended",
+          "reference": "CSD-00014-55",
+          "portalPath": "/membre/cPU5pGubZbXZMIPtmJo0yA"
+        }
+      }
+    },
+    {
+      "step": "unknown badge",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/gate/check",
+        "body": {
+          "credential": "INCONNU"
+        }
+      },
+      "status": 200,
+      "response": {
+        "decision": "deny",
+        "reason": "Badge inconnu.",
+        "memberId": null,
+        "overdueMinor": 0,
+        "overdueDays": 0,
+        "member": null
+      }
+    },
+    {
+      "step": "events today",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/gate/events?today=1"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<gev#1>",
+          "at": "2026-10-17T04:00:07.000Z",
+          "decision": "deny",
+          "reason": "Badge inconnu.",
+          "source": "attendant",
+          "credential_hint": "***ONNU",
+          "overdue_minor": 0,
+          "overdue_days": 0,
+          "member_id": null,
+          "member_number": null,
+          "member": null,
+          "device": null
+        },
+        {
+          "id": "<gev#2>",
+          "at": "2026-10-17T04:00:06.000Z",
+          "decision": "deny",
+          "reason": "Membre suspendu par le club.",
+          "source": "attendant",
+          "credential_hint": "**0014",
+          "overdue_minor": 0,
+          "overdue_days": 0,
+          "member_id": "<mbr#3>",
+          "member_number": "00014",
+          "member": "Gérard Maurel (démo)",
+          "device": null
+        },
+        {
+          "id": "<gev#3>",
+          "at": "2026-10-17T04:00:05.000Z",
+          "decision": "flag",
+          "reason": "Entrée signalée : 13100.00 MUR en retard de 250 jour(s).",
+          "source": "attendant",
+          "credential_hint": "**0006",
+          "overdue_minor": 1310000,
+          "overdue_days": 250,
+          "member_id": "<mbr#2>",
+          "member_number": "00006",
+          "member": "Nitin Gopaul (démo)",
+          "device": null
+        },
+        {
+          "id": "<gev#4>",
+          "at": "2026-10-17T04:00:04.000Z",
+          "decision": "allow",
+          "reason": "Compte à jour.",
+          "source": "attendant",
+          "credential_hint": "**0001",
+          "overdue_minor": 0,
+          "overdue_days": 0,
+          "member_id": "<mbr#1>",
+          "member_number": "00001",
+          "member": "Aditi Ramdin (démo)",
+          "device": null
+        },
+        {
+          "id": "<gev#5>",
+          "at": "2026-10-17T03:00:00.000Z",
+          "decision": "deny",
+          "reason": "Badge inconnu.",
+          "source": "reader",
+          "credential_hint": "**9999",
+          "overdue_minor": 0,
+          "overdue_days": 0,
+          "member_id": null,
+          "member_number": null,
+          "member": null,
+          "device": "Barrière entrée principale (démo)"
+        },
+        {
+          "id": "<gev#6>",
+          "at": "2026-10-17T02:30:00.000Z",
+          "decision": "flag",
+          "reason": "Entrée signalée : 5850.00 MUR en retard de 43 jour(s).",
+          "source": "reader",
+          "credential_hint": "**0010",
+          "overdue_minor": 585000,
+          "overdue_days": 43,
+          "member_id": "<mbr#4>",
+          "member_number": "00010",
+          "member": "Olivier Desvaux (démo)",
+          "device": "Barrière entrée principale (démo)"
+        },
+        {
+          "id": "<gev#7>",
+          "at": "2026-10-17T02:00:00.000Z",
+          "decision": "deny",
+          "reason": "Membre suspendu par le club.",
+          "source": "reader",
+          "credential_hint": "**0014",
+          "overdue_minor": 0,
+          "overdue_days": 0,
+          "member_id": "<mbr#3>",
+          "member_number": "00014",
+          "member": "Gérard Maurel (démo)",
+          "device": "Barrière entrée principale (démo)"
+        },
+        {
+          "id": "<gev#8>",
+          "at": "2026-10-17T01:30:00.000Z",
+          "decision": "allow",
+          "reason": "Compte à jour.",
+          "source": "reader",
+          "credential_hint": "**0002",
+          "overdue_minor": 0,
+          "overdue_days": 0,
+          "member_id": "<mbr#5>",
+          "member_number": "00002",
+          "member": "Christophe Lebon (démo)",
+          "device": "Barrière entrée principale (démo)"
+        },
+        {
+          "id": "<gev#9>",
+          "at": "2026-10-17T01:00:00.000Z",
+          "decision": "flag",
+          "reason": "Entrée signalée : 37250.00 MUR en retard de 615 jour(s).",
+          "source": "reader",
+          "credential_hint": "**0008",
+          "overdue_minor": 3725000,
+          "overdue_days": 615,
+          "member_id": "<mbr#6>",
+          "member_number": "00008",
+          "member": "Yannick Ramsamy (démo)",
+          "device": "Barrière entrée principale (démo)"
+        },
+        {
+          "id": "<gev#10>",
+          "at": "2026-10-17T00:30:00.000Z",
+          "decision": "allow",
+          "reason": "Compte à jour.",
+          "source": "reader",
+          "credential_hint": "**0011",
+          "overdue_minor": 0,
+          "overdue_days": 0,
+          "member_id": "<mbr#7>",
+          "member_number": "00011",
+          "member": "Priya Seewoo (démo)",
+          "device": "Barrière entrée principale (démo)"
+        },
+        {
+          "id": "<gev#11>",
+          "at": "2026-10-17T00:00:00.000Z",
+          "decision": "allow",
+          "reason": "Compte à jour.",
+          "source": "reader",
+          "credential_hint": "**0001",
+          "overdue_minor": 0,
+          "overdue_days": 0,
+          "member_id": "<mbr#1>",
+          "member_number": "00001",
+          "member": "Aditi Ramdin (démo)",
+          "device": "Barrière entrée principale (démo)"
+        }
+      ]
+    },
+    {
+      "step": "front desk cannot list devices",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/gate/devices"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "forbidden",
+          "message": "Accès non autorisé."
+        }
+      }
+    },
+    {
+      "step": "login u_cs_admin",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "GET /api/club/gate/devices",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/gate/devices"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "gd_cs_main",
+          "name": "Barrière entrée principale (démo)",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "step": "logout",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/logout",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "device call without signature",
+      "as": null,
+      "request": {
+        "method": "POST",
+        "path": "/api/access/check",
+        "body": "{\"credential\":\"B00001\"}"
+      },
+      "status": 401,
+      "response": {
+        "error": {
+          "code": "bad_signature",
+          "message": "Signature absente ou mal formée."
+        }
+      }
+    }
+  ]
+}

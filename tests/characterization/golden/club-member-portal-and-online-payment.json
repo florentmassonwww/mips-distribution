@@ -1,0 +1,449 @@
+{
+  "scenario": "club-member-portal-and-online-payment",
+  "description": "Statement sent to a member, public member page by token, online payment pending then confirmed by notification, status check.",
+  "transcript": [
+    {
+      "step": "login u_cs_compta",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_compta"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "members",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/members"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "send statement",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members/<mbr#1>/statement",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "url": "<origin>/membre/<token#1>",
+        "message": "Votre relevé de compte - Club Sportif Démo. Membre 00003 : 1050.00 MUR dû, dont 350.00 MUR en retard de 36 jour(s). Payer en ligne : <origin>/membre/<token#1>. Par virement, indiquez la référence CSD-00003-88."
+      }
+    },
+    {
+      "step": "logout",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/logout",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "public member page",
+      "as": null,
+      "request": {
+        "method": "GET",
+        "path": "/api/public/member/<token#1>"
+      },
+      "status": 200,
+      "response": {
+        "club": "Club Sportif Démo",
+        "number": "00003",
+        "firstName": "Farah",
+        "status": "active",
+        "reference": "CSD-00003-88",
+        "dueMinor": 105000,
+        "overdueMinor": 35000,
+        "overdueDays": 36,
+        "creditMinor": 0,
+        "open": [
+          {
+            "label": "Location court de squash",
+            "dueDate": "2026-09-11",
+            "remainingMinor": 35000,
+            "overdue": true
+          },
+          {
+            "label": "Bar - consommations",
+            "dueDate": "2026-10-20",
+            "remainingMinor": 70000,
+            "overdue": false
+          }
+        ],
+        "lastPayment": {
+          "status": "confirmed",
+          "amountMinor": 1800000,
+          "at": "2026-02-19T04:00:00.000Z"
+        },
+        "demoMode": true
+      }
+    },
+    {
+      "step": "start online payment",
+      "as": null,
+      "request": {
+        "method": "POST",
+        "path": "/api/public/member/<token#1>/pay",
+        "body": {
+          "idempotencyKey": "key-member-online-01"
+        }
+      },
+      "status": 200,
+      "response": {
+        "status": "pending",
+        "amountMinor": 105000,
+        "replayed": false
+      }
+    },
+    {
+      "step": "same key replayed",
+      "as": null,
+      "request": {
+        "method": "POST",
+        "path": "/api/public/member/<token#1>/pay",
+        "body": {
+          "idempotencyKey": "key-member-online-01"
+        }
+      },
+      "status": 200,
+      "response": {
+        "status": "pending",
+        "amountMinor": 105000,
+        "replayed": true
+      }
+    },
+    {
+      "step": "member pays",
+      "as": null,
+      "request": {
+        "method": "POST",
+        "path": "/api/public/member/<token#1>/pay/demo",
+        "body": {
+          "outcome": "success"
+        }
+      },
+      "status": 200,
+      "response": {
+        "result": "confirmed"
+      }
+    },
+    {
+      "step": "page after payment",
+      "as": null,
+      "request": {
+        "method": "GET",
+        "path": "/api/public/member/<token#1>"
+      },
+      "status": 200,
+      "response": {
+        "club": "Club Sportif Démo",
+        "number": "00003",
+        "firstName": "Farah",
+        "status": "active",
+        "reference": "CSD-00003-88",
+        "dueMinor": 0,
+        "overdueMinor": 0,
+        "overdueDays": 0,
+        "creditMinor": 0,
+        "open": [],
+        "lastPayment": {
+          "status": "confirmed",
+          "amountMinor": 105000,
+          "at": "2026-10-17T04:00:05.000Z"
+        },
+        "demoMode": true
+      }
+    },
+    {
+      "step": "unknown token",
+      "as": null,
+      "request": {
+        "method": "GET",
+        "path": "/api/public/member/jeton-inconnu-0000"
+      },
+      "status": 404,
+      "response": {
+        "error": {
+          "code": "not_found",
+          "message": "Compte membre introuvable."
+        }
+      }
+    },
+    {
+      "step": "login u_cs_compta",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_compta"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "online payments",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/payments?method=link"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<mpay#1>",
+          "created_at": "2026-10-17T04:00:05.000Z",
+          "confirmed_at": "2026-10-17T04:00:07.000Z",
+          "settled_at": null,
+          "method": "link",
+          "amount_minor": 105000,
+          "status": "confirmed",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-LNK#1>",
+          "reference": "CSD-00003-88",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": null,
+          "note": "",
+          "member_id": "<mbr#1>",
+          "member_number": "00003",
+          "member": "Farah Joomun (démo)"
+        },
+        {
+          "id": "<mpay#2>",
+          "created_at": "2026-10-07T04:00:00.000Z",
+          "confirmed_at": "2026-10-07T04:00:00.000Z",
+          "settled_at": null,
+          "method": "link",
+          "amount_minor": 270000,
+          "status": "confirmed",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-LNK#2>",
+          "reference": "CSD-00011-64",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": null,
+          "note": "",
+          "member_id": "<mbr#2>",
+          "member_number": "00011",
+          "member": "Priya Seewoo (démo)"
+        },
+        {
+          "id": "<mpay#3>",
+          "created_at": "2026-10-07T04:00:00.000Z",
+          "confirmed_at": "2026-10-07T04:00:00.000Z",
+          "settled_at": null,
+          "method": "link",
+          "amount_minor": 145000,
+          "status": "confirmed",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-LNK#3>",
+          "reference": "CSD-00007-76",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": null,
+          "note": "",
+          "member_id": "<mbr#3>",
+          "member_number": "00007",
+          "member": "Sandrine Hoareau (démo)"
+        },
+        {
+          "id": "<mpay#4>",
+          "created_at": "2026-09-08T06:00:00.000Z",
+          "confirmed_at": "2026-09-08T06:00:00.000Z",
+          "settled_at": "2026-09-12T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 180000,
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#4>",
+          "reference": "CSD-00009-70",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": 2700,
+          "note": "",
+          "member_id": "<mbr#4>",
+          "member_number": "00009",
+          "member": "Zara Peerbux (démo)"
+        },
+        {
+          "id": "<mpay#5>",
+          "created_at": "2026-09-07T04:00:00.000Z",
+          "confirmed_at": "2026-09-07T04:00:00.000Z",
+          "settled_at": "2026-09-12T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 290000,
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#5>",
+          "reference": "CSD-00005-82",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": 4350,
+          "note": "",
+          "member_id": "<mbr#5>",
+          "member_number": "00005",
+          "member": "Laura Bégué (démo)"
+        },
+        {
+          "id": "<mpay#6>",
+          "created_at": "2026-09-07T04:00:00.000Z",
+          "confirmed_at": "2026-09-07T04:00:00.000Z",
+          "settled_at": "2026-09-12T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 75000,
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#6>",
+          "reference": "CSD-00002-91",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": 1125,
+          "note": "",
+          "member_id": "<mbr#6>",
+          "member_number": "00002",
+          "member": "Christophe Lebon (démo)"
+        },
+        {
+          "id": "<mpay#7>",
+          "created_at": "2026-09-07T04:00:00.000Z",
+          "confirmed_at": "2026-09-07T04:00:00.000Z",
+          "settled_at": "2026-09-12T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 159000,
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#7>",
+          "reference": "CSD-00001-94",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": 2385,
+          "note": "",
+          "member_id": "<mbr#7>",
+          "member_number": "00001",
+          "member": "Aditi Ramdin (démo)"
+        },
+        {
+          "id": "<mpay#8>",
+          "created_at": "2026-08-08T06:00:00.000Z",
+          "confirmed_at": "2026-08-08T06:00:00.000Z",
+          "settled_at": "2026-09-12T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 180000,
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#8>",
+          "reference": "CSD-00009-70",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": 2700,
+          "note": "",
+          "member_id": "<mbr#4>",
+          "member_number": "00009",
+          "member": "Zara Peerbux (démo)"
+        },
+        {
+          "id": "<mpay#9>",
+          "created_at": "2026-07-09T06:00:00.000Z",
+          "confirmed_at": "2026-07-09T06:00:00.000Z",
+          "settled_at": "2026-09-12T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 180000,
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#9>",
+          "reference": "CSD-00010-67",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": 2700,
+          "note": "",
+          "member_id": "<mbr#8>",
+          "member_number": "00010",
+          "member": "Olivier Desvaux (démo)"
+        },
+        {
+          "id": "<mpay#10>",
+          "created_at": "2026-07-08T06:00:00.000Z",
+          "confirmed_at": "2026-07-08T06:00:00.000Z",
+          "settled_at": "2026-09-12T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 180000,
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#10>",
+          "reference": "CSD-00009-70",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": 2700,
+          "note": "",
+          "member_id": "<mbr#4>",
+          "member_number": "00009",
+          "member": "Zara Peerbux (démo)"
+        },
+        {
+          "id": "<mpay#11>",
+          "created_at": "2026-02-19T04:00:00.000Z",
+          "confirmed_at": "2026-02-19T04:00:00.000Z",
+          "settled_at": "2026-02-24T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 1800000,
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#11>",
+          "reference": "CSD-00003-88",
+          "confirmed_via": "notification",
+          "failure_reason": null,
+          "verify_reason": null,
+          "fee_actual_minor": 27000,
+          "note": "",
+          "member_id": "<mbr#1>",
+          "member_number": "00003",
+          "member": "Farah Joomun (démo)"
+        }
+      ]
+    },
+    {
+      "step": "status check",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/payments/<mpay#1>/check",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "id": "<mpay#1>",
+        "status": "confirmed"
+      }
+    }
+  ]
+}

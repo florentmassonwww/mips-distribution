@@ -1,0 +1,2176 @@
+{
+  "scenario": "finance-refund",
+  "description": "Partial then full refund of a confirmed payment; refund above the remaining amount and without reason refused; agent cannot refund.",
+  "transcript": [
+    {
+      "step": "login u_bd_agent1",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "agent routes",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<rte#1>",
+          "company_id": "co_bd",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 07 (démo)",
+          "status": "loaded",
+          "started_at": null,
+          "closed_at": null,
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 0,
+          "invoiced_minor": 0,
+          "paid_minor": 0
+        },
+        {
+          "id": "<rte#2>",
+          "company_id": "co_bd",
+          "name": "Sud - Mahébourg",
+          "day": "2026-10-16",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 12 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-16T04:00:00.000Z",
+          "closed_at": "2026-10-16T04:00:00.000Z",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 3,
+          "orders_total": 2,
+          "orders_done": 2,
+          "invoiced_minor": 2885000,
+          "paid_minor": 2885000
+        },
+        {
+          "id": "<rte#3>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-14",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-14T04:00:00.000Z",
+          "closed_at": "2026-10-14T04:00:00.000Z",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 4009600,
+          "paid_minor": 4009600
+        },
+        {
+          "id": "<rte#4>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-12",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-12T04:00:00.000Z",
+          "closed_at": "2026-10-12T04:00:00.000Z",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 3778800,
+          "paid_minor": 3778800
+        }
+      ]
+    },
+    {
+      "step": "start route",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/routes/<rte#1>/start",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "route bundle",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/bundle"
+      },
+      "status": 200,
+      "response": {
+        "generatedAt": "2026-10-17T04:00:03.000Z",
+        "route": {
+          "id": "<rte#1>",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "vehicle": "Camion 07 (démo)",
+          "status": "in_progress"
+        },
+        "stops": [
+          {
+            "customer_id": "c_bd_tilakaz",
+            "seq": 1,
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "address": "Route Royale, Grand-Baie",
+            "zone": "Nord",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_bellevue",
+            "seq": 2,
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "zone": "Nord",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "customer_id": "c_bd_lagon",
+            "seq": 3,
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "address": "Front de mer, Trou-aux-Biches",
+            "zone": "Nord",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_flamboyant",
+            "seq": 4,
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "address": "Rue du Marché, Triolet",
+            "zone": "Nord",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          }
+        ],
+        "orders": [
+          {
+            "id": "<ord#1>",
+            "number": "CMD-000024",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_tilakaz",
+            "note": "Livrer avant 11 h",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#1>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#2>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 10,
+                "qty_delivered": 0,
+                "unit_price_minor": 39000
+              },
+              {
+                "id": "<ol#3>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_eau-150",
+                "qty_ordered": 12,
+                "qty_delivered": 0,
+                "unit_price_minor": 15000
+              }
+            ]
+          },
+          {
+            "id": "<ord#2>",
+            "number": "CMD-000025",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_bellevue",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#4>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 24,
+                "qty_delivered": 0,
+                "unit_price_minor": 37050
+              },
+              {
+                "id": "<ol#5>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_cit-33",
+                "qty_ordered": 8,
+                "qty_delivered": 0,
+                "unit_price_minor": 49400
+              },
+              {
+                "id": "<ol#6>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_jus-100",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 74100
+              }
+            ]
+          },
+          {
+            "id": "<ord#3>",
+            "number": "CMD-000026",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_lagon",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#7>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 4,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#8>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_eag-50",
+                "qty_ordered": 5,
+                "qty_delivered": 0,
+                "unit_price_minor": 26000
+              }
+            ]
+          }
+        ],
+        "invoices": [],
+        "products": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000
+          }
+        ],
+        "priceLists": {
+          "pl_bd_gc": {
+            "p_bd_bie-33": 109250,
+            "p_bd_cit-33": 49400,
+            "p_bd_col-150": 37050,
+            "p_bd_eag-50": 24700,
+            "p_bd_eau-150": 14250,
+            "p_bd_ene-25": 125400,
+            "p_bd_jus-100": 74100,
+            "p_bd_mal-33": 65550
+          }
+        },
+        "stock": {
+          "p_bd_bie-33": 20,
+          "p_bd_cit-33": 8,
+          "p_bd_col-150": 64,
+          "p_bd_eag-50": 5,
+          "p_bd_eau-150": 52,
+          "p_bd_ene-25": 4,
+          "p_bd_jus-100": 6,
+          "p_bd_mal-33": 8
+        },
+        "customers": [
+          {
+            "id": "c_bd_bambou",
+            "name": "Boutique Bambou (démo)",
+            "code": "C008",
+            "zone": "Sud",
+            "address": "Rue des Tulipes, Rose-Belle",
+            "phone": "+230 5000 1007",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_tilakaz",
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "zone": "Nord",
+            "address": "Route Royale, Grand-Baie",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_corail",
+            "name": "Hôtel Baie Corail (démo)",
+            "code": "C007",
+            "zone": "Sud",
+            "address": "Route côtière, Mahébourg",
+            "phone": "+230 5000 1006",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_flamboyant",
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "zone": "Nord",
+            "address": "Rue du Marché, Triolet",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_lagon",
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "zone": "Nord",
+            "address": "Front de mer, Trou-aux-Biches",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_soleil",
+            "name": "Snack Soleil (démo)",
+            "code": "C009",
+            "zone": "Sud",
+            "address": "Place du Marché, Mahébourg",
+            "phone": "+230 5000 1008",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_plaza",
+            "name": "Supermarché Plaza (démo)",
+            "code": "C006",
+            "zone": "Centre",
+            "address": "Route Saint-Jean, Quatre-Bornes",
+            "phone": "+230 5000 1005",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_bellevue",
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "zone": "Nord",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_central",
+            "name": "Tabagie Centrale (démo)",
+            "code": "C005",
+            "zone": "Centre",
+            "address": "Rue Châteauneuf, Curepipe",
+            "phone": "+230 5000 1004",
+            "price_list_id": null
+          }
+        ],
+        "methods": [
+          {
+            "method": "paystation",
+            "label": "PayStation"
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)"
+          },
+          {
+            "method": "juice",
+            "label": "Juice"
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien"
+          }
+        ]
+      }
+    },
+    {
+      "step": "deliver first order in full",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": [
+            {
+              "id": "act-deliver-0001",
+              "type": "deliver",
+              "payload": {
+                "orderId": "<ord#1>",
+                "lines": [
+                  {
+                    "lineId": "<ol#1>",
+                    "qtyDelivered": 6
+                  },
+                  {
+                    "lineId": "<ol#2>",
+                    "qtyDelivered": 10
+                  },
+                  {
+                    "lineId": "<ol#3>",
+                    "qtyDelivered": 12
+                  }
+                ],
+                "returns": [],
+                "reason": "",
+                "pod": {
+                  "name": "Réceptionnaire (démo)",
+                  "note": ""
+                },
+                "at": "2026-10-17T04:30:00.000Z"
+              }
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "results": [
+          {
+            "id": "act-deliver-0001",
+            "status": "applied",
+            "result": {
+              "orderId": "<ord#1>",
+              "orderNumber": "CMD-000024",
+              "outcome": "full",
+              "invoiceId": "<inv#1>",
+              "invoiceNumber": "FAC-000024",
+              "amountMinor": 1260000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "step": "bundle after delivery",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/bundle"
+      },
+      "status": 200,
+      "response": {
+        "generatedAt": "2026-10-17T04:00:05.000Z",
+        "route": {
+          "id": "<rte#1>",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "vehicle": "Camion 07 (démo)",
+          "status": "in_progress"
+        },
+        "stops": [
+          {
+            "customer_id": "c_bd_tilakaz",
+            "seq": 1,
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "address": "Route Royale, Grand-Baie",
+            "zone": "Nord",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_bellevue",
+            "seq": 2,
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "zone": "Nord",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "customer_id": "c_bd_lagon",
+            "seq": 3,
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "address": "Front de mer, Trou-aux-Biches",
+            "zone": "Nord",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_flamboyant",
+            "seq": 4,
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "address": "Rue du Marché, Triolet",
+            "zone": "Nord",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          }
+        ],
+        "orders": [
+          {
+            "id": "<ord#1>",
+            "number": "CMD-000024",
+            "kind": "preorder",
+            "status": "delivered",
+            "customer_id": "c_bd_tilakaz",
+            "note": "Livrer avant 11 h",
+            "delivered_at": "2026-10-17T04:00:04.000Z",
+            "lines": [
+              {
+                "id": "<ol#1>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 6,
+                "qty_delivered": 6,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#2>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 10,
+                "qty_delivered": 10,
+                "unit_price_minor": 39000
+              },
+              {
+                "id": "<ol#3>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_eau-150",
+                "qty_ordered": 12,
+                "qty_delivered": 12,
+                "unit_price_minor": 15000
+              }
+            ]
+          },
+          {
+            "id": "<ord#2>",
+            "number": "CMD-000025",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_bellevue",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#4>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 24,
+                "qty_delivered": 0,
+                "unit_price_minor": 37050
+              },
+              {
+                "id": "<ol#5>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_cit-33",
+                "qty_ordered": 8,
+                "qty_delivered": 0,
+                "unit_price_minor": 49400
+              },
+              {
+                "id": "<ol#6>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_jus-100",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 74100
+              }
+            ]
+          },
+          {
+            "id": "<ord#3>",
+            "number": "CMD-000026",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_lagon",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#7>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 4,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#8>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_eag-50",
+                "qty_ordered": 5,
+                "qty_delivered": 0,
+                "unit_price_minor": 26000
+              }
+            ]
+          }
+        ],
+        "invoices": [
+          {
+            "id": "<inv#1>",
+            "number": "FAC-000024",
+            "order_id": "<ord#1>",
+            "customer_id": "c_bd_tilakaz",
+            "amount_minor": 1260000,
+            "paid_minor": 0,
+            "refunded_minor": 0,
+            "status": "unpaid",
+            "issued_at": "2026-10-17T04:00:04.000Z",
+            "payments": []
+          }
+        ],
+        "products": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000
+          }
+        ],
+        "priceLists": {
+          "pl_bd_gc": {
+            "p_bd_bie-33": 109250,
+            "p_bd_cit-33": 49400,
+            "p_bd_col-150": 37050,
+            "p_bd_eag-50": 24700,
+            "p_bd_eau-150": 14250,
+            "p_bd_ene-25": 125400,
+            "p_bd_jus-100": 74100,
+            "p_bd_mal-33": 65550
+          }
+        },
+        "stock": {
+          "p_bd_bie-33": 14,
+          "p_bd_cit-33": 8,
+          "p_bd_col-150": 54,
+          "p_bd_eag-50": 5,
+          "p_bd_eau-150": 40,
+          "p_bd_ene-25": 4,
+          "p_bd_jus-100": 6,
+          "p_bd_mal-33": 8
+        },
+        "customers": [
+          {
+            "id": "c_bd_bambou",
+            "name": "Boutique Bambou (démo)",
+            "code": "C008",
+            "zone": "Sud",
+            "address": "Rue des Tulipes, Rose-Belle",
+            "phone": "+230 5000 1007",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_tilakaz",
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "zone": "Nord",
+            "address": "Route Royale, Grand-Baie",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_corail",
+            "name": "Hôtel Baie Corail (démo)",
+            "code": "C007",
+            "zone": "Sud",
+            "address": "Route côtière, Mahébourg",
+            "phone": "+230 5000 1006",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_flamboyant",
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "zone": "Nord",
+            "address": "Rue du Marché, Triolet",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_lagon",
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "zone": "Nord",
+            "address": "Front de mer, Trou-aux-Biches",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_soleil",
+            "name": "Snack Soleil (démo)",
+            "code": "C009",
+            "zone": "Sud",
+            "address": "Place du Marché, Mahébourg",
+            "phone": "+230 5000 1008",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_plaza",
+            "name": "Supermarché Plaza (démo)",
+            "code": "C006",
+            "zone": "Centre",
+            "address": "Route Saint-Jean, Quatre-Bornes",
+            "phone": "+230 5000 1005",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_bellevue",
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "zone": "Nord",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_central",
+            "name": "Tabagie Centrale (démo)",
+            "code": "C005",
+            "zone": "Centre",
+            "address": "Rue Châteauneuf, Curepipe",
+            "phone": "+230 5000 1004",
+            "price_list_id": null
+          }
+        ],
+        "methods": [
+          {
+            "method": "paystation",
+            "label": "PayStation"
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)"
+          },
+          {
+            "method": "juice",
+            "label": "Juice"
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien"
+          }
+        ]
+      }
+    },
+    {
+      "step": "create card_tpe payment",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/payments",
+        "body": {
+          "invoiceId": "<inv#1>",
+          "method": "card_tpe",
+          "amountMinor": 1260000,
+          "idempotencyKey": "key-refund-pay-0001"
+        }
+      },
+      "status": 200,
+      "response": {
+        "payment": {
+          "id": "<pay#1>",
+          "invoiceId": "<inv#1>",
+          "method": "card_tpe",
+          "amountMinor": 1260000,
+          "currency": "MUR",
+          "status": "pending",
+          "refundedMinor": 0,
+          "providerRef": "<ref-TPE#1>",
+          "presentation": {
+            "kind": "terminal",
+            "value": "<ref-TPE#1>",
+            "instructions": "Montant envoyé au terminal. Le client présente ou insère sa carte sur le TPE ; aucune donnée de carte n'est saisie dans l'application."
+          },
+          "failureReason": null,
+          "verifyReason": null,
+          "settlementStatus": "unsettled",
+          "createdAt": "2026-10-17T04:00:06.000Z",
+          "expiresAt": "2026-10-17T04:10:06.000Z",
+          "confirmedAt": null,
+          "confirmedVia": null
+        },
+        "replayed": false
+      }
+    },
+    {
+      "step": "simulate success",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/payments/<pay#1>/simulate",
+        "body": {
+          "outcome": "success"
+        }
+      },
+      "status": 200,
+      "response": {
+        "result": "confirmed"
+      }
+    },
+    {
+      "step": "agent cannot refund",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/finance/payments/<pay#1>/refund",
+        "body": {
+          "amountMinor": 1000,
+          "reason": "Geste"
+        }
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "forbidden",
+          "message": "Accès non autorisé."
+        }
+      }
+    },
+    {
+      "step": "login u_bd_finance",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_finance"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "reason too short",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/finance/payments/<pay#1>/refund",
+        "body": {
+          "amountMinor": 1000,
+          "reason": "ok"
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : reason Too small: expected string to have >=3 characters"
+        }
+      }
+    },
+    {
+      "step": "partial refund",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/finance/payments/<pay#1>/refund",
+        "body": {
+          "amountMinor": 5000,
+          "reason": "Produit abîmé (démo)"
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<pay#1>",
+        "invoiceId": "<inv#1>",
+        "method": "card_tpe",
+        "amountMinor": 1260000,
+        "currency": "MUR",
+        "status": "confirmed",
+        "refundedMinor": 5000,
+        "providerRef": "<ref-TPE#1>",
+        "presentation": {
+          "kind": "terminal",
+          "value": "<ref-TPE#1>",
+          "instructions": "Montant envoyé au terminal. Le client présente ou insère sa carte sur le TPE ; aucune donnée de carte n'est saisie dans l'application."
+        },
+        "failureReason": null,
+        "verifyReason": null,
+        "settlementStatus": "unsettled",
+        "createdAt": "2026-10-17T04:00:06.000Z",
+        "expiresAt": "2026-10-17T04:10:06.000Z",
+        "confirmedAt": "2026-10-17T04:00:07.000Z",
+        "confirmedVia": "notification"
+      }
+    },
+    {
+      "step": "refund above remaining",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/finance/payments/<pay#1>/refund",
+        "body": {
+          "amountMinor": 1260000,
+          "reason": "Trop remboursé (démo)"
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "amount_exceeds_balance",
+          "message": "Montant supérieur au solde remboursable."
+        }
+      }
+    },
+    {
+      "step": "refund the rest",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/finance/payments/<pay#1>/refund",
+        "body": {
+          "amountMinor": 1255000,
+          "reason": "Retour complet (démo)"
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<pay#1>",
+        "invoiceId": "<inv#1>",
+        "method": "card_tpe",
+        "amountMinor": 1260000,
+        "currency": "MUR",
+        "status": "refunded",
+        "refundedMinor": 1260000,
+        "providerRef": "<ref-TPE#1>",
+        "presentation": {
+          "kind": "terminal",
+          "value": "<ref-TPE#1>",
+          "instructions": "Montant envoyé au terminal. Le client présente ou insère sa carte sur le TPE ; aucune donnée de carte n'est saisie dans l'application."
+        },
+        "failureReason": null,
+        "verifyReason": null,
+        "settlementStatus": "unsettled",
+        "createdAt": "2026-10-17T04:00:06.000Z",
+        "expiresAt": "2026-10-17T04:10:06.000Z",
+        "confirmedAt": "2026-10-17T04:00:07.000Z",
+        "confirmedVia": "notification"
+      }
+    },
+    {
+      "step": "journal after refunds",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<pay#1>",
+          "created_at": "2026-10-17T04:00:06.000Z",
+          "updated_at": "2026-10-17T04:00:13.000Z",
+          "confirmed_at": "2026-10-17T04:00:07.000Z",
+          "settled_at": null,
+          "method": "card_tpe",
+          "amount_minor": 1260000,
+          "refunded_minor": 1260000,
+          "currency": "MUR",
+          "status": "refunded",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-TPE#1>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 22050,
+          "fee_actual_minor": null,
+          "invoice": "FAC-000024",
+          "invoice_id": "<inv#1>",
+          "order_number": "CMD-000024",
+          "order_id": "<ord#1>",
+          "customer": "Boutique Ti Lakaz (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#2>",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "updated_at": "2026-10-16T04:00:00.000Z",
+          "confirmed_at": "2026-10-16T04:00:00.000Z",
+          "settled_at": null,
+          "method": "paystation",
+          "amount_minor": 624000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-PS#1>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 6240,
+          "fee_actual_minor": null,
+          "invoice": "FAC-000023",
+          "invoice_id": "<inv#2>",
+          "order_number": "CMD-000023",
+          "order_id": "<ord#4>",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#3>",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "updated_at": "2026-10-16T04:00:00.000Z",
+          "confirmed_at": "2026-10-16T04:00:00.000Z",
+          "settled_at": null,
+          "method": "card_tpe",
+          "amount_minor": 741000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-TPE#2>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 12968,
+          "fee_actual_minor": null,
+          "invoice": "FAC-000022",
+          "invoice_id": "<inv#3>",
+          "order_number": "CMD-000022",
+          "order_id": "<ord#5>",
+          "customer": "Boutique Bambou (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#4>",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "updated_at": "2026-10-16T04:00:00.000Z",
+          "confirmed_at": "2026-10-16T04:00:00.000Z",
+          "settled_at": "2026-10-16T04:00:00.000Z",
+          "method": "juice",
+          "amount_minor": 1520000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-JCE#1>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 13680,
+          "fee_actual_minor": 13680,
+          "invoice": "FAC-000021",
+          "invoice_id": "<inv#4>",
+          "order_number": "CMD-000021",
+          "order_id": "<ord#6>",
+          "customer": "Hôtel Baie Corail (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#5>",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "updated_at": "2026-10-15T04:00:00.000Z",
+          "confirmed_at": "2026-10-15T04:00:00.000Z",
+          "settled_at": "2026-10-15T04:00:00.000Z",
+          "method": "card_tpe",
+          "amount_minor": 285000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-TPE#3>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 4988,
+          "fee_actual_minor": 4988,
+          "invoice": "FAC-000020",
+          "invoice_id": "<inv#5>",
+          "order_number": "CMD-000020",
+          "order_id": "<ord#7>",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#6>",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "updated_at": "2026-10-15T04:00:00.000Z",
+          "confirmed_at": "2026-10-15T04:00:00.000Z",
+          "settled_at": "2026-10-15T04:00:00.000Z",
+          "method": "paystation",
+          "amount_minor": 1801200,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-PS#2>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 18012,
+          "fee_actual_minor": 18012,
+          "invoice": "FAC-000019",
+          "invoice_id": "<inv#6>",
+          "order_number": "CMD-000019",
+          "order_id": "<ord#8>",
+          "customer": "Hôtel Baie Corail (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#7>",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "updated_at": "2026-10-15T04:00:00.000Z",
+          "confirmed_at": "2026-10-15T04:00:00.000Z",
+          "settled_at": "2026-10-15T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 732450,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#1>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 10987,
+          "fee_actual_minor": 10987,
+          "invoice": "FAC-000018",
+          "invoice_id": "<inv#7>",
+          "order_number": "CMD-000018",
+          "order_id": "<ord#9>",
+          "customer": "Supermarché Plaza (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#8>",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "updated_at": "2026-10-15T04:00:00.000Z",
+          "confirmed_at": "2026-10-15T04:00:00.000Z",
+          "settled_at": "2026-10-15T04:00:00.000Z",
+          "method": "juice",
+          "amount_minor": 884000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-JCE#2>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 7956,
+          "fee_actual_minor": 7956,
+          "invoice": "FAC-000017",
+          "invoice_id": "<inv#8>",
+          "order_number": "CMD-000017",
+          "order_id": "<ord#10>",
+          "customer": "Tabagie Centrale (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#9>",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "updated_at": "2026-10-15T04:00:00.000Z",
+          "confirmed_at": null,
+          "settled_at": null,
+          "method": "card_tpe",
+          "amount_minor": 884000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "failed",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-TPE#4>",
+          "failure_reason": "Refusé par l'émetteur (simulation)",
+          "verify_reason": null,
+          "confirmed_via": null,
+          "fee_expected_minor": 0,
+          "fee_actual_minor": null,
+          "invoice": "FAC-000017",
+          "invoice_id": "<inv#8>",
+          "order_number": "CMD-000017",
+          "order_id": "<ord#10>",
+          "customer": "Tabagie Centrale (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#10>",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "updated_at": "2026-10-14T04:00:00.000Z",
+          "confirmed_at": "2026-10-14T04:00:00.000Z",
+          "settled_at": "2026-10-14T04:00:00.000Z",
+          "method": "juice",
+          "amount_minor": 307800,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-JCE#3>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 2770,
+          "fee_actual_minor": 2770,
+          "invoice": "FAC-000016",
+          "invoice_id": "<inv#9>",
+          "order_number": "CMD-000016",
+          "order_id": "<ord#11>",
+          "customer": "Supérette Belle Vue (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#11>",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "updated_at": "2026-10-14T04:00:00.000Z",
+          "confirmed_at": "2026-10-14T04:00:00.000Z",
+          "settled_at": "2026-10-14T04:00:00.000Z",
+          "method": "card_tpe",
+          "amount_minor": 1692000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-TPE#5>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 29610,
+          "fee_actual_minor": 29610,
+          "invoice": "FAC-000015",
+          "invoice_id": "<inv#10>",
+          "order_number": "CMD-000015",
+          "order_id": "<ord#12>",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#12>",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "updated_at": "2026-10-14T04:00:00.000Z",
+          "confirmed_at": "2026-10-14T04:00:00.000Z",
+          "settled_at": "2026-10-14T04:00:00.000Z",
+          "method": "paystation",
+          "amount_minor": 1474000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-PS#3>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 14740,
+          "fee_actual_minor": 14740,
+          "invoice": "FAC-000014",
+          "invoice_id": "<inv#11>",
+          "order_number": "CMD-000014",
+          "order_id": "<ord#13>",
+          "customer": "Boutique Bambou (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#13>",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "updated_at": "2026-10-14T04:00:00.000Z",
+          "confirmed_at": "2026-10-14T04:00:00.000Z",
+          "settled_at": "2026-10-14T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 535800,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#2>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 8037,
+          "fee_actual_minor": 8037,
+          "invoice": "FAC-000013",
+          "invoice_id": "<inv#12>",
+          "order_number": "CMD-000013",
+          "order_id": "<ord#14>",
+          "customer": "Hôtel Baie Corail (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#14>",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "updated_at": "2026-10-13T04:00:00.000Z",
+          "confirmed_at": "2026-10-13T04:00:00.000Z",
+          "settled_at": "2026-10-13T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 363000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#3>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 5445,
+          "fee_actual_minor": 5445,
+          "invoice": "FAC-000012",
+          "invoice_id": "<inv#13>",
+          "order_number": "CMD-000012",
+          "order_id": "<ord#15>",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#15>",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "updated_at": "2026-10-13T04:00:00.000Z",
+          "confirmed_at": "2026-10-13T04:00:00.000Z",
+          "settled_at": "2026-10-13T04:00:00.000Z",
+          "method": "juice",
+          "amount_minor": 837900,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-JCE#4>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 7541,
+          "fee_actual_minor": 7541,
+          "invoice": "FAC-000011",
+          "invoice_id": "<inv#14>",
+          "order_number": "CMD-000011",
+          "order_id": "<ord#16>",
+          "customer": "Supérette Belle Vue (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#16>",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "updated_at": "2026-10-13T04:00:00.000Z",
+          "confirmed_at": "2026-10-13T04:00:00.000Z",
+          "settled_at": "2026-10-13T04:00:00.000Z",
+          "method": "card_tpe",
+          "amount_minor": 1347000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-TPE#6>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 23573,
+          "fee_actual_minor": 23573,
+          "invoice": "FAC-000010",
+          "invoice_id": "<inv#15>",
+          "order_number": "CMD-000010",
+          "order_id": "<ord#17>",
+          "customer": "Boutique Ti Lakaz (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#17>",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "updated_at": "2026-10-13T04:00:00.000Z",
+          "confirmed_at": "2026-10-13T04:00:00.000Z",
+          "settled_at": "2026-10-13T04:00:00.000Z",
+          "method": "paystation",
+          "amount_minor": 1104000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-PS#4>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 11040,
+          "fee_actual_minor": 11040,
+          "invoice": "FAC-000009",
+          "invoice_id": "<inv#16>",
+          "order_number": "CMD-000009",
+          "order_id": "<ord#18>",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#18>",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "updated_at": "2026-10-13T04:00:00.000Z",
+          "confirmed_at": null,
+          "settled_at": null,
+          "method": "card_tpe",
+          "amount_minor": 1104000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "failed",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-TPE#7>",
+          "failure_reason": "Refusé par l'émetteur (simulation)",
+          "verify_reason": null,
+          "confirmed_via": null,
+          "fee_expected_minor": 0,
+          "fee_actual_minor": null,
+          "invoice": "FAC-000009",
+          "invoice_id": "<inv#16>",
+          "order_number": "CMD-000009",
+          "order_id": "<ord#18>",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#19>",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "updated_at": "2026-10-12T04:00:00.000Z",
+          "confirmed_at": "2026-10-12T04:00:00.000Z",
+          "settled_at": "2026-10-12T04:00:00.000Z",
+          "method": "paystation",
+          "amount_minor": 381900,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-PS#5>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 3819,
+          "fee_actual_minor": 3819,
+          "invoice": "FAC-000008",
+          "invoice_id": "<inv#17>",
+          "order_number": "CMD-000008",
+          "order_id": "<ord#19>",
+          "customer": "Supermarché Plaza (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#20>",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "updated_at": "2026-10-12T04:00:00.000Z",
+          "confirmed_at": "2026-10-12T04:00:00.000Z",
+          "settled_at": "2026-10-12T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 1680000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#4>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 25200,
+          "fee_actual_minor": 25200,
+          "invoice": "FAC-000007",
+          "invoice_id": "<inv#18>",
+          "order_number": "CMD-000007",
+          "order_id": "<ord#20>",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#21>",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "updated_at": "2026-10-12T04:00:00.000Z",
+          "confirmed_at": "2026-10-12T04:00:00.000Z",
+          "settled_at": "2026-10-12T04:00:00.000Z",
+          "method": "juice",
+          "amount_minor": 765000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-JCE#5>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 6885,
+          "fee_actual_minor": 6885,
+          "invoice": "FAC-000006",
+          "invoice_id": "<inv#19>",
+          "order_number": "CMD-000006",
+          "order_id": "<ord#21>",
+          "customer": "Snack Lagon Bleu (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#22>",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "updated_at": "2026-10-12T04:00:00.000Z",
+          "confirmed_at": "2026-10-12T04:00:00.000Z",
+          "settled_at": "2026-10-12T04:00:00.000Z",
+          "method": "card_tpe",
+          "amount_minor": 951900,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-TPE#8>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 16658,
+          "fee_actual_minor": 16658,
+          "invoice": "FAC-000005",
+          "invoice_id": "<inv#20>",
+          "order_number": "CMD-000005",
+          "order_id": "<ord#22>",
+          "customer": "Supérette Belle Vue (démo)",
+          "agent": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#23>",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "updated_at": "2026-10-11T04:00:00.000Z",
+          "confirmed_at": "2026-10-11T04:00:00.000Z",
+          "settled_at": "2026-10-11T04:00:00.000Z",
+          "method": "card_tpe",
+          "amount_minor": 441000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-TPE#9>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 7718,
+          "fee_actual_minor": 7718,
+          "invoice": "FAC-000004",
+          "invoice_id": "<inv#21>",
+          "order_number": "CMD-000004",
+          "order_id": "<ord#23>",
+          "customer": "Boutique Bambou (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#24>",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "updated_at": "2026-10-11T04:00:00.000Z",
+          "confirmed_at": "2026-10-11T04:00:00.000Z",
+          "settled_at": "2026-10-11T04:00:00.000Z",
+          "method": "paystation",
+          "amount_minor": 1263500,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-PS#6>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 12635,
+          "fee_actual_minor": 12635,
+          "invoice": "FAC-000003",
+          "invoice_id": "<inv#22>",
+          "order_number": "CMD-000003",
+          "order_id": "<ord#24>",
+          "customer": "Supermarché Plaza (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#25>",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "updated_at": "2026-10-11T04:00:00.000Z",
+          "confirmed_at": "2026-10-11T04:00:00.000Z",
+          "settled_at": "2026-10-11T04:00:00.000Z",
+          "method": "link",
+          "amount_minor": 1392000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-LNK#5>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 20880,
+          "fee_actual_minor": 20880,
+          "invoice": "FAC-000002",
+          "invoice_id": "<inv#23>",
+          "order_number": "CMD-000002",
+          "order_id": "<ord#25>",
+          "customer": "Tabagie Centrale (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#26>",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "updated_at": "2026-10-11T04:00:00.000Z",
+          "confirmed_at": "2026-10-11T04:00:00.000Z",
+          "settled_at": "2026-10-11T04:00:00.000Z",
+          "method": "juice",
+          "amount_minor": 648000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "confirmed",
+          "settlement_status": "settled",
+          "provider_ref": "<ref-JCE#6>",
+          "failure_reason": null,
+          "verify_reason": null,
+          "confirmed_via": "notification",
+          "fee_expected_minor": 5832,
+          "fee_actual_minor": 5832,
+          "invoice": "FAC-000001",
+          "invoice_id": "<inv#24>",
+          "order_number": "CMD-000001",
+          "order_id": "<ord#26>",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        },
+        {
+          "id": "<pay#27>",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "updated_at": "2026-10-11T04:00:00.000Z",
+          "confirmed_at": null,
+          "settled_at": null,
+          "method": "card_tpe",
+          "amount_minor": 648000,
+          "refunded_minor": 0,
+          "currency": "MUR",
+          "status": "failed",
+          "settlement_status": "unsettled",
+          "provider_ref": "<ref-TPE#10>",
+          "failure_reason": "Refusé par l'émetteur (simulation)",
+          "verify_reason": null,
+          "confirmed_via": null,
+          "fee_expected_minor": 0,
+          "fee_actual_minor": null,
+          "invoice": "FAC-000001",
+          "invoice_id": "<inv#24>",
+          "order_number": "CMD-000001",
+          "order_id": "<ord#26>",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "agent": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée"
+        }
+      ]
+    },
+    {
+      "step": "invoices after refunds",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/invoices"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<inv#1>",
+          "number": "FAC-000024",
+          "issued_at": "2026-10-17T04:00:04.000Z",
+          "amount_minor": 1260000,
+          "paid_minor": 1260000,
+          "refunded_minor": 1260000,
+          "status": "refunded",
+          "order_id": "<ord#1>",
+          "order_number": "CMD-000024",
+          "customer": "Boutique Ti Lakaz (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Nord - Grand-Baie",
+          "settled_minor": 0,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#2>",
+          "number": "FAC-000023",
+          "issued_at": "2026-10-16T04:00:00.000Z",
+          "amount_minor": 624000,
+          "paid_minor": 624000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#4>",
+          "order_number": "CMD-000023",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Sud - Mahébourg",
+          "settled_minor": 0,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#3>",
+          "number": "FAC-000022",
+          "issued_at": "2026-10-16T04:00:00.000Z",
+          "amount_minor": 741000,
+          "paid_minor": 741000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#5>",
+          "order_number": "CMD-000022",
+          "customer": "Boutique Bambou (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Sud - Mahébourg",
+          "settled_minor": 0,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#4>",
+          "number": "FAC-000021",
+          "issued_at": "2026-10-16T04:00:00.000Z",
+          "amount_minor": 1520000,
+          "paid_minor": 1520000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#6>",
+          "order_number": "CMD-000021",
+          "customer": "Hôtel Baie Corail (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Sud - Mahébourg",
+          "settled_minor": 1520000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#5>",
+          "number": "FAC-000020",
+          "issued_at": "2026-10-15T04:00:00.000Z",
+          "amount_minor": 285000,
+          "paid_minor": 285000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#7>",
+          "order_number": "CMD-000020",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 285000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#6>",
+          "number": "FAC-000019",
+          "issued_at": "2026-10-15T04:00:00.000Z",
+          "amount_minor": 1801200,
+          "paid_minor": 1801200,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#8>",
+          "order_number": "CMD-000019",
+          "customer": "Hôtel Baie Corail (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 1801200,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#7>",
+          "number": "FAC-000018",
+          "issued_at": "2026-10-15T04:00:00.000Z",
+          "amount_minor": 732450,
+          "paid_minor": 732450,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#9>",
+          "order_number": "CMD-000018",
+          "customer": "Supermarché Plaza (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 732450,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#8>",
+          "number": "FAC-000017",
+          "issued_at": "2026-10-15T04:00:00.000Z",
+          "amount_minor": 884000,
+          "paid_minor": 884000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#10>",
+          "order_number": "CMD-000017",
+          "customer": "Tabagie Centrale (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 884000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#9>",
+          "number": "FAC-000016",
+          "issued_at": "2026-10-14T04:00:00.000Z",
+          "amount_minor": 307800,
+          "paid_minor": 307800,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#11>",
+          "order_number": "CMD-000016",
+          "customer": "Supérette Belle Vue (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Ouest - Tamarin",
+          "settled_minor": 307800,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#10>",
+          "number": "FAC-000015",
+          "issued_at": "2026-10-14T04:00:00.000Z",
+          "amount_minor": 1692000,
+          "paid_minor": 1692000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#12>",
+          "order_number": "CMD-000015",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Ouest - Tamarin",
+          "settled_minor": 1692000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#11>",
+          "number": "FAC-000014",
+          "issued_at": "2026-10-14T04:00:00.000Z",
+          "amount_minor": 1474000,
+          "paid_minor": 1474000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#13>",
+          "order_number": "CMD-000014",
+          "customer": "Boutique Bambou (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Ouest - Tamarin",
+          "settled_minor": 1474000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#12>",
+          "number": "FAC-000013",
+          "issued_at": "2026-10-14T04:00:00.000Z",
+          "amount_minor": 535800,
+          "paid_minor": 535800,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#14>",
+          "order_number": "CMD-000013",
+          "customer": "Hôtel Baie Corail (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Ouest - Tamarin",
+          "settled_minor": 535800,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#13>",
+          "number": "FAC-000012",
+          "issued_at": "2026-10-13T04:00:00.000Z",
+          "amount_minor": 363000,
+          "paid_minor": 363000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#15>",
+          "order_number": "CMD-000012",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 363000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#14>",
+          "number": "FAC-000011",
+          "issued_at": "2026-10-13T04:00:00.000Z",
+          "amount_minor": 837900,
+          "paid_minor": 837900,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#16>",
+          "order_number": "CMD-000011",
+          "customer": "Supérette Belle Vue (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 837900,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#15>",
+          "number": "FAC-000010",
+          "issued_at": "2026-10-13T04:00:00.000Z",
+          "amount_minor": 1347000,
+          "paid_minor": 1347000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#17>",
+          "order_number": "CMD-000010",
+          "customer": "Boutique Ti Lakaz (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 1347000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#16>",
+          "number": "FAC-000009",
+          "issued_at": "2026-10-13T04:00:00.000Z",
+          "amount_minor": 1104000,
+          "paid_minor": 1104000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#18>",
+          "order_number": "CMD-000009",
+          "customer": "Snack Soleil (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 1104000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#17>",
+          "number": "FAC-000008",
+          "issued_at": "2026-10-12T04:00:00.000Z",
+          "amount_minor": 381900,
+          "paid_minor": 381900,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#19>",
+          "order_number": "CMD-000008",
+          "customer": "Supermarché Plaza (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Ouest - Tamarin",
+          "settled_minor": 381900,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#18>",
+          "number": "FAC-000007",
+          "issued_at": "2026-10-12T04:00:00.000Z",
+          "amount_minor": 1680000,
+          "paid_minor": 1680000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#20>",
+          "order_number": "CMD-000007",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Ouest - Tamarin",
+          "settled_minor": 1680000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#19>",
+          "number": "FAC-000006",
+          "issued_at": "2026-10-12T04:00:00.000Z",
+          "amount_minor": 765000,
+          "paid_minor": 765000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#21>",
+          "order_number": "CMD-000006",
+          "customer": "Snack Lagon Bleu (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Ouest - Tamarin",
+          "settled_minor": 765000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#20>",
+          "number": "FAC-000005",
+          "issued_at": "2026-10-12T04:00:00.000Z",
+          "amount_minor": 951900,
+          "paid_minor": 951900,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#22>",
+          "order_number": "CMD-000005",
+          "customer": "Supérette Belle Vue (démo)",
+          "agent": "Ravi D. (démo)",
+          "route": "Ouest - Tamarin",
+          "settled_minor": 951900,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#21>",
+          "number": "FAC-000004",
+          "issued_at": "2026-10-11T04:00:00.000Z",
+          "amount_minor": 441000,
+          "paid_minor": 441000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#23>",
+          "order_number": "CMD-000004",
+          "customer": "Boutique Bambou (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 441000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#22>",
+          "number": "FAC-000003",
+          "issued_at": "2026-10-11T04:00:00.000Z",
+          "amount_minor": 1263500,
+          "paid_minor": 1263500,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#24>",
+          "order_number": "CMD-000003",
+          "customer": "Supermarché Plaza (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 1263500,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#23>",
+          "number": "FAC-000002",
+          "issued_at": "2026-10-11T04:00:00.000Z",
+          "amount_minor": 1392000,
+          "paid_minor": 1392000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#25>",
+          "order_number": "CMD-000002",
+          "customer": "Tabagie Centrale (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 1392000,
+          "erp_status": "synced"
+        },
+        {
+          "id": "<inv#24>",
+          "number": "FAC-000001",
+          "issued_at": "2026-10-11T04:00:00.000Z",
+          "amount_minor": 648000,
+          "paid_minor": 648000,
+          "refunded_minor": 0,
+          "status": "paid",
+          "order_id": "<ord#26>",
+          "order_number": "CMD-000001",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "agent": "Nadia P. (démo)",
+          "route": "Est - Flacq",
+          "settled_minor": 648000,
+          "erp_status": "synced"
+        }
+      ]
+    }
+  ]
+}

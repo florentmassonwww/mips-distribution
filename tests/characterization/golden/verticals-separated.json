@@ -1,0 +1,268 @@
+{
+  "scenario": "verticals-separated",
+  "description": "A club user cannot use distribution endpoints and a distribution user cannot use club endpoints.",
+  "transcript": [
+    {
+      "step": "login u_cs_admin",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "club admin on distribution dashboard",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "wrong_vertical",
+          "message": "Cet espace est réservé à la distribution."
+        }
+      }
+    },
+    {
+      "step": "club admin on distribution journal",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "wrong_vertical",
+          "message": "Cet espace est réservé à la distribution."
+        }
+      }
+    },
+    {
+      "step": "club admin on club dashboard",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 200,
+      "response": {
+        "day": "2026-10-17",
+        "generatedAt": "2026-10-17T04:00:03.000Z",
+        "totals": {
+          "owedMinor": 10593000,
+          "overdueMinor": 9264000,
+          "creditMinor": 0,
+          "members": 14,
+          "inArrears": 10
+        },
+        "aging": {
+          "current": 1329000,
+          "d1_30": 974000,
+          "d31_60": 490000,
+          "d61_90": 0,
+          "d90": 7800000
+        },
+        "collectedMonth": [
+          {
+            "method": "link",
+            "count": 2,
+            "amount_minor": 415000
+          }
+        ],
+        "unsettledOnlineMinor": 415000,
+        "remindersMonth": 1,
+        "openExceptions": 0,
+        "gateToday": {
+          "allow": 3,
+          "flag": 2,
+          "deny": 2
+        },
+        "topDebtors": [
+          {
+            "id": "<mbr#1>",
+            "number": "00008",
+            "name": "Yannick Ramsamy (démo)",
+            "email": "",
+            "phone": "+230 5900 1107",
+            "plan": "Individuel",
+            "status": "active",
+            "reference": "CSD-00008-73",
+            "badge": "B00008",
+            "balance_minor": 3880000,
+            "overdue_minor": 3725000,
+            "overdue_days": 615,
+            "last_reminder_level": 3,
+            "last_reminder_at": "2026-09-17T04:00:00.000Z"
+          },
+          {
+            "id": "<mbr#2>",
+            "number": "00015",
+            "name": "Hélène Tsang (démo)",
+            "email": "hélène.15@membres.exemple.invalid",
+            "phone": "+230 5900 1114",
+            "plan": "Individuel",
+            "status": "resigned",
+            "reference": "CSD-00015-52",
+            "badge": "B00015",
+            "balance_minor": 1800000,
+            "overdue_minor": 1800000,
+            "overdue_days": 250,
+            "last_reminder_level": 3,
+            "last_reminder_at": "2026-09-17T04:00:00.000Z"
+          },
+          {
+            "id": "<mbr#3>",
+            "number": "00006",
+            "name": "Nitin Gopaul (démo)",
+            "email": "nitin.6@membres.exemple.invalid",
+            "phone": "+230 5900 1105",
+            "plan": "Individuel",
+            "status": "active",
+            "reference": "CSD-00006-79",
+            "badge": "B00006",
+            "balance_minor": 1310000,
+            "overdue_minor": 1310000,
+            "overdue_days": 250,
+            "last_reminder_level": 3,
+            "last_reminder_at": "2026-09-17T04:00:00.000Z"
+          },
+          {
+            "id": "<mbr#4>",
+            "number": "00014",
+            "name": "Gérard Maurel (démo)",
+            "email": "",
+            "phone": "+230 5900 1113",
+            "plan": "Senior (65 ans et plus)",
+            "status": "suspended",
+            "reference": "CSD-00014-55",
+            "badge": "B00014",
+            "balance_minor": 900000,
+            "overdue_minor": 900000,
+            "overdue_days": 615,
+            "last_reminder_level": 3,
+            "last_reminder_at": "2026-09-17T04:00:00.000Z"
+          },
+          {
+            "id": "<mbr#5>",
+            "number": "00013",
+            "name": "Amina Dulloo (démo)",
+            "email": "",
+            "phone": "+230 5900 1112",
+            "plan": "Junior (moins de 18 ans)",
+            "status": "active",
+            "reference": "CSD-00013-58",
+            "badge": "B00013",
+            "balance_minor": 739000,
+            "overdue_minor": 699000,
+            "overdue_days": 250,
+            "last_reminder_level": 3,
+            "last_reminder_at": "2026-09-17T04:00:00.000Z"
+          },
+          {
+            "id": "<mbr#6>",
+            "number": "00010",
+            "name": "Olivier Desvaux (démo)",
+            "email": "olivier.10@membres.exemple.invalid",
+            "phone": "+230 5900 1109",
+            "plan": "Mensuel",
+            "status": "active",
+            "reference": "CSD-00010-67",
+            "badge": "B00010",
+            "balance_minor": 895000,
+            "overdue_minor": 585000,
+            "overdue_days": 43,
+            "last_reminder_level": 2,
+            "last_reminder_at": "2026-10-09T04:00:00.000Z"
+          },
+          {
+            "id": "<mbr#7>",
+            "number": "00009",
+            "name": "Zara Peerbux (démo)",
+            "email": "zara.9@membres.exemple.invalid",
+            "phone": "+230 5900 1108",
+            "plan": "Mensuel",
+            "status": "active",
+            "reference": "CSD-00009-70",
+            "badge": "B00009",
+            "balance_minor": 300000,
+            "overdue_minor": 120000,
+            "overdue_days": 9,
+            "last_reminder_level": null,
+            "last_reminder_at": null
+          },
+          {
+            "id": "<mbr#8>",
+            "number": "00004",
+            "name": "Kevin Appadoo (démo)",
+            "email": "",
+            "phone": "+230 5900 1103",
+            "plan": "Junior (moins de 18 ans)",
+            "status": "active",
+            "reference": "CSD-00004-85",
+            "badge": "B00004",
+            "balance_minor": 45000,
+            "overdue_minor": 45000,
+            "overdue_days": 12,
+            "last_reminder_level": null,
+            "last_reminder_at": null
+          }
+        ]
+      }
+    },
+    {
+      "step": "login u_bd_admin",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "distribution admin on club dashboard",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "wrong_vertical",
+          "message": "Cet espace est réservé aux clubs."
+        }
+      }
+    },
+    {
+      "step": "distribution admin on club members",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/members"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "wrong_vertical",
+          "message": "Cet espace est réservé aux clubs."
+        }
+      }
+    }
+  ]
+}

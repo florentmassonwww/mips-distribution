@@ -1,0 +1,812 @@
+{
+  "scenario": "club-accounting-export",
+  "description": "Accounting export (balanced journal lines) for the default period, a given range and as CSV.",
+  "transcript": [
+    {
+      "step": "login u_cs_compta",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_compta"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "GET /api/club/accounting",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/accounting"
+      },
+      "status": 200,
+      "response": {
+        "from": "2026-10-01",
+        "to": "2026-10-17",
+        "lines": [
+          {
+            "date": "2026-10-02",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00010",
+            "piece": "MC-000054",
+            "label": "Green fee invités - Olivier Desvaux (démo)",
+            "debit": 130000,
+            "credit": 0
+          },
+          {
+            "date": "2026-10-02",
+            "journal": "VT",
+            "account": "706230",
+            "aux": "",
+            "piece": "MC-000054",
+            "label": "Green fee invités - Olivier Desvaux (démo)",
+            "debit": 0,
+            "credit": 130000
+          },
+          {
+            "date": "2026-10-05",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00016",
+            "piece": "MC-000055",
+            "label": "Boutique - balles et accessoires - Rohan Bhugaloo (démo)",
+            "debit": 89000,
+            "credit": 0
+          },
+          {
+            "date": "2026-10-05",
+            "journal": "VT",
+            "account": "707300",
+            "aux": "",
+            "piece": "MC-000055",
+            "label": "Boutique - balles et accessoires - Rohan Bhugaloo (démo)",
+            "debit": 0,
+            "credit": 89000
+          },
+          {
+            "date": "2026-10-05",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00009",
+            "piece": "MC-000032",
+            "label": "Cotisation 2026-10 - Mensuel - Zara Peerbux (démo)",
+            "debit": 180000,
+            "credit": 0
+          },
+          {
+            "date": "2026-10-05",
+            "journal": "VT",
+            "account": "706100",
+            "aux": "",
+            "piece": "MC-000032",
+            "label": "Cotisation 2026-10 - Mensuel - Zara Peerbux (démo)",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-10-05",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00010",
+            "piece": "MC-000033",
+            "label": "Cotisation 2026-10 - Mensuel - Olivier Desvaux (démo)",
+            "debit": 180000,
+            "credit": 0
+          },
+          {
+            "date": "2026-10-05",
+            "journal": "VT",
+            "account": "706100",
+            "aux": "",
+            "piece": "MC-000033",
+            "label": "Cotisation 2026-10 - Mensuel - Olivier Desvaux (démo)",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-10-07",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#1>",
+            "label": "Encaissement en ligne - Sandrine Hoareau (démo)",
+            "debit": 145000,
+            "credit": 0
+          },
+          {
+            "date": "2026-10-07",
+            "journal": "BQ",
+            "account": "411000",
+            "aux": "M00007",
+            "piece": "<ref-LNK#1>",
+            "label": "Encaissement en ligne - Sandrine Hoareau (démo)",
+            "debit": 0,
+            "credit": 145000
+          },
+          {
+            "date": "2026-10-07",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#2>",
+            "label": "Encaissement en ligne - Priya Seewoo (démo)",
+            "debit": 270000,
+            "credit": 0
+          },
+          {
+            "date": "2026-10-07",
+            "journal": "BQ",
+            "account": "411000",
+            "aux": "M00011",
+            "piece": "<ref-LNK#2>",
+            "label": "Encaissement en ligne - Priya Seewoo (démo)",
+            "debit": 0,
+            "credit": 270000
+          },
+          {
+            "date": "2026-10-08",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00016",
+            "piece": "MC-000056",
+            "label": "Soirée du club - Rohan Bhugaloo (démo)",
+            "debit": 255000,
+            "credit": 0
+          },
+          {
+            "date": "2026-10-08",
+            "journal": "VT",
+            "account": "706300",
+            "aux": "",
+            "piece": "MC-000056",
+            "label": "Soirée du club - Rohan Bhugaloo (démo)",
+            "debit": 0,
+            "credit": 255000
+          },
+          {
+            "date": "2026-10-11",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00016",
+            "piece": "MC-000057",
+            "label": "Restaurant - dîner - Rohan Bhugaloo (démo)",
+            "debit": 230000,
+            "credit": 0
+          },
+          {
+            "date": "2026-10-11",
+            "journal": "VT",
+            "account": "707100",
+            "aux": "",
+            "piece": "MC-000057",
+            "label": "Restaurant - dîner - Rohan Bhugaloo (démo)",
+            "debit": 0,
+            "credit": 230000
+          }
+        ],
+        "totals": {
+          "debit": 1479000,
+          "credit": 1479000,
+          "balanced": true
+        }
+      }
+    },
+    {
+      "step": "September",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/accounting?from=2026-09-01&to=2026-09-30"
+      },
+      "status": 200,
+      "response": {
+        "from": "2026-09-01",
+        "to": "2026-09-30",
+        "lines": [
+          {
+            "date": "2026-09-02",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00012",
+            "piece": "MC-000044",
+            "label": "Location court de tennis - Thomas Li Kwong (démo)",
+            "debit": 45000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-02",
+            "journal": "VT",
+            "account": "706210",
+            "aux": "",
+            "piece": "MC-000044",
+            "label": "Location court de tennis - Thomas Li Kwong (démo)",
+            "debit": 0,
+            "credit": 45000
+          },
+          {
+            "date": "2026-09-05",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00004",
+            "piece": "MC-000045",
+            "label": "Location court de squash - Kevin Appadoo (démo)",
+            "debit": 45000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-05",
+            "journal": "VT",
+            "account": "706220",
+            "aux": "",
+            "piece": "MC-000045",
+            "label": "Location court de squash - Kevin Appadoo (démo)",
+            "debit": 0,
+            "credit": 45000
+          },
+          {
+            "date": "2026-09-05",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00009",
+            "piece": "MC-000030",
+            "label": "Cotisation 2026-09 - Mensuel - Zara Peerbux (démo)",
+            "debit": 180000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-05",
+            "journal": "VT",
+            "account": "706100",
+            "aux": "",
+            "piece": "MC-000030",
+            "label": "Cotisation 2026-09 - Mensuel - Zara Peerbux (démo)",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-09-05",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00010",
+            "piece": "MC-000031",
+            "label": "Cotisation 2026-09 - Mensuel - Olivier Desvaux (démo)",
+            "debit": 180000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-05",
+            "journal": "VT",
+            "account": "706100",
+            "aux": "",
+            "piece": "MC-000031",
+            "label": "Cotisation 2026-09 - Mensuel - Olivier Desvaux (démo)",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-09-07",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#3>",
+            "label": "Encaissement en ligne - Aditi Ramdin (démo)",
+            "debit": 159000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-07",
+            "journal": "BQ",
+            "account": "411000",
+            "aux": "M00001",
+            "piece": "<ref-LNK#3>",
+            "label": "Encaissement en ligne - Aditi Ramdin (démo)",
+            "debit": 0,
+            "credit": 159000
+          },
+          {
+            "date": "2026-09-07",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#4>",
+            "label": "Encaissement en ligne - Christophe Lebon (démo)",
+            "debit": 75000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-07",
+            "journal": "BQ",
+            "account": "411000",
+            "aux": "M00002",
+            "piece": "<ref-LNK#4>",
+            "label": "Encaissement en ligne - Christophe Lebon (démo)",
+            "debit": 0,
+            "credit": 75000
+          },
+          {
+            "date": "2026-09-07",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#5>",
+            "label": "Encaissement en ligne - Laura Bégué (démo)",
+            "debit": 290000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-07",
+            "journal": "BQ",
+            "account": "411000",
+            "aux": "M00005",
+            "piece": "<ref-LNK#5>",
+            "label": "Encaissement en ligne - Laura Bégué (démo)",
+            "debit": 0,
+            "credit": 290000
+          },
+          {
+            "date": "2026-09-08",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#6>",
+            "label": "Encaissement en ligne - Zara Peerbux (démo)",
+            "debit": 180000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-08",
+            "journal": "BQ",
+            "account": "411000",
+            "aux": "M00009",
+            "piece": "<ref-LNK#6>",
+            "label": "Encaissement en ligne - Zara Peerbux (démo)",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-09-08",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00009",
+            "piece": "MC-000046",
+            "label": "Green fee invités - Zara Peerbux (démo)",
+            "debit": 120000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-08",
+            "journal": "VT",
+            "account": "706230",
+            "aux": "",
+            "piece": "MC-000046",
+            "label": "Green fee invités - Zara Peerbux (démo)",
+            "debit": 0,
+            "credit": 120000
+          },
+          {
+            "date": "2026-09-11",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00001",
+            "piece": "MC-000047",
+            "label": "Boutique - balles et accessoires - Aditi Ramdin (démo)",
+            "debit": 94000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-11",
+            "journal": "VT",
+            "account": "707300",
+            "aux": "",
+            "piece": "MC-000047",
+            "label": "Boutique - balles et accessoires - Aditi Ramdin (démo)",
+            "debit": 0,
+            "credit": 94000
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "512000",
+            "aux": "",
+            "piece": "<ref-LNK#7>",
+            "label": "Règlement paiement en ligne <ref-LNK#7>",
+            "debit": 177300,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "627000",
+            "aux": "",
+            "piece": "<ref-LNK#7>",
+            "label": "Règlement paiement en ligne <ref-LNK#7>",
+            "debit": 2700,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#7>",
+            "label": "Règlement paiement en ligne <ref-LNK#7>",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "512000",
+            "aux": "",
+            "piece": "<ref-LNK#8>",
+            "label": "Règlement paiement en ligne <ref-LNK#8>",
+            "debit": 177300,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "627000",
+            "aux": "",
+            "piece": "<ref-LNK#8>",
+            "label": "Règlement paiement en ligne <ref-LNK#8>",
+            "debit": 2700,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#8>",
+            "label": "Règlement paiement en ligne <ref-LNK#8>",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "512000",
+            "aux": "",
+            "piece": "<ref-LNK#9>",
+            "label": "Règlement paiement en ligne <ref-LNK#9>",
+            "debit": 177300,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "627000",
+            "aux": "",
+            "piece": "<ref-LNK#9>",
+            "label": "Règlement paiement en ligne <ref-LNK#9>",
+            "debit": 2700,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#9>",
+            "label": "Règlement paiement en ligne <ref-LNK#9>",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "512000",
+            "aux": "",
+            "piece": "<ref-LNK#3>",
+            "label": "Règlement paiement en ligne <ref-LNK#3>",
+            "debit": 156615,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "627000",
+            "aux": "",
+            "piece": "<ref-LNK#3>",
+            "label": "Règlement paiement en ligne <ref-LNK#3>",
+            "debit": 2385,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#3>",
+            "label": "Règlement paiement en ligne <ref-LNK#3>",
+            "debit": 0,
+            "credit": 159000
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "512000",
+            "aux": "",
+            "piece": "<ref-LNK#4>",
+            "label": "Règlement paiement en ligne <ref-LNK#4>",
+            "debit": 73875,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "627000",
+            "aux": "",
+            "piece": "<ref-LNK#4>",
+            "label": "Règlement paiement en ligne <ref-LNK#4>",
+            "debit": 1125,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#4>",
+            "label": "Règlement paiement en ligne <ref-LNK#4>",
+            "debit": 0,
+            "credit": 75000
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "512000",
+            "aux": "",
+            "piece": "<ref-LNK#5>",
+            "label": "Règlement paiement en ligne <ref-LNK#5>",
+            "debit": 285650,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "627000",
+            "aux": "",
+            "piece": "<ref-LNK#5>",
+            "label": "Règlement paiement en ligne <ref-LNK#5>",
+            "debit": 4350,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#5>",
+            "label": "Règlement paiement en ligne <ref-LNK#5>",
+            "debit": 0,
+            "credit": 290000
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "512000",
+            "aux": "",
+            "piece": "<ref-LNK#6>",
+            "label": "Règlement paiement en ligne <ref-LNK#6>",
+            "debit": 177300,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "627000",
+            "aux": "",
+            "piece": "<ref-LNK#6>",
+            "label": "Règlement paiement en ligne <ref-LNK#6>",
+            "debit": 2700,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "511500",
+            "aux": "",
+            "piece": "<ref-LNK#6>",
+            "label": "Règlement paiement en ligne <ref-LNK#6>",
+            "debit": 0,
+            "credit": 180000
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "512000",
+            "aux": "",
+            "piece": "CSD-00012-61",
+            "label": "Encaissement virement - Thomas Li Kwong (démo)",
+            "debit": 3000000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-12",
+            "journal": "BQ",
+            "account": "411000",
+            "aux": "M00012",
+            "piece": "CSD-00012-61",
+            "label": "Encaissement virement - Thomas Li Kwong (démo)",
+            "debit": 0,
+            "credit": 3000000
+          },
+          {
+            "date": "2026-09-14",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00006",
+            "piece": "MC-000048",
+            "label": "Soirée du club - Nitin Gopaul (démo)",
+            "debit": 260000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-14",
+            "journal": "VT",
+            "account": "706300",
+            "aux": "",
+            "piece": "MC-000048",
+            "label": "Soirée du club - Nitin Gopaul (démo)",
+            "debit": 0,
+            "credit": 260000
+          },
+          {
+            "date": "2026-09-17",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00011",
+            "piece": "MC-000049",
+            "label": "Restaurant - dîner - Priya Seewoo (démo)",
+            "debit": 220000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-17",
+            "journal": "VT",
+            "account": "707100",
+            "aux": "",
+            "piece": "MC-000049",
+            "label": "Restaurant - dîner - Priya Seewoo (démo)",
+            "debit": 0,
+            "credit": 220000
+          },
+          {
+            "date": "2026-09-20",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00003",
+            "piece": "MC-000050",
+            "label": "Bar - consommations - Farah Joomun (démo)",
+            "debit": 70000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-20",
+            "journal": "VT",
+            "account": "707200",
+            "aux": "",
+            "piece": "MC-000050",
+            "label": "Bar - consommations - Farah Joomun (démo)",
+            "debit": 0,
+            "credit": 70000
+          },
+          {
+            "date": "2026-09-23",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00008",
+            "piece": "MC-000051",
+            "label": "Restaurant - déjeuner - Yannick Ramsamy (démo)",
+            "debit": 155000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-23",
+            "journal": "VT",
+            "account": "707100",
+            "aux": "",
+            "piece": "MC-000051",
+            "label": "Restaurant - déjeuner - Yannick Ramsamy (démo)",
+            "debit": 0,
+            "credit": 155000
+          },
+          {
+            "date": "2026-09-26",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00013",
+            "piece": "MC-000052",
+            "label": "Location court de tennis - Amina Dulloo (démo)",
+            "debit": 40000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-26",
+            "journal": "VT",
+            "account": "706210",
+            "aux": "",
+            "piece": "MC-000052",
+            "label": "Location court de tennis - Amina Dulloo (démo)",
+            "debit": 0,
+            "credit": 40000
+          },
+          {
+            "date": "2026-09-29",
+            "journal": "VT",
+            "account": "411000",
+            "aux": "M00005",
+            "piece": "MC-000053",
+            "label": "Location court de squash - Laura Bégué (démo)",
+            "debit": 40000,
+            "credit": 0
+          },
+          {
+            "date": "2026-09-29",
+            "journal": "VT",
+            "account": "706220",
+            "aux": "",
+            "piece": "MC-000053",
+            "label": "Location court de squash - Laura Bégué (démo)",
+            "debit": 0,
+            "credit": 40000
+          }
+        ],
+        "totals": {
+          "debit": 6397000,
+          "credit": 6397000,
+          "balanced": true
+        }
+      }
+    },
+    {
+      "step": "year to date CSV",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/accounting?from=2026-01-01&to=2026-10-17&format=csv"
+      },
+      "status": 200,
+      "type": "text/csv",
+      "response": "Date,Journal,Compte,Compte tiers,Pièce,Libellé,Débit,Crédit\r\n2026-01-10,VT,411000,M00001,MC-000014,Cotisation 2026 - Individuel - Aditi Ramdin (démo),18000.00,0.00\r\n2026-01-10,VT,706100,,MC-000014,Cotisation 2026 - Individuel - Aditi Ramdin (démo),0.00,18000.00\r\n2026-01-10,VT,411000,M00002,MC-000015,Cotisation 2026 - Famille - Christophe Lebon (démo),30000.00,0.00\r\n2026-01-10,VT,706100,,MC-000015,Cotisation 2026 - Famille - Christophe Lebon (démo),0.00,30000.00\r\n2026-01-10,VT,411000,M00003,MC-000016,Cotisation 2026 - Individuel - Farah Joomun (démo),18000.00,0.00\r\n2026-01-10,VT,706100,,MC-000016,Cotisation 2026 - Individuel - Farah Joomun (démo),0.00,18000.00\r\n2026-01-10,VT,411000,M00004,MC-000017,Cotisation 2026 - Junior (moins de 18 ans) - Kevin Appadoo (démo),6000.00,0.00\r\n2026-01-10,VT,706100,,MC-000017,Cotisation 2026 - Junior (moins de 18 ans) - Kevin Appadoo (démo),0.00,6000.00\r\n2026-01-10,VT,411000,M00005,MC-000018,Cotisation 2026 - Senior (65 ans et plus) - Laura Bégué (démo),9000.00,0.00\r\n2026-01-10,VT,706100,,MC-000018,Cotisation 2026 - Senior (65 ans et plus) - Laura Bégué (démo),0.00,9000.00\r\n2026-01-10,VT,411000,M00006,MC-000019,Cotisation 2026 - Individuel - Nitin Gopaul (démo),18000.00,0.00\r\n2026-01-10,VT,706100,,MC-000019,Cotisation 2026 - Individuel - Nitin Gopaul (démo),0.00,18000.00\r\n2026-01-10,VT,411000,M00007,MC-000020,Cotisation 2026 - Famille - Sandrine Hoareau (démo),30000.00,0.00\r\n2026-01-10,VT,706100,,MC-000020,Cotisation 2026 - Famille - Sandrine Hoareau (démo),0.00,30000.00\r\n2026-01-10,VT,411000,M00008,MC-000021,Cotisation 2026 - Individuel - Yannick Ramsamy (démo),18000.00,0.00\r\n2026-01-10,VT,706100,,MC-000021,Cotisation 2026 - Individuel - Yannick Ramsamy (démo),0.00,18000.00\r\n2026-01-10,VT,411000,M00011,MC-000022,Cotisation 2026 - Individuel - Priya Seewoo (démo),18000.00,0.00\r\n2026-01-10,VT,706100,,MC-000022,Cotisation 2026 - Individuel - Priya Seewoo (démo),0.00,18000.00\r\n2026-01-10,VT,411000,M00012,MC-000023,Cotisation 2026 - Famille - Thomas Li Kwong (démo),30000.00,0.00\r\n2026-01-10,VT,706100,,MC-000023,Cotisation 2026 - Famille - Thomas Li Kwong (démo),0.00,30000.00\r\n2026-01-10,VT,411000,M00013,MC-000024,Cotisation 2026 - Junior (moins de 18 ans) - Amina Dulloo (démo),6000.00,0.00\r\n2026-01-10,VT,706100,,MC-000024,Cotisation 2026 - Junior (moins de 18 ans) - Amina Dulloo (démo),0.00,6000.00\r\n2026-01-10,VT,411000,M00015,MC-000025,Cotisation 2026 - Individuel - Hélène Tsang (démo),18000.00,0.00\r\n2026-01-10,VT,706100,,MC-000025,Cotisation 2026 - Individuel - Hélène Tsang (démo),0.00,18000.00\r\n2026-01-20,CA,530000,,CSD-00004-85,Encaissement espèces - Kevin Appadoo (démo),6000.00,0.00\r\n2026-01-20,CA,411000,M00004,CSD-00004-85,Encaissement espèces - Kevin Appadoo (démo),0.00,6000.00\r\n2026-02-04,BQ,512000,,CSD-00001-94,Encaissement virement - Aditi Ramdin (démo),18000.00,0.00\r\n2026-02-04,BQ,411000,M00001,CSD-00001-94,Encaissement virement - Aditi Ramdin (démo),0.00,18000.00\r\n2026-02-04,BQ,512000,,CSD-00002-91,Encaissement virement - Christophe Lebon (démo),30000.00,0.00\r\n2026-02-04,BQ,411000,M00002,CSD-00002-91,Encaissement virement - Christophe Lebon (démo),0.00,30000.00\r\n2026-02-04,BQ,512000,,CSD-00005-82,Encaissement virement - Laura Bégué (démo),9000.00,0.00\r\n2026-02-04,BQ,411000,M00005,CSD-00005-82,Encaissement virement - Laura Bégué (démo),0.00,9000.00\r\n2026-02-04,BQ,512000,,CSD-00007-76,Encaissement virement - Sandrine Hoareau (démo),30000.00,0.00\r\n2026-02-04,BQ,411000,M00007,CSD-00007-76,Encaissement virement - Sandrine Hoareau (démo),0.00,30000.00\r\n2026-02-04,BQ,512000,,CSD-00011-64,Encaissement virement - Priya Seewoo (démo),18000.00,0.00\r\n2026-02-04,BQ,411000,M00011,CSD-00011-64,Encaissement virement - Priya Seewoo (démo),0.00,18000.00\r\n2026-02-04,BQ,512000,,CSD-00006-79,Encaissement virement - Nitin Gopaul (démo),9000.00,0.00\r\n2026-02-04,BQ,411000,M00006,CSD-00006-79,Encaissement virement - Nitin Gopaul (démo),0.00,9000.00\r\n2026-02-19,BQ,511500,,<ref-LNK#10>,Encaissement en ligne - Farah Joomun (démo),18000.00,0.00\r\n2026-02-19,BQ,411000,M00003,<ref-LNK#10>,Encaissement en ligne - Farah Joomun (démo),0.00,18000.00\r\n2026-02-24,BQ,512000,,<ref-LNK#10>,Règlement paiement en ligne <ref-LNK#10>,17730.00,0.00\r\n2026-02-24,BQ,627000,,<ref-LNK#10>,Règlement paiement en ligne <ref-LNK#10>,270.00,0.00\r\n2026-02-24,BQ,511500,,<ref-LNK#10>,Règlement paiement en ligne <ref-LNK#10>,0.00,18000.00\r\n2026-07-05,VT,411000,M00009,MC-000026,Cotisation 2026-07 - Mensuel - Zara Peerbux (démo),1800.00,0.00\r\n2026-07-05,VT,706100,,MC-000026,Cotisation 2026-07 - Mensuel - Zara Peerbux (démo),0.00,1800.00\r\n2026-07-05,VT,411000,M00010,MC-000027,Cotisation 2026-07 - Mensuel - Olivier Desvaux (démo),1800.00,0.00\r\n2026-07-05,VT,706100,,MC-000027,Cotisation 2026-07 - Mensuel - Olivier Desvaux (démo),0.00,1800.00\r\n2026-07-08,BQ,511500,,<ref-LNK#7>,Encaissement en ligne - Zara Peerbux (démo),1800.00,0.00\r\n2026-07-08,BQ,411000,M00009,<ref-LNK#7>,Encaissement en ligne - Zara Peerbux (démo),0.00,1800.00\r\n2026-07-09,BQ,511500,,<ref-LNK#8>,Encaissement en ligne - Olivier Desvaux (démo),1800.00,0.00\r\n2026-07-09,BQ,411000,M00010,<ref-LNK#8>,Encaissement en ligne - Olivier Desvaux (démo),0.00,1800.00\r\n2026-08-03,VT,411000,M00001,MC-000034,Bar - consommations - Aditi Ramdin (démo),650.00,0.00\r\n2026-08-03,VT,707200,,MC-000034,Bar - consommations - Aditi Ramdin (démo),0.00,650.00\r\n2026-08-05,VT,411000,M00009,MC-000028,Cotisation 2026-08 - Mensuel - Zara Peerbux (démo),1800.00,0.00\r\n2026-08-05,VT,706100,,MC-000028,Cotisation 2026-08 - Mensuel - Zara Peerbux (démo),0.00,1800.00\r\n2026-08-05,VT,411000,M00010,MC-000029,Cotisation 2026-08 - Mensuel - Olivier Desvaux (démo),1800.00,0.00\r\n2026-08-05,VT,706100,,MC-000029,Cotisation 2026-08 - Mensuel - Olivier Desvaux (démo),0.00,1800.00\r\n2026-08-06,VT,411000,M00006,MC-000035,Restaurant - déjeuner - Nitin Gopaul (démo),1500.00,0.00\r\n2026-08-06,VT,707100,,MC-000035,Restaurant - déjeuner - Nitin Gopaul (démo),0.00,1500.00\r\n2026-08-08,BQ,511500,,<ref-LNK#9>,Encaissement en ligne - Zara Peerbux (démo),1800.00,0.00\r\n2026-08-08,BQ,411000,M00009,<ref-LNK#9>,Encaissement en ligne - Zara Peerbux (démo),0.00,1800.00\r\n2026-08-09,VT,411000,M00011,MC-000036,Location court de tennis - Priya Seewoo (démo),500.00,0.00\r\n2026-08-09,VT,706210,,MC-000036,Location court de tennis - Priya Seewoo (démo),0.00,500.00\r\n2026-08-12,VT,411000,M00003,MC-000037,Location court de squash - Farah Joomun (démo),350.00,0.00\r\n2026-08-12,VT,706220,,MC-000037,Location court de squash - Farah Joomun (démo),0.00,350.00\r\n2026-08-15,VT,411000,M00008,MC-000038,Green fee invités - Yannick Ramsamy (démo),1250.00,0.00\r\n2026-08-15,VT,706230,,MC-000038,Green fee invités - Yannick Ramsamy (démo),0.00,1250.00\r\n2026-08-18,VT,411000,M00013,MC-000039,Boutique - balles et accessoires - Amina Dulloo (démo),990.00,0.00\r\n2026-08-18,VT,707300,,MC-000039,Boutique - balles et accessoires - Amina Dulloo (démo),0.00,990.00\r\n2026-08-21,VT,411000,M00005,MC-000040,Soirée du club - Laura Bégué (démo),2500.00,0.00\r\n2026-08-21,VT,706300,,MC-000040,Soirée du club - Laura Bégué (démo),0.00,2500.00\r\n2026-08-24,VT,411000,M00010,MC-000041,Restaurant - dîner - Olivier Desvaux (démo),2250.00,0.00\r\n2026-08-24,VT,707100,,MC-000041,Restaurant - dîner - Olivier Desvaux (démo),0.00,2250.00\r\n2026-08-27,VT,411000,M00002,MC-000042,Bar - consommations - Christophe Lebon (démo),750.00,0.00\r\n2026-08-27,VT,707200,,MC-000042,Bar - consommations - Christophe Lebon (démo),0.00,750.00\r\n2026-08-30,VT,411000,M00007,MC-000043,Restaurant - déjeuner - Sandrine Hoareau (démo),1450.00,0.00\r\n2026-08-30,VT,707100,,MC-000043,Restaurant - déjeuner - Sandrine Hoareau (démo),0.00,1450.00\r\n2026-09-02,VT,411000,M00012,MC-000044,Location court de tennis - Thomas Li Kwong (démo),450.00,0.00\r\n2026-09-02,VT,706210,,MC-000044,Location court de tennis - Thomas Li Kwong (démo),0.00,450.00\r\n2026-09-05,VT,411000,M00004,MC-000045,Location court de squash - Kevin Appadoo (démo),450.00,0.00\r\n2026-09-05,VT,706220,,MC-000045,Location court de squash - Kevin Appadoo (démo),0.00,450.00\r\n2026-09-05,VT,411000,M00009,MC-000030,Cotisation 2026-09 - Mensuel - Zara Peerbux (démo),1800.00,0.00\r\n2026-09-05,VT,706100,,MC-000030,Cotisation 2026-09 - Mensuel - Zara Peerbux (démo),0.00,1800.00\r\n2026-09-05,VT,411000,M00010,MC-000031,Cotisation 2026-09 - Mensuel - Olivier Desvaux (démo),1800.00,0.00\r\n2026-09-05,VT,706100,,MC-000031,Cotisation 2026-09 - Mensuel - Olivier Desvaux (démo),0.00,1800.00\r\n2026-09-07,BQ,511500,,<ref-LNK#3>,Encaissement en ligne - Aditi Ramdin (démo),1590.00,0.00\r\n2026-09-07,BQ,411000,M00001,<ref-LNK#3>,Encaissement en ligne - Aditi Ramdin (démo),0.00,1590.00\r\n2026-09-07,BQ,511500,,<ref-LNK#4>,Encaissement en ligne - Christophe Lebon (démo),750.00,0.00\r\n2026-09-07,BQ,411000,M00002,<ref-LNK#4>,Encaissement en ligne - Christophe Lebon (démo),0.00,750.00\r\n2026-09-07,BQ,511500,,<ref-LNK#5>,Encaissement en ligne - Laura Bégué (démo),2900.00,0.00\r\n2026-09-07,BQ,411000,M00005,<ref-LNK#5>,Encaissement en ligne - Laura Bégué (démo),0.00,2900.00\r\n2026-09-08,BQ,511500,,<ref-LNK#6>,Encaissement en ligne - Zara Peerbux (démo),1800.00,0.00\r\n2026-09-08,BQ,411000,M00009,<ref-LNK#6>,Encaissement en ligne - Zara Peerbux (démo),0.00,1800.00\r\n2026-09-08,VT,411000,M00009,MC-000046,Green fee invités - Zara Peerbux (démo),1200.00,0.00\r\n2026-09-08,VT,706230,,MC-000046,Green fee invités - Zara Peerbux (démo),0.00,1200.00\r\n2026-09-11,VT,411000,M00001,MC-000047,Boutique - balles et accessoires - Aditi Ramdin (démo),940.00,0.00\r\n2026-09-11,VT,707300,,MC-000047,Boutique - balles et accessoires - Aditi Ramdin (démo),0.00,940.00\r\n2026-09-12,BQ,512000,,<ref-LNK#7>,Règlement paiement en ligne <ref-LNK#7>,1773.00,0.00\r\n2026-09-12,BQ,627000,,<ref-LNK#7>,Règlement paiement en ligne <ref-LNK#7>,27.00,0.00\r\n2026-09-12,BQ,511500,,<ref-LNK#7>,Règlement paiement en ligne <ref-LNK#7>,0.00,1800.00\r\n2026-09-12,BQ,512000,,<ref-LNK#8>,Règlement paiement en ligne <ref-LNK#8>,1773.00,0.00\r\n2026-09-12,BQ,627000,,<ref-LNK#8>,Règlement paiement en ligne <ref-LNK#8>,27.00,0.00\r\n2026-09-12,BQ,511500,,<ref-LNK#8>,Règlement paiement en ligne <ref-LNK#8>,0.00,1800.00\r\n2026-09-12,BQ,512000,,<ref-LNK#9>,Règlement paiement en ligne <ref-LNK#9>,1773.00,0.00\r\n2026-09-12,BQ,627000,,<ref-LNK#9>,Règlement paiement en ligne <ref-LNK#9>,27.00,0.00\r\n2026-09-12,BQ,511500,,<ref-LNK#9>,Règlement paiement en ligne <ref-LNK#9>,0.00,1800.00\r\n2026-09-12,BQ,512000,,<ref-LNK#3>,Règlement paiement en ligne <ref-LNK#3>,1566.15,0.00\r\n2026-09-12,BQ,627000,,<ref-LNK#3>,Règlement paiement en ligne <ref-LNK#3>,23.85,0.00\r\n2026-09-12,BQ,511500,,<ref-LNK#3>,Règlement paiement en ligne <ref-LNK#3>,0.00,1590.00\r\n2026-09-12,BQ,512000,,<ref-LNK#4>,Règlement paiement en ligne <ref-LNK#4>,738.75,0.00\r\n2026-09-12,BQ,627000,,<ref-LNK#4>,Règlement paiement en ligne <ref-LNK#4>,11.25,0.00\r\n2026-09-12,BQ,511500,,<ref-LNK#4>,Règlement paiement en ligne <ref-LNK#4>,0.00,750.00\r\n2026-09-12,BQ,512000,,<ref-LNK#5>,Règlement paiement en ligne <ref-LNK#5>,2856.50,0.00\r\n2026-09-12,BQ,627000,,<ref-LNK#5>,Règlement paiement en ligne <ref-LNK#5>,43.50,0.00\r\n2026-09-12,BQ,511500,,<ref-LNK#5>,Règlement paiement en ligne <ref-LNK#5>,0.00,2900.00\r\n2026-09-12,BQ,512000,,<ref-LNK#6>,Règlement paiement en ligne <ref-LNK#6>,1773.00,0.00\r\n2026-09-12,BQ,627000,,<ref-LNK#6>,Règlement paiement en ligne <ref-LNK#6>,27.00,0.00\r\n2026-09-12,BQ,511500,,<ref-LNK#6>,Règlement paiement en ligne <ref-LNK#6>,0.00,1800.00\r\n2026-09-12,BQ,512000,,CSD-00012-61,Encaissement virement - Thomas Li Kwong (démo),30000.00,0.00\r\n2026-09-12,BQ,411000,M00012,CSD-00012-61,Encaissement virement - Thomas Li Kwong (démo),0.00,30000.00\r\n2026-09-14,VT,411000,M00006,MC-000048,Soirée du club - Nitin Gopaul (démo),2600.00,0.00\r\n2026-09-14,VT,706300,,MC-000048,Soirée du club - Nitin Gopaul (démo),0.00,2600.00\r\n2026-09-17,VT,411000,M00011,MC-000049,Restaurant - dîner - Priya Seewoo (démo),2200.00,0.00\r\n2026-09-17,VT,707100,,MC-000049,Restaurant - dîner - Priya Seewoo (démo),0.00,2200.00\r\n2026-09-20,VT,411000,M00003,MC-000050,Bar - consommations - Farah Joomun (démo),700.00,0.00\r\n2026-09-20,VT,707200,,MC-000050,Bar - consommations - Farah Joomun (démo),0.00,700.00\r\n2026-09-23,VT,411000,M00008,MC-000051,Restaurant - déjeuner - Yannick Ramsamy (démo),1550.00,0.00\r\n2026-09-23,VT,707100,,MC-000051,Restaurant - déjeuner - Yannick Ramsamy (démo),0.00,1550.00\r\n2026-09-26,VT,411000,M00013,MC-000052,Location court de tennis - Amina Dulloo (démo),400.00,0.00\r\n2026-09-26,VT,706210,,MC-000052,Location court de tennis - Amina Dulloo (démo),0.00,400.00\r\n2026-09-29,VT,411000,M00005,MC-000053,Location court de squash - Laura Bégué (démo),400.00,0.00\r\n2026-09-29,VT,706220,,MC-000053,Location court de squash - Laura Bégué (démo),0.00,400.00\r\n2026-10-02,VT,411000,M00010,MC-000054,Green fee invités - Olivier Desvaux (démo),1300.00,0.00\r\n2026-10-02,VT,706230,,MC-000054,Green fee invités - Olivier Desvaux (démo),0.00,1300.00\r\n2026-10-05,VT,411000,M00016,MC-000055,Boutique - balles et accessoires - Rohan Bhugaloo (démo),890.00,0.00\r\n2026-10-05,VT,707300,,MC-000055,Boutique - balles et accessoires - Rohan Bhugaloo (démo),0.00,890.00\r\n2026-10-05,VT,411000,M00009,MC-000032,Cotisation 2026-10 - Mensuel - Zara Peerbux (démo),1800.00,0.00\r\n2026-10-05,VT,706100,,MC-000032,Cotisation 2026-10 - Mensuel - Zara Peerbux (démo),0.00,1800.00\r\n2026-10-05,VT,411000,M00010,MC-000033,Cotisation 2026-10 - Mensuel - Olivier Desvaux (démo),1800.00,0.00\r\n2026-10-05,VT,706100,,MC-000033,Cotisation 2026-10 - Mensuel - Olivier Desvaux (démo),0.00,1800.00\r\n2026-10-07,BQ,511500,,<ref-LNK#1>,Encaissement en ligne - Sandrine Hoareau (démo),1450.00,0.00\r\n2026-10-07,BQ,411000,M00007,<ref-LNK#1>,Encaissement en ligne - Sandrine Hoareau (démo),0.00,1450.00\r\n2026-10-07,BQ,511500,,<ref-LNK#2>,Encaissement en ligne - Priya Seewoo (démo),2700.00,0.00\r\n2026-10-07,BQ,411000,M00011,<ref-LNK#2>,Encaissement en ligne - Priya Seewoo (démo),0.00,2700.00\r\n2026-10-08,VT,411000,M00016,MC-000056,Soirée du club - Rohan Bhugaloo (démo),2550.00,0.00\r\n2026-10-08,VT,706300,,MC-000056,Soirée du club - Rohan Bhugaloo (démo),0.00,2550.00\r\n2026-10-11,VT,411000,M00016,MC-000057,Restaurant - dîner - Rohan Bhugaloo (démo),2300.00,0.00\r\n2026-10-11,VT,707100,,MC-000057,Restaurant - dîner - Rohan Bhugaloo (démo),0.00,2300.00\r\n"
+    },
+    {
+      "step": "login u_cs_secretariat",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_secretariat"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "secretariat cannot export",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/accounting"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "forbidden",
+          "message": "Accès non autorisé."
+        }
+      }
+    }
+  ]
+}

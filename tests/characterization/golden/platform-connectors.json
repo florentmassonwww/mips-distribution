@@ -1,0 +1,264 @@
+{
+  "scenario": "platform-connectors",
+  "description": "Connector catalogue (all simulated) as seen by the platform and a company admin.",
+  "transcript": [
+    {
+      "step": "login u_platform",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_platform"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "GET /api/connectors",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": {
+        "payments": [
+          {
+            "method": "paystation",
+            "label": "PayStation",
+            "demo": true,
+            "capabilities": {
+              "onSite": true,
+              "remote": false,
+              "refund": true,
+              "cancel": true,
+              "statusQuery": true
+            },
+            "toVerify": [
+              "Mode d'intégration depuis une application mobile tierce (API, SDK ou appel d'application) et parcours exact présenté au client.",
+              "Format, signature et politique de renvoi des notifications de paiement ; existence d'une interrogation de statut serveur à serveur.",
+              "Prise en charge d'une clé d'idempotence à l'initiation, de l'annulation d'une demande en attente et du remboursement partiel.",
+              "Référence reprise sur le relevé bancaire, délai et compte de règlement (compte MCB du distributeur : à confirmer par circuit)."
+            ]
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)",
+            "demo": true,
+            "capabilities": {
+              "onSite": true,
+              "remote": false,
+              "refund": true,
+              "cancel": true,
+              "statusQuery": true
+            },
+            "toVerify": [
+              "Modèles de TPE compatibles et mode de liaison avec le téléphone de l'agent (Bluetooth, réseau, cloud) ; certification requise le cas échéant.",
+              "Transmission du montant et de la référence de facture au terminal, et retour du résultat sans ressaisie.",
+              "Périmètre PCI DSS : l'application ne doit jamais voir, saisir ni stocker de numéro de carte ; seule la référence d'autorisation est conservée.",
+              "Annulation avant télécollecte, remboursement, et référence reprise sur le relevé d'acquisition."
+            ]
+          },
+          {
+            "method": "juice",
+            "label": "Juice",
+            "demo": true,
+            "capabilities": {
+              "onSite": true,
+              "remote": true,
+              "refund": true,
+              "cancel": false,
+              "statusQuery": true
+            },
+            "toVerify": [
+              "Disponibilité d'une interface marchand permettant d'initier une demande de paiement et d'en recevoir la confirmation (API, QR dynamique ou autre).",
+              "Notification serveur signée ou interrogation de statut : sans l'une des deux, le paiement reste « à vérifier » jusqu'au relevé.",
+              "Possibilité d'annuler une demande en attente (supposée indisponible dans l'adaptateur de démonstration).",
+              "Référence de transaction visible côté client et sur le relevé, plafonds et délai de règlement."
+            ]
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien",
+            "demo": true,
+            "capabilities": {
+              "onSite": true,
+              "remote": true,
+              "refund": true,
+              "cancel": true,
+              "statusQuery": true
+            },
+            "toVerify": [
+              "Prestataire de la page de paiement hébergée et moyens acceptés sur cette page.",
+              "Durée de validité du lien, usage unique, et annulation d'un lien non payé.",
+              "Notification signée à la confirmation et référence reprise sur le relevé bancaire."
+            ]
+          }
+        ],
+        "bank": {
+          "label": "Relevé de démonstration (CSV)",
+          "demo": true,
+          "toVerify": [
+            "Format réel des relevés (CSV, MT940, camt.053) et canal de mise à disposition par la banque.",
+            "Présence de la référence du prestataire sur chaque ligne, ou règlement en lot : un lot impose un rapport de règlement détaillé du prestataire.",
+            "Frais prélevés à la source ou facturés à part ; date de valeur et fréquence des règlements."
+          ]
+        },
+        "erp": {
+          "label": "ERP de démonstration",
+          "demo": true,
+          "toVerify": [
+            "ERP cible, version, et interface d'écriture disponible (API, fichier d'échange, middleware). Pour un club équipé d'un logiciel comptable : édition, outil d'import et droits d'accès.",
+            "Plan comptable, journaux et comptes de tiers à utiliser ; traitement de la TVA.",
+            "Clé d'idempotence acceptée par l'ERP pour qu'une reprise ne crée pas de doublon.",
+            "Sens de la référence maître (clients, articles, prix) : l'ERP ou cette application."
+          ]
+        },
+        "access": {
+          "label": "Barrière de démonstration",
+          "demo": true,
+          "toVerify": [
+            "Interface exposée par le logiciel de contrôle d'accès du fournisseur de la barrière (API, webhook, liste blanche synchronisée) : l'intégration en dépend.",
+            "Temps de réponse admissible au passage du badge et comportement du lecteur si le serveur du club ne répond pas (liste locale, ouverture ou refus par défaut).",
+            "Identifiants lus (carte RFID, NFC, BLE, PIN, QR) et format transmis par le lecteur ; association d'un badge à un membre.",
+            "Affichage possible à l'accueil d'un signalement « dette à régulariser » sans bloquer la barrière ; anti-retour et comptage des passages.",
+            "Option de lecture de plaques (ANPR) : à chiffrer séparément si retenue."
+          ]
+        }
+      }
+    },
+    {
+      "step": "login u_bd_finance",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_finance"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "connectors seen by finance",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": {
+        "payments": [
+          {
+            "method": "paystation",
+            "label": "PayStation",
+            "demo": true,
+            "capabilities": {
+              "onSite": true,
+              "remote": false,
+              "refund": true,
+              "cancel": true,
+              "statusQuery": true
+            },
+            "toVerify": [
+              "Mode d'intégration depuis une application mobile tierce (API, SDK ou appel d'application) et parcours exact présenté au client.",
+              "Format, signature et politique de renvoi des notifications de paiement ; existence d'une interrogation de statut serveur à serveur.",
+              "Prise en charge d'une clé d'idempotence à l'initiation, de l'annulation d'une demande en attente et du remboursement partiel.",
+              "Référence reprise sur le relevé bancaire, délai et compte de règlement (compte MCB du distributeur : à confirmer par circuit)."
+            ]
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)",
+            "demo": true,
+            "capabilities": {
+              "onSite": true,
+              "remote": false,
+              "refund": true,
+              "cancel": true,
+              "statusQuery": true
+            },
+            "toVerify": [
+              "Modèles de TPE compatibles et mode de liaison avec le téléphone de l'agent (Bluetooth, réseau, cloud) ; certification requise le cas échéant.",
+              "Transmission du montant et de la référence de facture au terminal, et retour du résultat sans ressaisie.",
+              "Périmètre PCI DSS : l'application ne doit jamais voir, saisir ni stocker de numéro de carte ; seule la référence d'autorisation est conservée.",
+              "Annulation avant télécollecte, remboursement, et référence reprise sur le relevé d'acquisition."
+            ]
+          },
+          {
+            "method": "juice",
+            "label": "Juice",
+            "demo": true,
+            "capabilities": {
+              "onSite": true,
+              "remote": true,
+              "refund": true,
+              "cancel": false,
+              "statusQuery": true
+            },
+            "toVerify": [
+              "Disponibilité d'une interface marchand permettant d'initier une demande de paiement et d'en recevoir la confirmation (API, QR dynamique ou autre).",
+              "Notification serveur signée ou interrogation de statut : sans l'une des deux, le paiement reste « à vérifier » jusqu'au relevé.",
+              "Possibilité d'annuler une demande en attente (supposée indisponible dans l'adaptateur de démonstration).",
+              "Référence de transaction visible côté client et sur le relevé, plafonds et délai de règlement."
+            ]
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien",
+            "demo": true,
+            "capabilities": {
+              "onSite": true,
+              "remote": true,
+              "refund": true,
+              "cancel": true,
+              "statusQuery": true
+            },
+            "toVerify": [
+              "Prestataire de la page de paiement hébergée et moyens acceptés sur cette page.",
+              "Durée de validité du lien, usage unique, et annulation d'un lien non payé.",
+              "Notification signée à la confirmation et référence reprise sur le relevé bancaire."
+            ]
+          }
+        ],
+        "bank": {
+          "label": "Relevé de démonstration (CSV)",
+          "demo": true,
+          "toVerify": [
+            "Format réel des relevés (CSV, MT940, camt.053) et canal de mise à disposition par la banque.",
+            "Présence de la référence du prestataire sur chaque ligne, ou règlement en lot : un lot impose un rapport de règlement détaillé du prestataire.",
+            "Frais prélevés à la source ou facturés à part ; date de valeur et fréquence des règlements."
+          ]
+        },
+        "erp": {
+          "label": "ERP de démonstration",
+          "demo": true,
+          "toVerify": [
+            "ERP cible, version, et interface d'écriture disponible (API, fichier d'échange, middleware). Pour un club équipé d'un logiciel comptable : édition, outil d'import et droits d'accès.",
+            "Plan comptable, journaux et comptes de tiers à utiliser ; traitement de la TVA.",
+            "Clé d'idempotence acceptée par l'ERP pour qu'une reprise ne crée pas de doublon.",
+            "Sens de la référence maître (clients, articles, prix) : l'ERP ou cette application."
+          ]
+        },
+        "access": {
+          "label": "Barrière de démonstration",
+          "demo": true,
+          "toVerify": [
+            "Interface exposée par le logiciel de contrôle d'accès du fournisseur de la barrière (API, webhook, liste blanche synchronisée) : l'intégration en dépend.",
+            "Temps de réponse admissible au passage du badge et comportement du lecteur si le serveur du club ne répond pas (liste locale, ouverture ou refus par défaut).",
+            "Identifiants lus (carte RFID, NFC, BLE, PIN, QR) et format transmis par le lecteur ; association d'un badge à un membre.",
+            "Affichage possible à l'accueil d'un signalement « dette à régulariser » sans bloquer la barrière ; anti-retour et comptage des passages.",
+            "Option de lecture de plaques (ANPR) : à chiffrer séparément si retenue."
+          ]
+        }
+      }
+    }
+  ]
+}

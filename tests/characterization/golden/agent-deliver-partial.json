@@ -1,0 +1,922 @@
+{
+  "scenario": "agent-deliver-partial",
+  "description": "Partial delivery: refused without reason, accepted with a reason; invoice is on the delivered quantity only.",
+  "transcript": [
+    {
+      "step": "login u_bd_agent1",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "agent routes",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<rte#1>",
+          "company_id": "co_bd",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 07 (démo)",
+          "status": "loaded",
+          "started_at": null,
+          "closed_at": null,
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 0,
+          "invoiced_minor": 0,
+          "paid_minor": 0
+        },
+        {
+          "id": "<rte#2>",
+          "company_id": "co_bd",
+          "name": "Sud - Mahébourg",
+          "day": "2026-10-16",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 12 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-16T04:00:00.000Z",
+          "closed_at": "2026-10-16T04:00:00.000Z",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 3,
+          "orders_total": 2,
+          "orders_done": 2,
+          "invoiced_minor": 2885000,
+          "paid_minor": 2885000
+        },
+        {
+          "id": "<rte#3>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-14",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-14T04:00:00.000Z",
+          "closed_at": "2026-10-14T04:00:00.000Z",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 4009600,
+          "paid_minor": 4009600
+        },
+        {
+          "id": "<rte#4>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-12",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-12T04:00:00.000Z",
+          "closed_at": "2026-10-12T04:00:00.000Z",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 3778800,
+          "paid_minor": 3778800
+        }
+      ]
+    },
+    {
+      "step": "start route",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/routes/<rte#1>/start",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "route bundle",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/bundle"
+      },
+      "status": 200,
+      "response": {
+        "generatedAt": "2026-10-17T04:00:03.000Z",
+        "route": {
+          "id": "<rte#1>",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "vehicle": "Camion 07 (démo)",
+          "status": "in_progress"
+        },
+        "stops": [
+          {
+            "customer_id": "c_bd_tilakaz",
+            "seq": 1,
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "address": "Route Royale, Grand-Baie",
+            "zone": "Nord",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_bellevue",
+            "seq": 2,
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "zone": "Nord",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "customer_id": "c_bd_lagon",
+            "seq": 3,
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "address": "Front de mer, Trou-aux-Biches",
+            "zone": "Nord",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_flamboyant",
+            "seq": 4,
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "address": "Rue du Marché, Triolet",
+            "zone": "Nord",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          }
+        ],
+        "orders": [
+          {
+            "id": "<ord#1>",
+            "number": "CMD-000024",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_tilakaz",
+            "note": "Livrer avant 11 h",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#1>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#2>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 10,
+                "qty_delivered": 0,
+                "unit_price_minor": 39000
+              },
+              {
+                "id": "<ol#3>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_eau-150",
+                "qty_ordered": 12,
+                "qty_delivered": 0,
+                "unit_price_minor": 15000
+              }
+            ]
+          },
+          {
+            "id": "<ord#2>",
+            "number": "CMD-000025",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_bellevue",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#4>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 24,
+                "qty_delivered": 0,
+                "unit_price_minor": 37050
+              },
+              {
+                "id": "<ol#5>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_cit-33",
+                "qty_ordered": 8,
+                "qty_delivered": 0,
+                "unit_price_minor": 49400
+              },
+              {
+                "id": "<ol#6>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_jus-100",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 74100
+              }
+            ]
+          },
+          {
+            "id": "<ord#3>",
+            "number": "CMD-000026",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_lagon",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#7>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 4,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#8>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_eag-50",
+                "qty_ordered": 5,
+                "qty_delivered": 0,
+                "unit_price_minor": 26000
+              }
+            ]
+          }
+        ],
+        "invoices": [],
+        "products": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000
+          }
+        ],
+        "priceLists": {
+          "pl_bd_gc": {
+            "p_bd_bie-33": 109250,
+            "p_bd_cit-33": 49400,
+            "p_bd_col-150": 37050,
+            "p_bd_eag-50": 24700,
+            "p_bd_eau-150": 14250,
+            "p_bd_ene-25": 125400,
+            "p_bd_jus-100": 74100,
+            "p_bd_mal-33": 65550
+          }
+        },
+        "stock": {
+          "p_bd_bie-33": 20,
+          "p_bd_cit-33": 8,
+          "p_bd_col-150": 64,
+          "p_bd_eag-50": 5,
+          "p_bd_eau-150": 52,
+          "p_bd_ene-25": 4,
+          "p_bd_jus-100": 6,
+          "p_bd_mal-33": 8
+        },
+        "customers": [
+          {
+            "id": "c_bd_bambou",
+            "name": "Boutique Bambou (démo)",
+            "code": "C008",
+            "zone": "Sud",
+            "address": "Rue des Tulipes, Rose-Belle",
+            "phone": "+230 5000 1007",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_tilakaz",
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "zone": "Nord",
+            "address": "Route Royale, Grand-Baie",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_corail",
+            "name": "Hôtel Baie Corail (démo)",
+            "code": "C007",
+            "zone": "Sud",
+            "address": "Route côtière, Mahébourg",
+            "phone": "+230 5000 1006",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_flamboyant",
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "zone": "Nord",
+            "address": "Rue du Marché, Triolet",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_lagon",
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "zone": "Nord",
+            "address": "Front de mer, Trou-aux-Biches",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_soleil",
+            "name": "Snack Soleil (démo)",
+            "code": "C009",
+            "zone": "Sud",
+            "address": "Place du Marché, Mahébourg",
+            "phone": "+230 5000 1008",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_plaza",
+            "name": "Supermarché Plaza (démo)",
+            "code": "C006",
+            "zone": "Centre",
+            "address": "Route Saint-Jean, Quatre-Bornes",
+            "phone": "+230 5000 1005",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_bellevue",
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "zone": "Nord",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_central",
+            "name": "Tabagie Centrale (démo)",
+            "code": "C005",
+            "zone": "Centre",
+            "address": "Rue Châteauneuf, Curepipe",
+            "phone": "+230 5000 1004",
+            "price_list_id": null
+          }
+        ],
+        "methods": [
+          {
+            "method": "paystation",
+            "label": "PayStation"
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)"
+          },
+          {
+            "method": "juice",
+            "label": "Juice"
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien"
+          }
+        ]
+      }
+    },
+    {
+      "step": "partial without reason",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": [
+            {
+              "id": "act-part-000001",
+              "type": "deliver",
+              "payload": {
+                "orderId": "<ord#2>",
+                "lines": [
+                  {
+                    "lineId": "<ol#4>",
+                    "qtyDelivered": 12
+                  },
+                  {
+                    "lineId": "<ol#5>",
+                    "qtyDelivered": 4
+                  },
+                  {
+                    "lineId": "<ol#6>",
+                    "qtyDelivered": 3
+                  }
+                ],
+                "returns": [],
+                "reason": "",
+                "pod": {
+                  "name": "Réceptionnaire (démo)",
+                  "note": ""
+                },
+                "at": "2026-10-17T04:30:00.000Z"
+              }
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "results": [
+          {
+            "id": "act-part-000001",
+            "status": "rejected",
+            "code": "reason_required",
+            "message": "Indiquez le motif de la livraison partielle."
+          }
+        ]
+      }
+    },
+    {
+      "step": "partial with reason",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": [
+            {
+              "id": "act-part-000002",
+              "type": "deliver",
+              "payload": {
+                "orderId": "<ord#2>",
+                "lines": [
+                  {
+                    "lineId": "<ol#4>",
+                    "qtyDelivered": 12
+                  },
+                  {
+                    "lineId": "<ol#5>",
+                    "qtyDelivered": 4
+                  },
+                  {
+                    "lineId": "<ol#6>",
+                    "qtyDelivered": 3
+                  }
+                ],
+                "returns": [],
+                "reason": "Rupture chez le client (démo)",
+                "pod": {
+                  "name": "Réceptionnaire (démo)",
+                  "note": ""
+                },
+                "at": "2026-10-17T04:30:00.000Z"
+              }
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "results": [
+          {
+            "id": "act-part-000002",
+            "status": "applied",
+            "result": {
+              "orderId": "<ord#2>",
+              "orderNumber": "CMD-000025",
+              "outcome": "partial",
+              "invoiceId": "<inv#1>",
+              "invoiceNumber": "FAC-000024",
+              "amountMinor": 864500
+            }
+          }
+        ]
+      }
+    },
+    {
+      "step": "bundle after partial delivery",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/bundle"
+      },
+      "status": 200,
+      "response": {
+        "generatedAt": "2026-10-17T04:00:06.000Z",
+        "route": {
+          "id": "<rte#1>",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "vehicle": "Camion 07 (démo)",
+          "status": "in_progress"
+        },
+        "stops": [
+          {
+            "customer_id": "c_bd_tilakaz",
+            "seq": 1,
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "address": "Route Royale, Grand-Baie",
+            "zone": "Nord",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_bellevue",
+            "seq": 2,
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "zone": "Nord",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "customer_id": "c_bd_lagon",
+            "seq": 3,
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "address": "Front de mer, Trou-aux-Biches",
+            "zone": "Nord",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_flamboyant",
+            "seq": 4,
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "address": "Rue du Marché, Triolet",
+            "zone": "Nord",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          }
+        ],
+        "orders": [
+          {
+            "id": "<ord#1>",
+            "number": "CMD-000024",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_tilakaz",
+            "note": "Livrer avant 11 h",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#1>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#2>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 10,
+                "qty_delivered": 0,
+                "unit_price_minor": 39000
+              },
+              {
+                "id": "<ol#3>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_eau-150",
+                "qty_ordered": 12,
+                "qty_delivered": 0,
+                "unit_price_minor": 15000
+              }
+            ]
+          },
+          {
+            "id": "<ord#2>",
+            "number": "CMD-000025",
+            "kind": "preorder",
+            "status": "partially_delivered",
+            "customer_id": "c_bd_bellevue",
+            "note": "",
+            "delivered_at": "2026-10-17T04:00:05.000Z",
+            "lines": [
+              {
+                "id": "<ol#4>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 24,
+                "qty_delivered": 12,
+                "unit_price_minor": 37050
+              },
+              {
+                "id": "<ol#5>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_cit-33",
+                "qty_ordered": 8,
+                "qty_delivered": 4,
+                "unit_price_minor": 49400
+              },
+              {
+                "id": "<ol#6>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_jus-100",
+                "qty_ordered": 6,
+                "qty_delivered": 3,
+                "unit_price_minor": 74100
+              }
+            ]
+          },
+          {
+            "id": "<ord#3>",
+            "number": "CMD-000026",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_lagon",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#7>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 4,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#8>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_eag-50",
+                "qty_ordered": 5,
+                "qty_delivered": 0,
+                "unit_price_minor": 26000
+              }
+            ]
+          }
+        ],
+        "invoices": [
+          {
+            "id": "<inv#1>",
+            "number": "FAC-000024",
+            "order_id": "<ord#2>",
+            "customer_id": "c_bd_bellevue",
+            "amount_minor": 864500,
+            "paid_minor": 0,
+            "refunded_minor": 0,
+            "status": "unpaid",
+            "issued_at": "2026-10-17T04:00:05.000Z",
+            "payments": []
+          }
+        ],
+        "products": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000
+          }
+        ],
+        "priceLists": {
+          "pl_bd_gc": {
+            "p_bd_bie-33": 109250,
+            "p_bd_cit-33": 49400,
+            "p_bd_col-150": 37050,
+            "p_bd_eag-50": 24700,
+            "p_bd_eau-150": 14250,
+            "p_bd_ene-25": 125400,
+            "p_bd_jus-100": 74100,
+            "p_bd_mal-33": 65550
+          }
+        },
+        "stock": {
+          "p_bd_bie-33": 20,
+          "p_bd_cit-33": 4,
+          "p_bd_col-150": 52,
+          "p_bd_eag-50": 5,
+          "p_bd_eau-150": 52,
+          "p_bd_ene-25": 4,
+          "p_bd_jus-100": 3,
+          "p_bd_mal-33": 8
+        },
+        "customers": [
+          {
+            "id": "c_bd_bambou",
+            "name": "Boutique Bambou (démo)",
+            "code": "C008",
+            "zone": "Sud",
+            "address": "Rue des Tulipes, Rose-Belle",
+            "phone": "+230 5000 1007",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_tilakaz",
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "zone": "Nord",
+            "address": "Route Royale, Grand-Baie",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_corail",
+            "name": "Hôtel Baie Corail (démo)",
+            "code": "C007",
+            "zone": "Sud",
+            "address": "Route côtière, Mahébourg",
+            "phone": "+230 5000 1006",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_flamboyant",
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "zone": "Nord",
+            "address": "Rue du Marché, Triolet",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_lagon",
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "zone": "Nord",
+            "address": "Front de mer, Trou-aux-Biches",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_soleil",
+            "name": "Snack Soleil (démo)",
+            "code": "C009",
+            "zone": "Sud",
+            "address": "Place du Marché, Mahébourg",
+            "phone": "+230 5000 1008",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_plaza",
+            "name": "Supermarché Plaza (démo)",
+            "code": "C006",
+            "zone": "Centre",
+            "address": "Route Saint-Jean, Quatre-Bornes",
+            "phone": "+230 5000 1005",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_bellevue",
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "zone": "Nord",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_central",
+            "name": "Tabagie Centrale (démo)",
+            "code": "C005",
+            "zone": "Centre",
+            "address": "Rue Châteauneuf, Curepipe",
+            "phone": "+230 5000 1004",
+            "price_list_id": null
+          }
+        ],
+        "methods": [
+          {
+            "method": "paystation",
+            "label": "PayStation"
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)"
+          },
+          {
+            "method": "juice",
+            "label": "Juice"
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien"
+          }
+        ]
+      }
+    }
+  ]
+}

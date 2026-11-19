@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>v0.1.0 reference API harness</title>
+    <!--
+      Loads only the compiled v0.1.0 bundle, without the #root element, so the
+      React interface does not start: the in-browser API (Hono + SQLite) is
+      installed behind window.fetch for /api/* and the UI mount fails harmlessly.
+    -->
+    <script defer src="../../../reference/v0.1.0/app.js"></script>
+  </head>
+  <body></body>
+</html>

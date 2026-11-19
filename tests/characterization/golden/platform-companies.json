@@ -1,0 +1,412 @@
+{
+  "scenario": "platform-companies",
+  "description": "Platform admin lists, creates (distribution and club) and updates companies; duplicates are refused; audit records it.",
+  "transcript": [
+    {
+      "step": "login u_platform",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_platform"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "GET /api/platform/companies",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "co_bd",
+          "name": "Boissons Démo Ltée",
+          "slug": "bd",
+          "vertical": "distribution",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "users": 5,
+          "agents": 2
+        },
+        {
+          "id": "co_go",
+          "name": "Grossiste Démo Océan",
+          "slug": "go",
+          "vertical": "distribution",
+          "status": "active",
+          "plan": "standard",
+          "subscription_status": "actif",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "users": 4,
+          "agents": 1
+        },
+        {
+          "id": "co_cs",
+          "name": "Club Sportif Démo",
+          "slug": "cs",
+          "vertical": "club",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2024-11-16T04:00:00.000Z",
+          "users": 4,
+          "agents": 1
+        }
+      ]
+    },
+    {
+      "step": "create distribution company",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/platform/companies",
+        "body": {
+          "name": "Dépôt Démo Est",
+          "slug": "depot-demo-est",
+          "adminName": "Admin Démo Est",
+          "adminEmail": "admin@depot-est.exemple.invalid"
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<co#1>"
+      }
+    },
+    {
+      "step": "create club company",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/platform/companies",
+        "body": {
+          "name": "Tennis Club Démo",
+          "slug": "tennis-demo",
+          "adminName": "Admin Tennis Démo",
+          "adminEmail": "admin@tennis.exemple.invalid",
+          "vertical": "club"
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<co#2>"
+      }
+    },
+    {
+      "step": "duplicate slug refused",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/platform/companies",
+        "body": {
+          "name": "Doublon",
+          "slug": "depot-demo-est",
+          "adminName": "Doublon Démo",
+          "adminEmail": "autre@exemple.invalid"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "slug_taken",
+          "message": "Cet identifiant d'entreprise est déjà pris."
+        }
+      }
+    },
+    {
+      "step": "duplicate admin email refused",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/platform/companies",
+        "body": {
+          "name": "Doublon 2",
+          "slug": "doublon-2",
+          "adminName": "Doublon Démo",
+          "adminEmail": "admin@depot-est.exemple.invalid"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "email_taken",
+          "message": "Cette adresse est déjà utilisée."
+        }
+      }
+    },
+    {
+      "step": "invalid input refused",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/platform/companies",
+        "body": {
+          "name": "X",
+          "slug": "BAD SLUG",
+          "adminName": "A",
+          "adminEmail": "pas-un-email"
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : name Too small: expected string to have >=2 characters ; slug Invalid string: must match pattern /^[a-z0-9-]{2,30}$/ ; adminName Too small: expected string to have >=2 characters ; adminEmail Invalid email address"
+        }
+      }
+    },
+    {
+      "step": "companies after creation",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "co_bd",
+          "name": "Boissons Démo Ltée",
+          "slug": "bd",
+          "vertical": "distribution",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "users": 5,
+          "agents": 2
+        },
+        {
+          "id": "co_go",
+          "name": "Grossiste Démo Océan",
+          "slug": "go",
+          "vertical": "distribution",
+          "status": "active",
+          "plan": "standard",
+          "subscription_status": "actif",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "users": 4,
+          "agents": 1
+        },
+        {
+          "id": "co_cs",
+          "name": "Club Sportif Démo",
+          "slug": "cs",
+          "vertical": "club",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2024-11-16T04:00:00.000Z",
+          "users": 4,
+          "agents": 1
+        },
+        {
+          "id": "<co#1>",
+          "name": "Dépôt Démo Est",
+          "slug": "depot-demo-est",
+          "vertical": "distribution",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": null,
+          "created_at": "2026-10-17T04:00:02.000Z",
+          "users": 1,
+          "agents": 0
+        },
+        {
+          "id": "<co#2>",
+          "name": "Tennis Club Démo",
+          "slug": "tennis-demo",
+          "vertical": "club",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": null,
+          "created_at": "2026-10-17T04:00:03.000Z",
+          "users": 1,
+          "agents": 0
+        }
+      ]
+    },
+    {
+      "step": "update plan and subscription",
+      "as": "u_platform",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/platform/companies/<co#1>",
+        "body": {
+          "plan": "standard",
+          "subscriptionStatus": "actif",
+          "renewsAt": "2027-01-31"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "unknown company",
+      "as": "u_platform",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/platform/companies/co_inconnue",
+        "body": {
+          "status": "suspended"
+        }
+      },
+      "status": 404,
+      "response": {
+        "error": {
+          "code": "not_found",
+          "message": "Entreprise introuvable."
+        }
+      }
+    },
+    {
+      "step": "companies after update",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "co_bd",
+          "name": "Boissons Démo Ltée",
+          "slug": "bd",
+          "vertical": "distribution",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "users": 5,
+          "agents": 2
+        },
+        {
+          "id": "co_go",
+          "name": "Grossiste Démo Océan",
+          "slug": "go",
+          "vertical": "distribution",
+          "status": "active",
+          "plan": "standard",
+          "subscription_status": "actif",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "users": 4,
+          "agents": 1
+        },
+        {
+          "id": "co_cs",
+          "name": "Club Sportif Démo",
+          "slug": "cs",
+          "vertical": "club",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": "2026-11-16T04:00:00.000Z",
+          "created_at": "2024-11-16T04:00:00.000Z",
+          "users": 4,
+          "agents": 1
+        },
+        {
+          "id": "<co#1>",
+          "name": "Dépôt Démo Est",
+          "slug": "depot-demo-est",
+          "vertical": "distribution",
+          "status": "active",
+          "plan": "standard",
+          "subscription_status": "actif",
+          "subscription_renews_at": "2027-01-31T00:00:00.000Z",
+          "created_at": "2026-10-17T04:00:02.000Z",
+          "users": 1,
+          "agents": 0
+        },
+        {
+          "id": "<co#2>",
+          "name": "Tennis Club Démo",
+          "slug": "tennis-demo",
+          "vertical": "club",
+          "status": "active",
+          "plan": "pilote",
+          "subscription_status": "essai",
+          "subscription_renews_at": null,
+          "created_at": "2026-10-17T04:00:03.000Z",
+          "users": 1,
+          "agents": 0
+        }
+      ]
+    },
+    {
+      "step": "GET /api/platform/audit",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/audit"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<aud#1>",
+          "at": "2026-10-17T04:00:08.000Z",
+          "action": "company.updated",
+          "entity": "company",
+          "entity_id": "<co#1>",
+          "actor_role": "platform_admin",
+          "actor": "Équipe plateforme MIPS (démo)",
+          "company": "Dépôt Démo Est",
+          "details": {
+            "plan": "standard",
+            "subscriptionStatus": "actif",
+            "renewsAt": "2027-01-31"
+          }
+        },
+        {
+          "id": "<aud#2>",
+          "at": "2026-10-17T04:00:03.000Z",
+          "action": "company.created",
+          "entity": "company",
+          "entity_id": "<co#2>",
+          "actor_role": "platform_admin",
+          "actor": "Équipe plateforme MIPS (démo)",
+          "company": "Tennis Club Démo",
+          "details": {
+            "name": "Tennis Club Démo",
+            "vertical": "club"
+          }
+        },
+        {
+          "id": "<aud#3>",
+          "at": "2026-10-17T04:00:02.000Z",
+          "action": "company.created",
+          "entity": "company",
+          "entity_id": "<co#1>",
+          "actor_role": "platform_admin",
+          "actor": "Équipe plateforme MIPS (démo)",
+          "company": "Dépôt Démo Est",
+          "details": {
+            "name": "Dépôt Démo Est",
+            "vertical": "distribution"
+          }
+        }
+      ]
+    }
+  ]
+}

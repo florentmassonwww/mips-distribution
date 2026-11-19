@@ -1,0 +1,938 @@
+{
+  "scenario": "centrale-order-lifecycle",
+  "description": "Create an order at the customer's price list, read its chain, assign it to a route, prepare it, cancel another one; invalid inputs refused.",
+  "transcript": [
+    {
+      "step": "login u_bd_centrale",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_centrale"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "reference",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/reference"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "order for a price-list customer",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders",
+        "body": {
+          "customerId": "c_bd_corail",
+          "note": "Commande test",
+          "lines": [
+            {
+              "productId": "p_bd_bie-33",
+              "qty": 3
+            },
+            {
+              "productId": "p_bd_col-150",
+              "qty": 2
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<ord#1>",
+        "number": "CMD-000030"
+      }
+    },
+    {
+      "step": "order at base prices",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders",
+        "body": {
+          "customerId": "c_bd_bambou",
+          "lines": [
+            {
+              "productId": "p_bd_bie-33",
+              "qty": 1
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<ord#2>",
+        "number": "CMD-000031"
+      }
+    },
+    {
+      "step": "order without lines refused",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders",
+        "body": {
+          "customerId": "c_bd_bambou",
+          "lines": []
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : lines Too small: expected array to have >=1 items"
+        }
+      }
+    },
+    {
+      "step": "unknown customer refused",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders",
+        "body": {
+          "customerId": "c_inconnu",
+          "lines": [
+            {
+              "productId": "p_bd_bie-33",
+              "qty": 1
+            }
+          ]
+        }
+      },
+      "status": 404,
+      "response": {
+        "error": {
+          "code": "not_found",
+          "message": "Commerce introuvable."
+        }
+      }
+    },
+    {
+      "step": "unknown product refused",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders",
+        "body": {
+          "customerId": "c_bd_bambou",
+          "lines": [
+            {
+              "productId": "p_inconnu",
+              "qty": 1
+            }
+          ]
+        }
+      },
+      "status": 404,
+      "response": {
+        "error": {
+          "code": "not_found",
+          "message": "Produit introuvable."
+        }
+      }
+    },
+    {
+      "step": "order chain",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/chain/<ord#1>"
+      },
+      "status": 200,
+      "response": {
+        "order": {
+          "id": "<ord#1>",
+          "company_id": "co_bd",
+          "number": "CMD-000030",
+          "customer_id": "c_bd_corail",
+          "route_id": null,
+          "kind": "preorder",
+          "status": "confirmed",
+          "note": "Commande test",
+          "created_by": "u_bd_centrale",
+          "created_at": "2026-10-17T04:00:02.000Z",
+          "delivered_at": null,
+          "customer": "Hôtel Baie Corail (démo)",
+          "address": "Route côtière, Mahébourg",
+          "route": null,
+          "created_by_name": "Kevin L. (démo)"
+        },
+        "lines": [
+          {
+            "id": "<ol#1>",
+            "order_id": "<ord#1>",
+            "company_id": "co_bd",
+            "product_id": "p_bd_bie-33",
+            "qty_ordered": 3,
+            "qty_delivered": 0,
+            "unit_price_minor": 109250,
+            "product": "Bière blonde 33 cl",
+            "sku": "BIE-33",
+            "unit": "casier de 24"
+          },
+          {
+            "id": "<ol#2>",
+            "order_id": "<ord#1>",
+            "company_id": "co_bd",
+            "product_id": "p_bd_col-150",
+            "qty_ordered": 2,
+            "qty_delivered": 0,
+            "unit_price_minor": 37050,
+            "product": "Boisson gazeuse cola 1,5 L",
+            "sku": "COL-150",
+            "unit": "pack de 6"
+          }
+        ],
+        "delivery": null,
+        "invoice": null,
+        "payments": [],
+        "erp": []
+      }
+    },
+    {
+      "step": "routes",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/routes"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "assign to a route",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders/<ord#1>/assign",
+        "body": {
+          "routeId": "<rte#1>"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "mark prepared",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders/<ord#1>/status",
+        "body": {
+          "status": "prepared"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "cancel second order",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders/<ord#2>/status",
+        "body": {
+          "status": "cancelled"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "prepare a cancelled order",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders/<ord#2>/status",
+        "body": {
+          "status": "prepared"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "bad_status",
+          "message": "Action impossible dans l'état actuel de la commande."
+        }
+      }
+    },
+    {
+      "step": "unassign",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders/<ord#1>/assign",
+        "body": {
+          "routeId": null
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "assign to a closed route",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/centrale/orders/<ord#1>/assign",
+        "body": {
+          "routeId": "<rte#2>"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "route_locked",
+          "message": "Cette tournée est déjà chargée : affectez la commande à une tournée planifiée."
+        }
+      }
+    },
+    {
+      "step": "orders after changes",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/orders"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<ord#2>",
+          "number": "CMD-000031",
+          "kind": "preorder",
+          "status": "cancelled",
+          "created_at": "2026-10-17T04:00:03.000Z",
+          "delivered_at": null,
+          "route_id": null,
+          "customer": "Boutique Bambou (démo)",
+          "zone": "Sud",
+          "route": null,
+          "route_status": null,
+          "ordered_minor": 115000,
+          "invoice_id": null,
+          "invoice_number": null,
+          "invoice_minor": null,
+          "invoice_status": null
+        },
+        {
+          "id": "<ord#1>",
+          "number": "CMD-000030",
+          "kind": "preorder",
+          "status": "prepared",
+          "created_at": "2026-10-17T04:00:02.000Z",
+          "delivered_at": null,
+          "route_id": null,
+          "customer": "Hôtel Baie Corail (démo)",
+          "zone": "Sud",
+          "route": null,
+          "route_status": null,
+          "ordered_minor": 401850,
+          "invoice_id": null,
+          "invoice_number": null,
+          "invoice_minor": null,
+          "invoice_status": null
+        },
+        {
+          "id": "<ord#3>",
+          "number": "CMD-000029",
+          "kind": "preorder",
+          "status": "confirmed",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "delivered_at": null,
+          "route_id": null,
+          "customer": "Hôtel Baie Corail (démo)",
+          "zone": "Sud",
+          "route": null,
+          "route_status": null,
+          "ordered_minor": 1206500,
+          "invoice_id": null,
+          "invoice_number": null,
+          "invoice_minor": null,
+          "invoice_status": null
+        },
+        {
+          "id": "<ord#4>",
+          "number": "CMD-000028",
+          "kind": "preorder",
+          "status": "confirmed",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "delivered_at": null,
+          "route_id": "<rte#1>",
+          "customer": "Supermarché Plaza (démo)",
+          "zone": "Centre",
+          "route": "Centre - Curepipe",
+          "route_status": "planned",
+          "ordered_minor": 4048900,
+          "invoice_id": null,
+          "invoice_number": null,
+          "invoice_minor": null,
+          "invoice_status": null
+        },
+        {
+          "id": "<ord#5>",
+          "number": "CMD-000027",
+          "kind": "preorder",
+          "status": "confirmed",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "delivered_at": null,
+          "route_id": "<rte#1>",
+          "customer": "Tabagie Centrale (démo)",
+          "zone": "Centre",
+          "route": "Centre - Curepipe",
+          "route_status": "planned",
+          "ordered_minor": 384000,
+          "invoice_id": null,
+          "invoice_number": null,
+          "invoice_minor": null,
+          "invoice_status": null
+        },
+        {
+          "id": "<ord#6>",
+          "number": "CMD-000026",
+          "kind": "preorder",
+          "status": "loaded",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "delivered_at": null,
+          "route_id": "<rte#3>",
+          "customer": "Snack Lagon Bleu (démo)",
+          "zone": "Nord",
+          "route": "Nord - Grand-Baie",
+          "route_status": "loaded",
+          "ordered_minor": 590000,
+          "invoice_id": null,
+          "invoice_number": null,
+          "invoice_minor": null,
+          "invoice_status": null
+        },
+        {
+          "id": "<ord#7>",
+          "number": "CMD-000025",
+          "kind": "preorder",
+          "status": "loaded",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "delivered_at": null,
+          "route_id": "<rte#3>",
+          "customer": "Supérette Belle Vue (démo)",
+          "zone": "Nord",
+          "route": "Nord - Grand-Baie",
+          "route_status": "loaded",
+          "ordered_minor": 1729000,
+          "invoice_id": null,
+          "invoice_number": null,
+          "invoice_minor": null,
+          "invoice_status": null
+        },
+        {
+          "id": "<ord#8>",
+          "number": "CMD-000024",
+          "kind": "preorder",
+          "status": "loaded",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "delivered_at": null,
+          "route_id": "<rte#3>",
+          "customer": "Boutique Ti Lakaz (démo)",
+          "zone": "Nord",
+          "route": "Nord - Grand-Baie",
+          "route_status": "loaded",
+          "ordered_minor": 1260000,
+          "invoice_id": null,
+          "invoice_number": null,
+          "invoice_minor": null,
+          "invoice_status": null
+        },
+        {
+          "id": "<ord#9>",
+          "number": "CMD-000023",
+          "kind": "route_sale",
+          "status": "delivered",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "delivered_at": "2026-10-16T04:00:00.000Z",
+          "route_id": "<rte#2>",
+          "customer": "Snack Soleil (démo)",
+          "zone": "Sud",
+          "route": "Sud - Mahébourg",
+          "route_status": "closed",
+          "ordered_minor": 624000,
+          "invoice_id": "<inv#1>",
+          "invoice_number": "FAC-000023",
+          "invoice_minor": 624000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#10>",
+          "number": "CMD-000022",
+          "kind": "preorder",
+          "status": "partially_delivered",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "delivered_at": "2026-10-16T04:00:00.000Z",
+          "route_id": "<rte#2>",
+          "customer": "Boutique Bambou (démo)",
+          "zone": "Sud",
+          "route": "Sud - Mahébourg",
+          "route_status": "closed",
+          "ordered_minor": 780000,
+          "invoice_id": "<inv#2>",
+          "invoice_number": "FAC-000022",
+          "invoice_minor": 741000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#11>",
+          "number": "CMD-000021",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "delivered_at": "2026-10-16T04:00:00.000Z",
+          "route_id": "<rte#2>",
+          "customer": "Hôtel Baie Corail (démo)",
+          "zone": "Sud",
+          "route": "Sud - Mahébourg",
+          "route_status": "closed",
+          "ordered_minor": 1520000,
+          "invoice_id": "<inv#3>",
+          "invoice_number": "FAC-000021",
+          "invoice_minor": 1520000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#12>",
+          "number": "CMD-000020",
+          "kind": "route_sale",
+          "status": "delivered",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "delivered_at": "2026-10-15T04:00:00.000Z",
+          "route_id": "<rte#4>",
+          "customer": "Snack Soleil (démo)",
+          "zone": "Sud",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 285000,
+          "invoice_id": "<inv#4>",
+          "invoice_number": "FAC-000020",
+          "invoice_minor": 285000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#13>",
+          "number": "CMD-000019",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "delivered_at": "2026-10-15T04:00:00.000Z",
+          "route_id": "<rte#4>",
+          "customer": "Hôtel Baie Corail (démo)",
+          "zone": "Sud",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 1801200,
+          "invoice_id": "<inv#5>",
+          "invoice_number": "FAC-000019",
+          "invoice_minor": 1801200,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#14>",
+          "number": "CMD-000018",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "delivered_at": "2026-10-15T04:00:00.000Z",
+          "route_id": "<rte#4>",
+          "customer": "Supermarché Plaza (démo)",
+          "zone": "Centre",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 732450,
+          "invoice_id": "<inv#6>",
+          "invoice_number": "FAC-000018",
+          "invoice_minor": 732450,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#15>",
+          "number": "CMD-000017",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-15T04:00:00.000Z",
+          "delivered_at": "2026-10-15T04:00:00.000Z",
+          "route_id": "<rte#4>",
+          "customer": "Tabagie Centrale (démo)",
+          "zone": "Centre",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 884000,
+          "invoice_id": "<inv#7>",
+          "invoice_number": "FAC-000017",
+          "invoice_minor": 884000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#16>",
+          "number": "CMD-000016",
+          "kind": "route_sale",
+          "status": "delivered",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "delivered_at": "2026-10-14T04:00:00.000Z",
+          "route_id": "<rte#5>",
+          "customer": "Supérette Belle Vue (démo)",
+          "zone": "Nord",
+          "route": "Ouest - Tamarin",
+          "route_status": "closed",
+          "ordered_minor": 307800,
+          "invoice_id": "<inv#8>",
+          "invoice_number": "FAC-000016",
+          "invoice_minor": 307800,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#17>",
+          "number": "CMD-000015",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "delivered_at": "2026-10-14T04:00:00.000Z",
+          "route_id": "<rte#5>",
+          "customer": "Snack Soleil (démo)",
+          "zone": "Sud",
+          "route": "Ouest - Tamarin",
+          "route_status": "closed",
+          "ordered_minor": 1692000,
+          "invoice_id": "<inv#9>",
+          "invoice_number": "FAC-000015",
+          "invoice_minor": 1692000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#18>",
+          "number": "CMD-000014",
+          "kind": "preorder",
+          "status": "partially_delivered",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "delivered_at": "2026-10-14T04:00:00.000Z",
+          "route_id": "<rte#5>",
+          "customer": "Boutique Bambou (démo)",
+          "zone": "Sud",
+          "route": "Ouest - Tamarin",
+          "route_status": "closed",
+          "ordered_minor": 1500000,
+          "invoice_id": "<inv#10>",
+          "invoice_number": "FAC-000014",
+          "invoice_minor": 1474000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#19>",
+          "number": "CMD-000013",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "delivered_at": "2026-10-14T04:00:00.000Z",
+          "route_id": "<rte#5>",
+          "customer": "Hôtel Baie Corail (démo)",
+          "zone": "Sud",
+          "route": "Ouest - Tamarin",
+          "route_status": "closed",
+          "ordered_minor": 535800,
+          "invoice_id": "<inv#11>",
+          "invoice_number": "FAC-000013",
+          "invoice_minor": 535800,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#20>",
+          "number": "CMD-000012",
+          "kind": "route_sale",
+          "status": "delivered",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "delivered_at": "2026-10-13T04:00:00.000Z",
+          "route_id": "<rte#6>",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "zone": "Nord",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 363000,
+          "invoice_id": "<inv#12>",
+          "invoice_number": "FAC-000012",
+          "invoice_minor": 363000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#21>",
+          "number": "CMD-000011",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "delivered_at": "2026-10-13T04:00:00.000Z",
+          "route_id": "<rte#6>",
+          "customer": "Supérette Belle Vue (démo)",
+          "zone": "Nord",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 837900,
+          "invoice_id": "<inv#13>",
+          "invoice_number": "FAC-000011",
+          "invoice_minor": 837900,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#22>",
+          "number": "CMD-000010",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "delivered_at": "2026-10-13T04:00:00.000Z",
+          "route_id": "<rte#6>",
+          "customer": "Boutique Ti Lakaz (démo)",
+          "zone": "Nord",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 1347000,
+          "invoice_id": "<inv#14>",
+          "invoice_number": "FAC-000010",
+          "invoice_minor": 1347000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#23>",
+          "number": "CMD-000009",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-13T04:00:00.000Z",
+          "delivered_at": "2026-10-13T04:00:00.000Z",
+          "route_id": "<rte#6>",
+          "customer": "Snack Soleil (démo)",
+          "zone": "Sud",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 1104000,
+          "invoice_id": "<inv#15>",
+          "invoice_number": "FAC-000009",
+          "invoice_minor": 1104000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#24>",
+          "number": "CMD-000008",
+          "kind": "route_sale",
+          "status": "delivered",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "delivered_at": "2026-10-12T04:00:00.000Z",
+          "route_id": "<rte#7>",
+          "customer": "Supermarché Plaza (démo)",
+          "zone": "Centre",
+          "route": "Ouest - Tamarin",
+          "route_status": "closed",
+          "ordered_minor": 381900,
+          "invoice_id": "<inv#16>",
+          "invoice_number": "FAC-000008",
+          "invoice_minor": 381900,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#25>",
+          "number": "CMD-000007",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "delivered_at": "2026-10-12T04:00:00.000Z",
+          "route_id": "<rte#7>",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "zone": "Nord",
+          "route": "Ouest - Tamarin",
+          "route_status": "closed",
+          "ordered_minor": 1680000,
+          "invoice_id": "<inv#17>",
+          "invoice_number": "FAC-000007",
+          "invoice_minor": 1680000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#26>",
+          "number": "CMD-000006",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "delivered_at": "2026-10-12T04:00:00.000Z",
+          "route_id": "<rte#7>",
+          "customer": "Snack Lagon Bleu (démo)",
+          "zone": "Nord",
+          "route": "Ouest - Tamarin",
+          "route_status": "closed",
+          "ordered_minor": 765000,
+          "invoice_id": "<inv#18>",
+          "invoice_number": "FAC-000006",
+          "invoice_minor": 765000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#27>",
+          "number": "CMD-000005",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "delivered_at": "2026-10-12T04:00:00.000Z",
+          "route_id": "<rte#7>",
+          "customer": "Supérette Belle Vue (démo)",
+          "zone": "Nord",
+          "route": "Ouest - Tamarin",
+          "route_status": "closed",
+          "ordered_minor": 951900,
+          "invoice_id": "<inv#19>",
+          "invoice_number": "FAC-000005",
+          "invoice_minor": 951900,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#28>",
+          "number": "CMD-000004",
+          "kind": "route_sale",
+          "status": "delivered",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "delivered_at": "2026-10-11T04:00:00.000Z",
+          "route_id": "<rte#8>",
+          "customer": "Boutique Bambou (démo)",
+          "zone": "Sud",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 441000,
+          "invoice_id": "<inv#20>",
+          "invoice_number": "FAC-000004",
+          "invoice_minor": 441000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#29>",
+          "number": "CMD-000003",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "delivered_at": "2026-10-11T04:00:00.000Z",
+          "route_id": "<rte#8>",
+          "customer": "Supermarché Plaza (démo)",
+          "zone": "Centre",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 1263500,
+          "invoice_id": "<inv#21>",
+          "invoice_number": "FAC-000003",
+          "invoice_minor": 1263500,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#30>",
+          "number": "CMD-000002",
+          "kind": "preorder",
+          "status": "partially_delivered",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "delivered_at": "2026-10-11T04:00:00.000Z",
+          "route_id": "<rte#8>",
+          "customer": "Tabagie Centrale (démo)",
+          "zone": "Centre",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 1524000,
+          "invoice_id": "<inv#22>",
+          "invoice_number": "FAC-000002",
+          "invoice_minor": 1392000,
+          "invoice_status": "paid"
+        },
+        {
+          "id": "<ord#31>",
+          "number": "CMD-000001",
+          "kind": "preorder",
+          "status": "delivered",
+          "created_at": "2026-10-11T04:00:00.000Z",
+          "delivered_at": "2026-10-11T04:00:00.000Z",
+          "route_id": "<rte#8>",
+          "customer": "Restaurant Le Flamboyant (démo)",
+          "zone": "Nord",
+          "route": "Est - Flacq",
+          "route_status": "closed",
+          "ordered_minor": 648000,
+          "invoice_id": "<inv#23>",
+          "invoice_number": "FAC-000001",
+          "invoice_minor": 648000,
+          "invoice_status": "paid"
+        }
+      ]
+    },
+    {
+      "step": "chain after changes",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/chain/<ord#1>"
+      },
+      "status": 200,
+      "response": {
+        "order": {
+          "id": "<ord#1>",
+          "company_id": "co_bd",
+          "number": "CMD-000030",
+          "customer_id": "c_bd_corail",
+          "route_id": null,
+          "kind": "preorder",
+          "status": "prepared",
+          "note": "Commande test",
+          "created_by": "u_bd_centrale",
+          "created_at": "2026-10-17T04:00:02.000Z",
+          "delivered_at": null,
+          "customer": "Hôtel Baie Corail (démo)",
+          "address": "Route côtière, Mahébourg",
+          "route": null,
+          "created_by_name": "Kevin L. (démo)"
+        },
+        "lines": [
+          {
+            "id": "<ol#1>",
+            "order_id": "<ord#1>",
+            "company_id": "co_bd",
+            "product_id": "p_bd_bie-33",
+            "qty_ordered": 3,
+            "qty_delivered": 0,
+            "unit_price_minor": 109250,
+            "product": "Bière blonde 33 cl",
+            "sku": "BIE-33",
+            "unit": "casier de 24"
+          },
+          {
+            "id": "<ol#2>",
+            "order_id": "<ord#1>",
+            "company_id": "co_bd",
+            "product_id": "p_bd_col-150",
+            "qty_ordered": 2,
+            "qty_delivered": 0,
+            "unit_price_minor": 37050,
+            "product": "Boisson gazeuse cola 1,5 L",
+            "sku": "COL-150",
+            "unit": "pack de 6"
+          }
+        ],
+        "delivery": null,
+        "invoice": null,
+        "payments": [],
+        "erp": []
+      }
+    }
+  ]
+}

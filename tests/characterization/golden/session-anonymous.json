@@ -1,0 +1,206 @@
+{
+  "scenario": "session-anonymous",
+  "description": "Without a session: session endpoint, demo users, and a protected route refused with 401.",
+  "transcript": [
+    {
+      "step": "GET /api/session",
+      "as": null,
+      "request": {
+        "method": "GET",
+        "path": "/api/session"
+      },
+      "status": 200,
+      "response": {
+        "demoMode": true,
+        "version": "0.1.0",
+        "today": "2026-10-17",
+        "user": null
+      }
+    },
+    {
+      "step": "GET /api/demo/users",
+      "as": null,
+      "request": {
+        "method": "GET",
+        "path": "/api/demo/users"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "u_platform",
+          "name": "Équipe plateforme MIPS (démo)",
+          "role": "platform_admin",
+          "company_id": null,
+          "company_name": null,
+          "company_status": null,
+          "company_vertical": null
+        },
+        {
+          "id": "u_bd_admin",
+          "name": "Anjali R. (démo)",
+          "role": "company_admin",
+          "company_id": "co_bd",
+          "company_name": "Boissons Démo Ltée",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_bd_centrale",
+          "name": "Kevin L. (démo)",
+          "role": "dispatcher",
+          "company_id": "co_bd",
+          "company_name": "Boissons Démo Ltée",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_bd_finance",
+          "name": "Sophie M. (démo)",
+          "role": "finance",
+          "company_id": "co_bd",
+          "company_name": "Boissons Démo Ltée",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_bd_agent1",
+          "name": "Ravi D. (démo)",
+          "role": "agent",
+          "company_id": "co_bd",
+          "company_name": "Boissons Démo Ltée",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_bd_agent2",
+          "name": "Nadia P. (démo)",
+          "role": "agent",
+          "company_id": "co_bd",
+          "company_name": "Boissons Démo Ltée",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_go_admin",
+          "name": "Marc T. (démo)",
+          "role": "company_admin",
+          "company_id": "co_go",
+          "company_name": "Grossiste Démo Océan",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_go_centrale",
+          "name": "Priya S. (démo)",
+          "role": "dispatcher",
+          "company_id": "co_go",
+          "company_name": "Grossiste Démo Océan",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_go_finance",
+          "name": "Jean C. (démo)",
+          "role": "finance",
+          "company_id": "co_go",
+          "company_name": "Grossiste Démo Océan",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_go_agent1",
+          "name": "Yusuf A. (démo)",
+          "role": "agent",
+          "company_id": "co_go",
+          "company_name": "Grossiste Démo Océan",
+          "company_status": "active",
+          "company_vertical": "distribution"
+        },
+        {
+          "id": "u_cs_admin",
+          "name": "Véronique B. (démo)",
+          "role": "company_admin",
+          "company_id": "co_cs",
+          "company_name": "Club Sportif Démo",
+          "company_status": "active",
+          "company_vertical": "club"
+        },
+        {
+          "id": "u_cs_secretariat",
+          "name": "Arvind K. (démo)",
+          "role": "dispatcher",
+          "company_id": "co_cs",
+          "company_name": "Club Sportif Démo",
+          "company_status": "active",
+          "company_vertical": "club"
+        },
+        {
+          "id": "u_cs_compta",
+          "name": "Mélanie C. (démo)",
+          "role": "finance",
+          "company_id": "co_cs",
+          "company_name": "Club Sportif Démo",
+          "company_status": "active",
+          "company_vertical": "club"
+        },
+        {
+          "id": "u_cs_accueil",
+          "name": "Jean-Luc P. (démo)",
+          "role": "agent",
+          "company_id": "co_cs",
+          "company_name": "Club Sportif Démo",
+          "company_status": "active",
+          "company_vertical": "club"
+        }
+      ]
+    },
+    {
+      "step": "protected route without session",
+      "as": null,
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 401,
+      "response": {
+        "error": {
+          "code": "unauthenticated",
+          "message": "Connexion requise."
+        }
+      }
+    },
+    {
+      "step": "login unknown user",
+      "as": null,
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_nobody"
+        }
+      },
+      "status": 404,
+      "response": {
+        "error": {
+          "code": "not_found",
+          "message": "Utilisateur introuvable."
+        }
+      }
+    },
+    {
+      "step": "unknown API route",
+      "as": null,
+      "request": {
+        "method": "GET",
+        "path": "/api/does-not-exist"
+      },
+      "status": 404,
+      "response": {
+        "error": {
+          "code": "not_found",
+          "message": "Ressource introuvable."
+        }
+      }
+    }
+  ]
+}

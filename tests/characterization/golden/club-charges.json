@@ -1,0 +1,498 @@
+{
+  "scenario": "club-charges",
+  "description": "Consumption and fee charges per outlet; finance cancels a charge with a reason; balances follow.",
+  "transcript": [
+    {
+      "step": "login u_cs_secretariat",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_secretariat"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "members",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/members"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "bar consumption",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members/<mbr#1>/charges",
+        "body": {
+          "kind": "consumption",
+          "outlet": "bar",
+          "label": "Consommations bar (démo)",
+          "amountMinor": 45000
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<chg#1>"
+      }
+    },
+    {
+      "step": "court fee",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members/<mbr#1>/charges",
+        "body": {
+          "kind": "fee",
+          "outlet": "tennis",
+          "label": "Location court (démo)",
+          "amountMinor": 30000
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<chg#2>"
+      }
+    },
+    {
+      "step": "dues cannot be charged by hand",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members/<mbr#1>/charges",
+        "body": {
+          "kind": "dues",
+          "outlet": "bar",
+          "label": "Interdit",
+          "amountMinor": 100
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : kind Invalid option: expected one of \"consumption\"|\"fee\""
+        }
+      }
+    },
+    {
+      "step": "unknown outlet",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members/<mbr#1>/charges",
+        "body": {
+          "kind": "consumption",
+          "outlet": "piscine",
+          "label": "Inconnu",
+          "amountMinor": 100
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : outlet Invalid option: expected one of \"restaurant\"|\"bar\"|\"tennis\"|\"squash\"|\"golf\"|\"shop\"|\"events\"|\"other\""
+        }
+      }
+    },
+    {
+      "step": "secretariat cannot cancel",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/charges/<chg#1>/cancel",
+        "body": {
+          "reason": "Erreur"
+        }
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "forbidden",
+          "message": "Accès non autorisé."
+        }
+      }
+    },
+    {
+      "step": "login u_cs_compta",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_compta"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "finance cancels",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/charges/<chg#1>/cancel",
+        "body": {
+          "reason": "Erreur de saisie (démo)"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "cancel twice",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/charges/<chg#1>/cancel",
+        "body": {
+          "reason": "Encore (démo)"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "bad_status",
+          "message": "Ce dû est déjà annulé."
+        }
+      }
+    },
+    {
+      "step": "member balance after charges",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/members/<mbr#1>"
+      },
+      "status": 200,
+      "response": {
+        "member": {
+          "id": "<mbr#1>",
+          "company_id": "co_cs",
+          "number": "00001",
+          "name": "Aditi Ramdin (démo)",
+          "email": "aditi.1@membres.exemple.invalid",
+          "phone": "+230 5900 1100",
+          "plan_id": "plan_cs_ind",
+          "status": "active",
+          "reference": "CSD-00001-94",
+          "badge": "B00001",
+          "joined_at": "2024-11-16",
+          "created_at": "2024-11-16T04:00:00.000Z",
+          "plan": {
+            "id": "plan_cs_ind",
+            "name": "Individuel",
+            "billing": "annual",
+            "fee_minor": 1800000
+          }
+        },
+        "account": {
+          "chargedMinor": 3789000,
+          "paidMinor": 3759000,
+          "balanceMinor": 30000,
+          "dueMinor": 30000,
+          "creditMinor": 0,
+          "overdueMinor": 0,
+          "overdueDays": 0,
+          "oldestOverdueId": null
+        },
+        "portalPath": "/membre/0OXE9h_uDG2RSw3kreM9lQ",
+        "gate": {
+          "memberId": "<mbr#1>",
+          "overdueMinor": 0,
+          "overdueDays": 0,
+          "decision": "allow",
+          "reason": "Compte à jour."
+        },
+        "charges": [
+          {
+            "id": "<chg#2>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "number": "MC-000059",
+            "kind": "fee",
+            "outlet": "tennis",
+            "label": "Location court (démo)",
+            "period": null,
+            "amount_minor": 30000,
+            "allocated_minor": 0,
+            "due_date": "2026-11-16",
+            "status": "open",
+            "cancel_reason": null,
+            "cancelled_at": null,
+            "created_by": "u_cs_secretariat",
+            "created_at": "2026-10-17T04:00:03.000Z",
+            "remaining_minor": 30000,
+            "overdue": false
+          },
+          {
+            "id": "<chg#1>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "number": "MC-000058",
+            "kind": "consumption",
+            "outlet": "bar",
+            "label": "Consommations bar (démo)",
+            "period": null,
+            "amount_minor": 45000,
+            "allocated_minor": 0,
+            "due_date": "2026-11-16",
+            "status": "cancelled",
+            "cancel_reason": "Erreur de saisie (démo)",
+            "cancelled_at": "2026-10-17T04:00:08.000Z",
+            "created_by": "u_cs_secretariat",
+            "created_at": "2026-10-17T04:00:02.000Z",
+            "remaining_minor": 0,
+            "overdue": false
+          },
+          {
+            "id": "<chg#3>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "number": "MC-000047",
+            "kind": "consumption",
+            "outlet": "shop",
+            "label": "Boutique - balles et accessoires",
+            "period": null,
+            "amount_minor": 94000,
+            "allocated_minor": 94000,
+            "due_date": "2026-10-11",
+            "status": "paid",
+            "cancel_reason": null,
+            "cancelled_at": null,
+            "created_by": "u_cs_secretariat",
+            "created_at": "2026-09-11T04:00:00.000Z",
+            "remaining_minor": 0,
+            "overdue": false
+          },
+          {
+            "id": "<chg#4>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "number": "MC-000034",
+            "kind": "consumption",
+            "outlet": "bar",
+            "label": "Bar - consommations",
+            "period": null,
+            "amount_minor": 65000,
+            "allocated_minor": 65000,
+            "due_date": "2026-09-02",
+            "status": "paid",
+            "cancel_reason": null,
+            "cancelled_at": null,
+            "created_by": "u_cs_secretariat",
+            "created_at": "2026-08-03T04:00:00.000Z",
+            "remaining_minor": 0,
+            "overdue": false
+          },
+          {
+            "id": "<chg#5>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "number": "MC-000014",
+            "kind": "dues",
+            "outlet": "",
+            "label": "Cotisation 2026 - Individuel",
+            "period": "2026",
+            "amount_minor": 1800000,
+            "allocated_minor": 1800000,
+            "due_date": "2026-02-09",
+            "status": "paid",
+            "cancel_reason": null,
+            "cancelled_at": null,
+            "created_by": "u_cs_compta",
+            "created_at": "2026-01-10T04:00:00.000Z",
+            "remaining_minor": 0,
+            "overdue": false
+          },
+          {
+            "id": "<chg#6>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "number": "MC-000001",
+            "kind": "dues",
+            "outlet": "",
+            "label": "Cotisation 2025 - Individuel",
+            "period": "2025",
+            "amount_minor": 1800000,
+            "allocated_minor": 1800000,
+            "due_date": "2025-02-09",
+            "status": "paid",
+            "cancel_reason": null,
+            "cancelled_at": null,
+            "created_by": "u_cs_compta",
+            "created_at": "2025-01-10T04:00:00.000Z",
+            "remaining_minor": 0,
+            "overdue": false
+          }
+        ],
+        "payments": [
+          {
+            "id": "<mpay#1>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "method": "link",
+            "amount_minor": 159000,
+            "currency": "MUR",
+            "status": "confirmed",
+            "provider_ref": "<ref-LNK#1>",
+            "reference": "CSD-00001-94",
+            "failure_reason": null,
+            "verify_reason": null,
+            "note": "",
+            "settlement_status": "settled",
+            "settled_at": "2026-09-12T04:00:00.000Z",
+            "fee_actual_minor": 2385,
+            "bank_line_id": "<bl#1>",
+            "confirmed_at": "2026-09-07T04:00:00.000Z",
+            "confirmed_via": "notification",
+            "created_by": "member:00001",
+            "created_at": "2026-09-07T04:00:00.000Z",
+            "updated_at": "2026-09-12T04:00:00.000Z",
+            "expires_at": "2026-09-07T04:10:00.000Z"
+          },
+          {
+            "id": "<mpay#2>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "method": "bank_transfer",
+            "amount_minor": 1800000,
+            "currency": "MUR",
+            "status": "confirmed",
+            "provider_ref": null,
+            "reference": "CSD-00001-94",
+            "failure_reason": null,
+            "verify_reason": null,
+            "note": "VIREMENT CSD-00001-94 COTISATION",
+            "settlement_status": "settled",
+            "settled_at": "2026-02-04T04:00:00.000Z",
+            "fee_actual_minor": 0,
+            "bank_line_id": "<bl#2>",
+            "confirmed_at": "2026-02-04T04:00:00.000Z",
+            "confirmed_via": "bank_statement",
+            "created_by": "u_cs_compta",
+            "created_at": "2026-02-04T04:00:00.000Z",
+            "updated_at": "2026-02-04T04:00:00.000Z",
+            "expires_at": null
+          },
+          {
+            "id": "<mpay#3>",
+            "company_id": "co_cs",
+            "member_id": "<mbr#1>",
+            "method": "bank_transfer",
+            "amount_minor": 1800000,
+            "currency": "MUR",
+            "status": "confirmed",
+            "provider_ref": null,
+            "reference": "CSD-00001-94",
+            "failure_reason": null,
+            "verify_reason": null,
+            "note": "VIREMENT CSD-00001-94 COTISATION",
+            "settlement_status": "settled",
+            "settled_at": "2025-01-30T04:00:00.000Z",
+            "fee_actual_minor": 0,
+            "bank_line_id": "<bl#3>",
+            "confirmed_at": "2025-01-30T04:00:00.000Z",
+            "confirmed_via": "bank_statement",
+            "created_by": "u_cs_compta",
+            "created_at": "2025-01-30T04:00:00.000Z",
+            "updated_at": "2025-01-30T04:00:00.000Z",
+            "expires_at": null
+          }
+        ],
+        "statement": [
+          {
+            "at": "2026-10-17T04:00:03.000Z",
+            "ref": "MC-000059",
+            "label": "Location court (démo)",
+            "debit": 30000,
+            "credit": 0,
+            "balance": 30000
+          },
+          {
+            "at": "2026-09-11T04:00:00.000Z",
+            "ref": "MC-000047",
+            "label": "Boutique - balles et accessoires",
+            "debit": 94000,
+            "credit": 0,
+            "balance": 0
+          },
+          {
+            "at": "2026-09-07T04:00:00.000Z",
+            "ref": "<ref-LNK#1>",
+            "label": "Encaissement (link)",
+            "debit": 0,
+            "credit": 159000,
+            "balance": -94000
+          },
+          {
+            "at": "2026-08-03T04:00:00.000Z",
+            "ref": "MC-000034",
+            "label": "Bar - consommations",
+            "debit": 65000,
+            "credit": 0,
+            "balance": 65000
+          },
+          {
+            "at": "2026-02-04T04:00:00.000Z",
+            "ref": "CSD-00001-94",
+            "label": "Encaissement (bank_transfer)",
+            "debit": 0,
+            "credit": 1800000,
+            "balance": 0
+          },
+          {
+            "at": "2026-01-10T04:00:00.000Z",
+            "ref": "MC-000014",
+            "label": "Cotisation 2026 - Individuel",
+            "debit": 1800000,
+            "credit": 0,
+            "balance": 1800000
+          },
+          {
+            "at": "2025-01-30T04:00:00.000Z",
+            "ref": "CSD-00001-94",
+            "label": "Encaissement (bank_transfer)",
+            "debit": 0,
+            "credit": 1800000,
+            "balance": 0
+          },
+          {
+            "at": "2025-01-10T04:00:00.000Z",
+            "ref": "MC-000001",
+            "label": "Cotisation 2025 - Individuel",
+            "debit": 1800000,
+            "credit": 0,
+            "balance": 1800000
+          }
+        ],
+        "reminders": [],
+        "gateEvents": [
+          {
+            "id": "<gev#1>",
+            "decision": "allow",
+            "reason": "Compte à jour.",
+            "source": "reader",
+            "at": "2026-10-17T00:00:00.000Z",
+            "overdue_minor": 0,
+            "overdue_days": 0
+          }
+        ]
+      }
+    }
+  ]
+}
