@@ -7,7 +7,7 @@ on:
 
 jobs:
   characterization:
-    name: Characterization suite (v0.1.0 reference)
+    name: Typecheck and characterization (reference and rebuilt API)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -17,5 +17,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm run test:api
       - run: npx playwright install --with-deps chromium
-      - run: npm test
+      - run: npm run test:reference

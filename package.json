@@ -8,10 +8,11 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "test": "node tests/characterization/run.mjs",
-    "test:characterization": "node tests/characterization/run.mjs",
-    "golden:update": "node tests/characterization/run.mjs --update",
-    "typecheck": "tsc -p apps/api"
+    "test": "npm run typecheck && npm run test:reference && npm run test:api",
+    "typecheck": "tsc -p apps/api && tsc -p packages",
+    "test:reference": "node --no-warnings tests/characterization/run.mjs",
+    "test:api": "node --no-warnings tests/characterization/run.mjs --target=api",
+    "golden:update": "node --no-warnings tests/characterization/run.mjs --update"
   },
   "devDependencies": {
     "@sinonjs/fake-timers": "15.5.0",
