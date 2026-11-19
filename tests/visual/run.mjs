@@ -13,6 +13,7 @@ import { createRequire } from "node:module";
 import FakeTimers from "@sinonjs/fake-timers";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
+import crypto from "node:crypto";
 import { SCREENS } from "./screens.mjs";
 
 const require = createRequire(import.meta.url);
@@ -20,6 +21,10 @@ const { chromium } = require("playwright");
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..", "..");
 const outDir = path.join(here, "output");
+// Reference screenshots never change while reference/v0.1.0 and the screen definition do not:
+// they are cached (key: reference bundle hash + screen definition + language + width).
+const cacheDir = path.join(here, ".reference-cache");
+const referenceHash = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, "reference/v0.1.0/app.js"))).digest("hex").slice(0, 16);
 const args = process.argv.slice(2);
 const only = args.find((a) => a.startsWith("--only="))?.slice(7);
 const widths = (args.find((a) => a.startsWith("--widths="))?.slice(9) ?? "1280,1366,1920,390").split(",").map(Number);
@@ -159,7 +164,18 @@ try {
       for (const width of widths) {
         total++;
         const id = `${screen.name}.${lang}.${width}`;
-        const [ref, neu] = [await capture(referenceUrl, screen, width, lang), await capture(rebuiltUrl, screen, width, lang)];
+        const key = crypto.createHash("sha256").update([referenceHash, screen.name, String(screen.as), String(screen.path), String(screen.act ?? ""), lang, width].join("|")).digest("hex").slice(0, 20);
+        const cached = path.join(cacheDir, `${id}.${key}.json`);
+        let ref;
+        if (fs.existsSync(cached)) {
+          const c = JSON.parse(fs.readFileSync(cached, "utf8"));
+          ref = { png: PNG.sync.read(Buffer.from(c.png, "base64")), errors: c.errors, overflow: c.overflow };
+        } else {
+          ref = await capture(referenceUrl, screen, width, lang);
+          fs.mkdirSync(cacheDir, { recursive: true });
+          fs.writeFileSync(cached, JSON.stringify({ png: PNG.sync.write(ref.png).toString("base64"), errors: ref.errors, overflow: ref.overflow }));
+        }
+        const neu = await capture(rebuiltUrl, screen, width, lang);
         const problems = [];
         if (neu.errors.length) problems.push(`console errors: ${neu.errors.join(" | ").slice(0, 200)}`);
         if (neu.overflow > 0) notes.push(`${id}: horizontal overflow ${neu.overflow}px (reference: ${ref.overflow}px)`);
