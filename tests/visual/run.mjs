@@ -131,7 +131,6 @@ async function capture(baseUrl, screen, width, lang) {
   }
   await page.evaluate((h) => { location.hash = h; }, hash);
   await page.waitForFunction((h) => location.hash === `#${h}`, hash);
-  await advance(page, baseUrl, 2000);
   // Wait until no loading placeholder is left and the page height is stable.
   await page.waitForFunction(() => !/Chargement…|Loading…/.test(document.body.innerText), null, { timeout: 30000 }).catch(() => {});
   // Stable when height and text are unchanged over three consecutive checks.
