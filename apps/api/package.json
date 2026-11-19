@@ -4,9 +4,9 @@
   "private": true,
   "description": "MIPS Business Suite API (Hono + SQLite). Demo mode only: every connector is simulated.",
   "type": "module",
-  "main": "src/app.mjs",
+  "main": "src/app.ts",
   "scripts": {
-    "start": "node src/server.mjs"
+    "start": "node src/server.ts"
   },
   "dependencies": {
     "hono": "4.13.19",
