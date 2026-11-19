@@ -1,0 +1,8 @@
+{
+  "name": "@mips/connectors",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Connector interfaces and simulators (payments, bank, accounting software, gate). Filled in steps 3 and 4.",
+  "type": "module",
+  "exports": "./src/index.ts"
+}

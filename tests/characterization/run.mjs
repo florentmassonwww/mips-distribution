@@ -3,6 +3,7 @@
 //   node tests/characterization/run.mjs --update        (re)record golden files from the reference
 //   node tests/characterization/run.mjs --only=<name>   run matching scenarios only
 //   node tests/characterization/run.mjs --print         print transcripts instead of comparing
+//   node tests/characterization/run.mjs --target=api    run against the rebuilt server (apps/api)
 // The target is the compiled v0.1.0 reference (reference/v0.1.0). Step 1 adds the rebuilt server
 // as a second target: the same golden files must then pass unchanged.
 import fs from "node:fs";
@@ -10,6 +11,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { isDeepStrictEqual } from "node:util";
 import { launchReference } from "./lib/reference-client.mjs";
+import { launchApi } from "./lib/api-client.mjs";
 import { createApi } from "./lib/api.mjs";
 import { scenarios } from "./scenarios/index.mjs";
 
@@ -19,6 +21,9 @@ const args = process.argv.slice(2);
 const update = args.includes("--update");
 const print = args.includes("--print");
 const only = args.find((a) => a.startsWith("--only="))?.slice(7);
+const target = args.find((a) => a.startsWith("--target="))?.slice(9) ?? "reference";
+if (!["reference", "api"].includes(target)) throw new Error(`unknown target: ${target}`);
+if (update && target !== "reference") throw new Error("golden files are recorded from the reference only");
 
 const names = new Set();
 for (const s of scenarios) {
@@ -42,7 +47,8 @@ function firstDiff(a, b, at = "$") {
   return `${at}: differs`;
 }
 
-const ref = await launchReference();
+const ref = target === "api" ? await launchApi() : await launchReference();
+console.log(`target: ${target === "api" ? "rebuilt server (apps/api)" : "v0.1.0 reference (reference/v0.1.0)"}`);
 let failed = 0;
 const started = Date.now();
 try {
