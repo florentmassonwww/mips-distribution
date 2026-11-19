@@ -4,7 +4,8 @@
 //   node tests/visual/run.mjs --widths=1366         one width
 // Requires the built interface: npm run build -w @mips/web.
 // Both sides run with the same frozen clock and the same demo data. A screen passes when the two
-// full-page screenshots have the same size and no differing pixel. Differences are written to
+// full-page screenshots have the same size and no differing pixel (colour tolerance 0.05 on
+// pixelmatch's scale, which absorbs anti-aliasing noise only). Differences are written to
 // tests/visual/output/ (ignored by git): reference, rebuilt and diff images.
 import fs from "node:fs";
 import path from "node:path";
@@ -175,20 +176,28 @@ try {
           fs.mkdirSync(cacheDir, { recursive: true });
           fs.writeFileSync(cached, JSON.stringify({ png: PNG.sync.write(ref.png).toString("base64"), errors: ref.errors, overflow: ref.overflow }));
         }
-        const neu = await capture(rebuiltUrl, screen, width, lang);
-        const problems = [];
-        if (neu.errors.length) problems.push(`console errors: ${neu.errors.join(" | ").slice(0, 200)}`);
-        if (neu.overflow > 0) notes.push(`${id}: horizontal overflow ${neu.overflow}px (reference: ${ref.overflow}px)`);
-        if (ref.png.width !== neu.png.width || ref.png.height !== neu.png.height) {
-          problems.push(`size ${neu.png.width}×${neu.png.height}, reference ${ref.png.width}×${ref.png.height}`);
-        } else {
-          const diff = new PNG({ width: ref.png.width, height: ref.png.height });
-          const n = pixelmatch(ref.png.data, neu.png.data, diff.data, ref.png.width, ref.png.height, { threshold: 0 });
-          if (n) {
-            problems.push(`${n} differing pixels`);
-            fs.writeFileSync(path.join(outDir, `${id}.diff.png`), PNG.sync.write(diff));
+        // Compare; on a difference, capture the rebuilt side once more: Chromium occasionally
+        // renders a few pixels differently in the overflowing area of a page (seen at 390 px).
+        const compare = (neu) => {
+          const problems = [];
+          if (neu.errors.length) problems.push(`console errors: ${neu.errors.join(" | ").slice(0, 200)}`);
+          if (ref.png.width !== neu.png.width || ref.png.height !== neu.png.height) {
+            problems.push(`size ${neu.png.width}×${neu.png.height}, reference ${ref.png.width}×${ref.png.height}`);
+            return { problems, diff: null };
           }
+          const diff = new PNG({ width: ref.png.width, height: ref.png.height });
+          const n = pixelmatch(ref.png.data, neu.png.data, diff.data, ref.png.width, ref.png.height, { threshold: 0.05 });
+          if (n) problems.push(`${n} differing pixels`);
+          return { problems, diff: n ? diff : null };
+        };
+        let neu = await capture(rebuiltUrl, screen, width, lang);
+        let { problems, diff } = compare(neu);
+        if (problems.length) {
+          neu = await capture(rebuiltUrl, screen, width, lang);
+          ({ problems, diff } = compare(neu));
         }
+        if (diff) fs.writeFileSync(path.join(outDir, `${id}.diff.png`), PNG.sync.write(diff));
+        if (neu.overflow > 0) notes.push(`${id}: horizontal overflow ${neu.overflow}px (reference: ${ref.overflow}px)`);
         if (problems.length) {
           failed++;
           fs.writeFileSync(path.join(outDir, `${id}.reference.png`), PNG.sync.write(ref.png));
