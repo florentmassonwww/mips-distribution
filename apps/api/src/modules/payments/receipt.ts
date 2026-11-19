@@ -2,7 +2,7 @@
 import { type Actor, companyOf } from "../../core/actor.ts";
 import { type Db, type Row, all, get } from "../../core/db.ts";
 import { notFound } from "../../core/errors.ts";
-import { paymentView } from "./legacy-imports.ts";
+import { serializePayment as paymentView } from "./payment-view.ts";
 import { assertInvoiceAccess } from "./lookups.ts";
 import type { InvoiceRow, PaymentRow } from "./types.ts";
 

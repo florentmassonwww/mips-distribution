@@ -1,14 +1,7 @@
 // Collecting invoices: payment attempts, status checks, cancellation, claims, receipts.
 import { z } from "zod";
-import {
-  cancelPayment,
-  checkPayment,
-  claimPayment,
-  getPayment,
-  invoiceReceipt,
-  presentPayment,
-  requestPayment,
-} from "./legacy-modules.ts";
+import { cancelPayment, checkPaymentStatus as checkPayment, claimPayment, getPaymentForUser as getPayment, getReceipt as invoiceReceipt, initiatePayment as requestPayment } from "../modules/payments/index.ts";
+import { serializePayment as presentPayment } from "../modules/payments/payment-view.ts";
 import { type App, type AppDeps, paymentMethodSchema, readJson, requestOrigin, routeParam } from "./context.ts";
 import { COMPANY_ROLES } from "./session.ts";
 

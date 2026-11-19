@@ -4,7 +4,7 @@ import { type Db, transaction } from "../../core/db.ts";
 import { ApiError } from "../../core/errors.ts";
 import { iso } from "../../core/time.ts";
 import type { ConnectorSet, ProviderStatus } from "../connectors/index.ts";
-import { getCompanyPayment } from "./legacy-imports.ts";
+import { requireCompanyPayment as getCompanyPayment } from "./payment-view.ts";
 import { confirmPayment, failPayment, markToVerify } from "./lifecycle.ts";
 import { getPaymentForUser } from "./lookups.ts";
 import type { PaymentRow } from "./types.ts";

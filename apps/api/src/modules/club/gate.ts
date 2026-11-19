@@ -10,7 +10,7 @@ import { formatMinor } from "../../core/format.ts";
 import { newId } from "../../core/ids.ts";
 import { businessDay, iso } from "../../core/time.ts";
 import { memberAccount } from "./allocation.ts";
-import { loadSettings } from "./legacy-deps.ts";
+import { readCompanySettings as loadSettings } from "../distribution/settings.ts";
 import { actorCompanyId, memberById, portalPath } from "./shared.ts";
 import type { ClubConnectors, GateDecision, GateDeviceRow, MemberRow } from "./types.ts";
 

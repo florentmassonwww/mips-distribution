@@ -8,7 +8,7 @@ import { ApiError } from "../../core/errors.ts";
 import { businessDay } from "../../core/time.ts";
 import { createCharge } from "./charges.ts";
 import { addDaysToDay } from "./dates.ts";
-import { loadSettings } from "./legacy-deps.ts";
+import { readCompanySettings as loadSettings } from "../distribution/settings.ts";
 import { actorCompanyId } from "./shared.ts";
 import type { MemberRow } from "./types.ts";
 

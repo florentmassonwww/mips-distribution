@@ -3,22 +3,10 @@
 import { z } from "zod";
 import { formatMinor } from "../core/format.ts";
 import { businessDay } from "../core/time.ts";
-import {
-  FINANCE_ROLES,
-  closeDay,
-  closePreview,
-  companySettings,
-  dailyCloses,
-  demoBankStatement,
-  erpEntries,
-  importBankStatement,
-  invoiceList,
-  paymentJournal,
-  presentPayment,
-  reconciliation,
-  refundPayment,
-  syncErp,
-} from "./legacy-modules.ts";
+import { FINANCE_ROLES, readCompanySettings as companySettings } from "../modules/distribution/settings.ts";
+import { closeDay, generateDemoStatement as demoBankStatement, getDayTotals as closePreview, getReconciliation as reconciliation, importStatement as importBankStatement, listAccountingEntries as erpEntries, listDailyCloses as dailyCloses, listInvoices as invoiceList, listJournal as paymentJournal, syncAccountingEntries as syncErp } from "../modules/finance/index.ts";
+import { refundPayment } from "../modules/payments/index.ts";
+import { serializePayment as presentPayment } from "../modules/payments/payment-view.ts";
 import { type App, type AppDeps, companyOf, queryFilter, readJson, routeParam } from "./context.ts";
 import { csvResponse, wantsCsv, withDecimalAmounts } from "./csv.ts";
 

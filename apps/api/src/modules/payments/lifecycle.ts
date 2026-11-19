@@ -4,7 +4,8 @@ import type { Actor } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run } from "../../core/db.ts";
 import { iso } from "../../core/time.ts";
-import { companySettings, openException, queueAccountingEntry, resolveExceptions } from "./legacy-imports.ts";
+import { autoResolveExceptions as resolveExceptions, queueErpEntry as queueAccountingEntry, raiseException as openException } from "../distribution/exceptions.ts";
+import { readCompanySettings as companySettings } from "../distribution/settings.ts";
 import type { ConfirmationSource, InvoiceRow, InvoiceStatus, PaymentRow, PaymentStatus } from "./types.ts";
 
 /**

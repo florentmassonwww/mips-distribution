@@ -14,6 +14,7 @@ export const FINANCE_ROLES: readonly Role[] = ["company_admin", "finance"];
 /** Club outlets, each with its own revenue account. */
 export const CLUB_OUTLETS = ["restaurant", "bar", "tennis", "squash", "golf", "shop", "events", "other"] as const;
 export type ClubOutlet = (typeof CLUB_OUTLETS)[number];
+export const isClubOutlet = (value: string): value is ClubOutlet => (CLUB_OUTLETS as readonly string[]).includes(value);
 
 export interface PaymentMethodSettings {
   enabled: boolean;

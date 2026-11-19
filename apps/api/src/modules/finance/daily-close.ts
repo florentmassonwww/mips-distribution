@@ -5,7 +5,7 @@ import { type Db, type Row, all, get, run, transaction } from "../../core/db.ts"
 import { ApiError } from "../../core/errors.ts";
 import { newId } from "../../core/ids.ts";
 import { businessDay, iso } from "../../core/time.ts";
-import { dayBounds, isValidDay } from "./legacy-imports.ts";
+import { dayBounds, isValidDay } from "../distribution/days.ts";
 
 export interface DayTotals {
   day: string;

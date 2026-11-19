@@ -3,7 +3,8 @@ import type { Context, Hono } from "hono";
 import { z } from "zod";
 import type { Db } from "../core/db.ts";
 import type { SessionUser } from "../core/actor.ts";
-import { type Connectors, type PaymentMethod, PAYMENT_METHODS } from "./legacy-modules.ts";
+import { type DemoConnectorSet as Connectors } from "../modules/connectors/types.ts";
+import { PAYMENT_METHODS } from "../modules/distribution/settings.ts";
 import type { SessionTools } from "./session.ts";
 import type { RateLimiter } from "./rate-limit.ts";
 

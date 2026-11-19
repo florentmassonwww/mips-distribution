@@ -4,7 +4,8 @@ import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run, transaction } from "../../core/db.ts";
 import { ApiError } from "../../core/errors.ts";
 import type { ConnectorSet } from "../connectors/index.ts";
-import { getCompanyPayment, queueAccountingEntry, resolveExceptions } from "./legacy-imports.ts";
+import { autoResolveExceptions as resolveExceptions, queueErpEntry as queueAccountingEntry } from "../distribution/exceptions.ts";
+import { requireCompanyPayment as getCompanyPayment } from "./payment-view.ts";
 import { refreshInvoiceStatus, touchPayment } from "./lifecycle.ts";
 import type { PaymentRow } from "./types.ts";
 

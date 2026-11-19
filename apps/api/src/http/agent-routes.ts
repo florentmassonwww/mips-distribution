@@ -1,16 +1,8 @@
 // Delivery agents' mobile app: their routes, the offline bundle, and action sync.
 import { z } from "zod";
-import {
-  PAYMENT_METHODS,
-  applySyncAction,
-  closeRoute,
-  companySettings,
-  listRoutes,
-  routeBundle,
-  routeSummary,
-  startRoute,
-  syncActionSchema,
-} from "./legacy-modules.ts";
+import { applySyncAction, closeRoute, routeBundle, startRoute, syncActionInput as syncActionSchema } from "../modules/distribution/agent-sync.ts";
+import { listRoutes, routeSummary } from "../modules/distribution/delivery-routes.ts";
+import { PAYMENT_METHODS, readCompanySettings as companySettings } from "../modules/distribution/settings.ts";
 import { type App, type AppDeps, companyOf, readJson, routeParam } from "./context.ts";
 
 export function registerAgentRoutes(app: App, deps: AppDeps): void {

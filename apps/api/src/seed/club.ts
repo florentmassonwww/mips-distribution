@@ -7,21 +7,17 @@ import { type Db, all, get, run, transaction } from "../core/db.ts";
 import type { Actor } from "../core/actor.ts";
 import { formatMinor } from "../core/format.ts";
 import { addDays, businessDay, iso } from "../core/time.ts";
-import {
-  type Connectors,
-  addCharge,
-  createMember,
-  defaultSettings,
-  handleNotification,
-  importClubStatement,
-  recordCashPayment,
-  recordGatePassage,
-  runDues,
-  runReminders,
-  startMemberLinkPayment,
-  syncErp,
-  updateMember,
-} from "../http/legacy-modules.ts";
+import { importStatement as importClubStatement } from "../modules/club/bank-reconciliation.ts";
+import { chargeMember as addCharge } from "../modules/club/charges.ts";
+import { runDues } from "../modules/club/dues.ts";
+import { readerDecision as recordGatePassage } from "../modules/club/gate.ts";
+import { recordCashPayment, startLinkPayment as startMemberLinkPayment } from "../modules/club/member-payments.ts";
+import { createMember, updateMember } from "../modules/club/members.ts";
+import { runReminders } from "../modules/club/reminders.ts";
+import { type DemoConnectorSet as Connectors } from "../modules/connectors/types.ts";
+import { defaultCompanySettings as defaultSettings } from "../modules/distribution/settings.ts";
+import { syncAccountingEntries as syncErp } from "../modules/finance/index.ts";
+import { processNotification as handleNotification } from "../modules/payments/index.ts";
 import {
   CLUB_COMPANY_ID,
   CLUB_CONSUMPTIONS,

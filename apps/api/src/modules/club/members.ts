@@ -10,7 +10,7 @@ import { businessDay, iso } from "../../core/time.ts";
 import { memberAccount } from "./allocation.ts";
 import { daysBetween } from "./dates.ts";
 import { accessDecision } from "./gate.ts";
-import { loadSettings } from "./legacy-deps.ts";
+import { readCompanySettings as loadSettings } from "../distribution/settings.ts";
 import { paymentReference } from "./references.ts";
 import { actorCompanyId, portalPath, requireMember } from "./shared.ts";
 import type { MemberChargeRow, MemberPaymentRow, MemberRow, MemberStatus } from "./types.ts";

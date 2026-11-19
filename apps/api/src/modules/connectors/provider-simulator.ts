@@ -6,7 +6,7 @@ import { type Db, get, run } from "../../core/db.ts";
 import { ApiError } from "../../core/errors.ts";
 import { uuidV4 } from "../../core/ids.ts";
 import { iso } from "../../core/time.ts";
-import { signPayload, verifySignature } from "./legacy-imports.ts";
+import { signWebhook as signPayload, verifyWebhook as verifySignature } from "./signature.ts";
 import type { PaymentProviderSpec } from "./payment-providers.ts";
 import type {
   InitiatePaymentRequest,

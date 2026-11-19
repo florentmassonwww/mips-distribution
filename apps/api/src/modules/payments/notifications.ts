@@ -5,11 +5,17 @@ import { type Db, get, run, transaction } from "../../core/db.ts";
 import { newId } from "../../core/ids.ts";
 import { iso } from "../../core/time.ts";
 import type { ConnectorSet, PaymentMethod, PaymentNotification } from "../connectors/index.ts";
-import { type NotificationOutcome, applyMemberPaymentNotification, openException } from "./legacy-imports.ts";
+import { applyMemberPaymentNotification } from "../club/member-payments.ts";
+import { raiseException as openException } from "../distribution/exceptions.ts";
 import { confirmPayment, failPayment, markToVerify } from "./lifecycle.ts";
 import type { PaymentRow } from "./types.ts";
 
-export type { NotificationOutcome } from "./legacy-imports.ts";
+/** Result of processing one provider notification. */
+export interface NotificationOutcome {
+  result: string;
+  paymentId: string | null;
+  companyId: string | null;
+}
 
 function recordEvent(
   db: Db,

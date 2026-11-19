@@ -8,7 +8,7 @@ import { formatMinor } from "../../core/format.ts";
 import { newId } from "../../core/ids.ts";
 import { businessDay, iso } from "../../core/time.ts";
 import { type MemberAccount, memberAccount } from "./allocation.ts";
-import { loadSettings } from "./legacy-deps.ts";
+import { readCompanySettings as loadSettings } from "../distribution/settings.ts";
 import { actorCompanyId, portalPath } from "./shared.ts";
 import type { MemberRow } from "./types.ts";
 

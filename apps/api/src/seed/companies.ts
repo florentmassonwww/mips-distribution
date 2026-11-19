@@ -2,7 +2,7 @@
 import { type Db, get, run } from "../core/db.ts";
 import type { Actor } from "../core/actor.ts";
 import { addDays, iso } from "../core/time.ts";
-import { defaultSettings } from "../http/legacy-modules.ts";
+import { defaultCompanySettings as defaultSettings } from "../modules/distribution/settings.ts";
 import { CUSTOMERS, PRODUCTS, type CustomerSpec, type ProductSpec, type UserSpec } from "./catalog.ts";
 
 export interface CompanySeed {

@@ -11,13 +11,9 @@ import { formatMinor } from "../../core/format.ts";
 import { newId } from "../../core/ids.ts";
 import { businessDay, iso } from "../../core/time.ts";
 import { settlementJournalLines } from "./accounting.ts";
-import {
-  BANK_STATEMENT_HEADER,
-  loadSettings,
-  openException,
-  queueErpEntry,
-  resolveExceptions,
-} from "./legacy-deps.ts";
+import { STATEMENT_HEADER as BANK_STATEMENT_HEADER } from "../connectors/index.ts";
+import { autoResolveExceptions as resolveExceptions, queueErpEntry, raiseException as openException } from "../distribution/exceptions.ts";
+import { readCompanySettings as loadSettings } from "../distribution/settings.ts";
 import { confirmMemberPayment, touchMemberPayment } from "./member-payments.ts";
 import { listMembers } from "./members.ts";
 import { findReference } from "./references.ts";

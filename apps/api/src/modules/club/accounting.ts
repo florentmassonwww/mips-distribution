@@ -1,7 +1,7 @@
 // Accounting: journal lines of charges, payments and online settlements, and the export over a
 // period. The same lines are attached to the ERP entries when the events happen.
 import { type Db, all, get } from "../../core/db.ts";
-import { OUTLETS, loadSettings } from "./legacy-deps.ts";
+import { isClubOutlet, readCompanySettings as loadSettings } from "../distribution/settings.ts";
 import type { ClubAccounting, MemberChargeRow, MemberPaymentRow, MemberRow } from "./types.ts";
 
 export interface JournalLine {
@@ -22,7 +22,7 @@ type MemberRef = Pick<MemberRow, "number" | "name">;
 function revenueAccount(club: ClubAccounting, charge: MemberChargeRow): string {
   if (charge.kind === "dues") return club.accounts.dues;
   if (charge.kind === "fee") return club.accounts.fee;
-  return club.accounts.outlets[OUTLETS.includes(charge.outlet) ? charge.outlet : "other"]!;
+  return club.accounts.outlets[isClubOutlet(charge.outlet) ? charge.outlet : "other"]!;
 }
 
 /** Sales journal lines of a charge (receivable / revenue), or of its cancellation (reversed). */

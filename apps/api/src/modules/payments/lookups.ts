@@ -2,7 +2,7 @@
 import { type Actor, companyOf } from "../../core/actor.ts";
 import { type Db, get } from "../../core/db.ts";
 import { forbidden } from "../../core/errors.ts";
-import { getCompanyPayment } from "./legacy-imports.ts";
+import { requireCompanyPayment as getCompanyPayment } from "./payment-view.ts";
 import type { InvoiceRow, PaymentRow } from "./types.ts";
 
 /** An agent only sees the invoices of their own deliveries or routes; other roles see all of their company. */

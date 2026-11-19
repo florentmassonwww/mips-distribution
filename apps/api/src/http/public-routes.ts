@@ -3,14 +3,11 @@
 import { get } from "../core/db.ts";
 import { notFound } from "../core/errors.ts";
 import { z } from "zod";
-import {
-  PAYMENT_METHODS,
-  handleNotification,
-  memberByToken,
-  publicMemberView,
-  readerAccessCheck,
-  startMemberLinkPayment,
-} from "./legacy-modules.ts";
+import { handleReaderRequest as readerAccessCheck } from "../modules/club/gate.ts";
+import { startLinkPayment as startMemberLinkPayment } from "../modules/club/member-payments.ts";
+import { memberPortal as publicMemberView, requireMemberByPortalToken as memberByToken } from "../modules/club/portal.ts";
+import { PAYMENT_METHODS } from "../modules/distribution/settings.ts";
+import { processNotification as handleNotification } from "../modules/payments/index.ts";
 import { type App, type AppDeps, clientKey, paymentMethodSchema, readJson, requestOrigin, routeParam } from "./context.ts";
 import { COMPANY_ROLES } from "./session.ts";
 import { ONE_MINUTE_MS } from "./rate-limit.ts";

@@ -1,6 +1,6 @@
 // Finance lists: the payment journal and the invoices.
 import { type Db, type Row, all } from "../../core/db.ts";
-import { dayBounds, isValidDay } from "./legacy-imports.ts";
+import { dayBounds, isValidDay } from "../distribution/days.ts";
 
 export interface JournalFilters {
   status?: string;

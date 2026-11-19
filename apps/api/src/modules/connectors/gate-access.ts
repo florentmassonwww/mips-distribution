@@ -1,7 +1,7 @@
 // Demo gate access: a badge reader posts signed requests, verified like provider notifications.
 import { ApiError } from "../../core/errors.ts";
 import { iso } from "../../core/time.ts";
-import { verifySignature } from "./legacy-imports.ts";
+import { verifyWebhook as verifySignature } from "./signature.ts";
 import type { GateAccess, GateRequest } from "./types.ts";
 
 interface GateRequestBody {

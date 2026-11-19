@@ -5,7 +5,8 @@ import { type Db, migrate, openDatabase } from "./core/db.ts";
 import { randomBytes } from "./core/random.ts";
 import { type AppConfig, createApp } from "./http/app.ts";
 import type { AppEnv } from "./http/context.ts";
-import { type Connectors, createConnectors } from "./http/legacy-modules.ts";
+import { createDemoConnectors as createConnectors } from "./modules/connectors/index.ts";
+import { type DemoConnectorSet as Connectors } from "./modules/connectors/types.ts";
 import { hasData, seedDemo } from "./seed/index.ts";
 
 export interface InstanceOptions {

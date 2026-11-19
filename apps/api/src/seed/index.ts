@@ -1,7 +1,7 @@
 // Fictitious demonstration data: two distribution companies with a week of activity and a sports
 // club with two years of history. Everything is marked "(démo)"; nothing refers to real people.
 import { type Db, get, transaction } from "../core/db.ts";
-import type { Connectors } from "../http/legacy-modules.ts";
+import { type DemoConnectorSet as Connectors } from "../modules/connectors/types.ts";
 import { seedClub } from "./club.ts";
 import { seedPlatformAndCompanies } from "./companies.ts";
 import { seedDistributionHistory } from "./distribution-history.ts";

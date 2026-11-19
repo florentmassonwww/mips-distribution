@@ -3,32 +3,17 @@
 import { z } from "zod";
 import { all } from "../core/db.ts";
 import { businessDay, iso } from "../core/time.ts";
-import {
-  CLUB_OUTLETS,
-  type ClubOutlet,
-  accountingExport,
-  addCharge,
-  assignBankLine,
-  cancelCharge,
-  checkGateCredential,
-  checkMemberPayment,
-  clubDashboard,
-  clubReconciliation,
-  createMember,
-  demoClubStatement,
-  gateEvents,
-  importClubStatement,
-  listDues,
-  listMembers,
-  listReminders,
-  memberDetail,
-  memberPayments,
-  memberStatement,
-  recordCashPayment,
-  runDues,
-  runReminders,
-  updateMember,
-} from "./legacy-modules.ts";
+import { accountingExport } from "../modules/club/accounting.ts";
+import { assignBankLine, demoStatement as demoClubStatement, importStatement as importClubStatement, reconciliationOverview as clubReconciliation } from "../modules/club/bank-reconciliation.ts";
+import { cancelCharge, chargeMember as addCharge } from "../modules/club/charges.ts";
+import { clubDashboard } from "../modules/club/dashboard.ts";
+import { duesOverview as listDues, runDues } from "../modules/club/dues.ts";
+import { checkAtDesk as checkGateCredential, listGateEvents as gateEvents } from "../modules/club/gate.ts";
+import { checkMemberPaymentStatus as checkMemberPayment, listMemberPayments as memberPayments, recordCashPayment } from "../modules/club/member-payments.ts";
+import { createMember, listMembers, memberDetail, updateMember } from "../modules/club/members.ts";
+import { listReminders, runReminders } from "../modules/club/reminders.ts";
+import { sendStatement as memberStatement } from "../modules/club/statements.ts";
+import { CLUB_OUTLETS } from "../modules/distribution/settings.ts";
 import { type App, type AppDeps, companyOf, queryFilter, readJson, requestOrigin, routeParam } from "./context.ts";
 import { csvResponse, wantsCsv, withDecimalAmounts } from "./csv.ts";
 

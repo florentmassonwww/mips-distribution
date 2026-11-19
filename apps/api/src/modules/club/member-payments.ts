@@ -10,7 +10,8 @@ import { newId } from "../../core/ids.ts";
 import { businessDay, iso } from "../../core/time.ts";
 import { paymentJournalLines } from "./accounting.ts";
 import { memberAccount, reallocatePayments } from "./allocation.ts";
-import { loadSettings, openException, queueErpEntry, resolveExceptions } from "./legacy-deps.ts";
+import { autoResolveExceptions as resolveExceptions, queueErpEntry, raiseException as openException } from "../distribution/exceptions.ts";
+import { readCompanySettings as loadSettings } from "../distribution/settings.ts";
 import {
   actorCompanyId,
   memberById,

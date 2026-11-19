@@ -2,7 +2,8 @@
 import { z } from "zod";
 import type { SessionUser } from "../core/actor.ts";
 import { forbidden } from "../core/errors.ts";
-import { FINANCE_ROLES, OPS_ROLES, listExceptions, resolveException } from "./legacy-modules.ts";
+import { listExceptions, resolveException } from "../modules/distribution/exceptions.ts";
+import { FINANCE_ROLES, OPS_ROLES } from "../modules/distribution/settings.ts";
 import { type App, type AppDeps, companyOf, readJson, routeParam } from "./context.ts";
 import { csvResponse, wantsCsv } from "./csv.ts";
 

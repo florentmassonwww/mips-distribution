@@ -10,7 +10,8 @@ import { businessDay, iso } from "../../core/time.ts";
 import { type ConnectorSet, type StatementLine, STATEMENT_HEADER } from "../connectors/index.ts";
 import { expectedFee, settlePayment } from "../payments/index.ts";
 import type { PaymentRow } from "../payments/types.ts";
-import { companySettings, openException } from "./legacy-imports.ts";
+import { raiseException as openException } from "../distribution/exceptions.ts";
+import { readCompanySettings as companySettings } from "../distribution/settings.ts";
 
 /** Amount deliberately skimmed from the second line of a statement with anomalies (100.00). */
 const ANOMALY_SHORT_CREDIT_MINOR = 10_000;

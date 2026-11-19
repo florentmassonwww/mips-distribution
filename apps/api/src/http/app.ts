@@ -6,7 +6,9 @@
 import { Hono } from "hono";
 import type { Db } from "../core/db.ts";
 import { notFound } from "../core/errors.ts";
-import { companySettings, syncErp, type Connectors } from "./legacy-modules.ts";
+import { type DemoConnectorSet as Connectors } from "../modules/connectors/types.ts";
+import { readCompanySettings as companySettings } from "../modules/distribution/settings.ts";
+import { syncAccountingEntries as syncErp } from "../modules/finance/index.ts";
 import type { AppConfig, AppDeps, AppEnv } from "./context.ts";
 import { csrfAndNoStore, errorHandler, registerAccessGate } from "./middleware.ts";
 import { createSessionTools } from "./session.ts";

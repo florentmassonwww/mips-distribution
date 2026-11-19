@@ -6,7 +6,7 @@ import { recordAudit } from "../core/audit.ts";
 import { ApiError, notFound } from "../core/errors.ts";
 import { newId } from "../core/ids.ts";
 import { iso } from "../core/time.ts";
-import { type CompanySettings, type PaymentMethod, companySettings } from "./legacy-modules.ts";
+import { type CompanySettings, type PaymentMethod, readCompanySettings as companySettings } from "../modules/distribution/settings.ts";
 import { type App, type AppDeps, companyOf, paymentMethodSchema, readJson, routeParam } from "./context.ts";
 import { csvResponse, wantsCsv } from "./csv.ts";
 import { COMPANY_ROLES } from "./session.ts";

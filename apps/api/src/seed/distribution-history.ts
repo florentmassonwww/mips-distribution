@@ -8,28 +8,14 @@ import { type Db, all, get } from "../core/db.ts";
 import type { Actor } from "../core/actor.ts";
 import { formatMinor } from "../core/format.ts";
 import { addDays, businessDay, iso } from "../core/time.ts";
-import {
-  type Connectors,
-  type OrderInput,
-  type PaymentMethod,
-  type SyncActionResult,
-  type SimulatedOutcome,
-  applySyncAction,
-  closeDay,
-  closeRoute,
-  createOrder,
-  createRoute,
-  defaultSettings,
-  demoBankStatement,
-  handleNotification,
-  importBankStatement,
-  loadRoute,
-  requestPayment,
-  resolveException,
-  setOrderStatus,
-  startRoute,
-  syncErp,
-} from "../http/legacy-modules.ts";
+import { type DemoConnectorSet as Connectors, type SimulatedOutcome } from "../modules/connectors/types.ts";
+import { type SyncActionResult, applySyncAction, closeRoute, startRoute } from "../modules/distribution/agent-sync.ts";
+import { createRoute, loadRoute } from "../modules/distribution/delivery-routes.ts";
+import { resolveException } from "../modules/distribution/exceptions.ts";
+import { type CreateOrderInput as OrderInput, createOrder, setOrderStatus } from "../modules/distribution/orders.ts";
+import { type PaymentMethod, defaultCompanySettings as defaultSettings } from "../modules/distribution/settings.ts";
+import { closeDay, generateDemoStatement as demoBankStatement, importStatement as importBankStatement, syncAccountingEntries as syncErp } from "../modules/finance/index.ts";
+import { initiatePayment as requestPayment, processNotification as handleNotification } from "../modules/payments/index.ts";
 import { CUSTOMERS, PRODUCTS } from "./catalog.ts";
 import { productIdOf, providerRef, seedActor } from "./companies.ts";
 

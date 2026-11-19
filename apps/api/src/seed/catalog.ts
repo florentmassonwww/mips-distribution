@@ -1,5 +1,6 @@
 // Fixed tables of the fictitious demo data. Every name, address and phone number is invented and
 // marked "(démo)"; e-mail addresses use the reserved `.invalid` top-level domain.
+import type { ClubOutlet } from "../modules/distribution/settings.ts";
 
 /** [sku, name, unit, price in rupees, warehouse stock]. */
 export type ProductSpec = readonly [sku: string, name: string, unit: string, priceRupees: number, stock: number];
@@ -73,7 +74,7 @@ export const CLUB_MEMBERS: readonly MemberSpec[] = [
 ];
 
 /** [outlet, label, base amount in rupees]: consumptions charged to members' accounts. */
-export type ConsumptionSpec = readonly [outlet: string, label: string, baseRupees: number];
+export type ConsumptionSpec = readonly [outlet: ClubOutlet, label: string, baseRupees: number];
 
 export const CLUB_CONSUMPTIONS: readonly ConsumptionSpec[] = [
   ["bar", "Bar - consommations", 650],

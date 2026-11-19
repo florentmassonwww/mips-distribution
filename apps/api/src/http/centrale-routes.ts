@@ -1,24 +1,11 @@
 // Dispatch office ("centrale"): orders, routes, loading and warehouse stock.
 import { z } from "zod";
 import { all } from "../core/db.ts";
-import {
-  OPS_ROLES,
-  adjustStock,
-  assignOrder,
-  centraleDashboard,
-  createOrder,
-  createRoute,
-  listOrders,
-  listRoutes,
-  loadRoute,
-  orderChain,
-  orderInputSchema,
-  routeInputSchema,
-  routeSummary,
-  setOrderStatus,
-  stockLevels,
-  updateRoute,
-} from "./legacy-modules.ts";
+import { dashboard as centraleDashboard } from "../modules/distribution/dashboard.ts";
+import { createRoute, createRouteInput as routeInputSchema, listRoutes, loadRoute, routeSummary, updateRoute } from "../modules/distribution/delivery-routes.ts";
+import { assignOrder, createOrder, createOrderInput as orderInputSchema, listOrders, orderChain, setOrderStatus } from "../modules/distribution/orders.ts";
+import { OPS_ROLES } from "../modules/distribution/settings.ts";
+import { adjustStock, readStock as stockLevels } from "../modules/distribution/stock.ts";
 import { type App, type AppDeps, companyOf, queryFilter, readJson, routeParam } from "./context.ts";
 
 export function registerCentraleRoutes(app: App, deps: AppDeps): void {

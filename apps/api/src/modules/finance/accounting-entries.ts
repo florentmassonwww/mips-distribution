@@ -4,7 +4,8 @@ import { recordAudit } from "../../core/audit.ts";
 import { type Db, type Row, all, run } from "../../core/db.ts";
 import { iso } from "../../core/time.ts";
 import type { ConnectorSet } from "../connectors/index.ts";
-import { companySettings, openException, resolveExceptions } from "./legacy-imports.ts";
+import { autoResolveExceptions as resolveExceptions, raiseException as openException } from "../distribution/exceptions.ts";
+import { readCompanySettings as companySettings } from "../distribution/settings.ts";
 
 interface ErpEntryRow {
   id: string;

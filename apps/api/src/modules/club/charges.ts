@@ -9,13 +9,15 @@ import { businessDay, iso } from "../../core/time.ts";
 import { chargeJournalLines } from "./accounting.ts";
 import { reallocatePayments } from "./allocation.ts";
 import { addDaysToDay } from "./dates.ts";
-import { OUTLETS, loadSettings, nextNumber, queueErpEntry } from "./legacy-deps.ts";
+import { nextNumber } from "../distribution/counters.ts";
+import { queueErpEntry } from "../distribution/exceptions.ts";
+import { CLUB_OUTLETS as OUTLETS, readCompanySettings as loadSettings } from "../distribution/settings.ts";
 import { actorCompanyId, memberById, requireMember } from "./shared.ts";
 import type { ChargeKind, MemberChargeRow, MemberRow } from "./types.ts";
 
 export const chargeMemberInput = z.object({
   kind: z.enum(["consumption", "fee"]),
-  outlet: z.enum(OUTLETS as [string, ...string[]]),
+  outlet: z.enum(OUTLETS),
   label: z.string().min(2).max(80),
   amountMinor: z.number().int().positive().max(1e8),
 });

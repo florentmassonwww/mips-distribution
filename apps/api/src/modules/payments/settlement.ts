@@ -3,7 +3,7 @@ import type { Actor } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run } from "../../core/db.ts";
 import { iso } from "../../core/time.ts";
-import { queueAccountingEntry } from "./legacy-imports.ts";
+import { queueErpEntry as queueAccountingEntry } from "../distribution/exceptions.ts";
 import { confirmPayment, touchPayment } from "./lifecycle.ts";
 import type { PaymentRow } from "./types.ts";
 
