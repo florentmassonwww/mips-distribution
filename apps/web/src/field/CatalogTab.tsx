@@ -5,9 +5,8 @@ import { translate } from "../i18n/translate.ts";
 import { Badge } from "../shared/Badge.tsx";
 import { Field } from "../shared/Form.tsx";
 import { formatMoney } from "../shared/format.ts";
-import { unitPrice } from "../shared/offline.ts";
+import { type LocalRouteView, unitPrice } from "../shared/offline.ts";
 import { findCustomer } from "./route-helpers.ts";
-import type { LocalRouteView } from "../shared/offline.ts";
 
 export function CatalogTab({ work }: { work: LocalRouteView }) {
   const [customerId, setCustomerId] = useState("");

@@ -4,8 +4,8 @@ import { translate } from "../i18n/translate.ts";
 import { Badge, StatusBadge } from "../shared/Badge.tsx";
 import { formatMoney, formatTime } from "../shared/format.ts";
 import { INVOICE_STATUS, ORDER_STATUS, PAYMENT_CHANNEL, PAYMENT_STATUS } from "../shared/labels.ts";
-import { findCustomer } from "./route-helpers.ts";
 import type { LocalRouteView, QueuedAction } from "../shared/offline.ts";
+import { findCustomer } from "./route-helpers.ts";
 
 interface HistoryTabProps {
   work: LocalRouteView;

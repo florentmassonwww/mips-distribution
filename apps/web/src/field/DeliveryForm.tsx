@@ -5,9 +5,6 @@ import { useMemo, useState } from "react";
 import { translate } from "../i18n/translate.ts";
 import { Field, Stepper } from "../shared/Form.tsx";
 import { formatMoney } from "../shared/format.ts";
-import { BackButton } from "./BackButton.tsx";
-import { SignaturePad } from "./SignaturePad.tsx";
-import { findCustomer } from "./route-helpers.ts";
 import {
   type BundleOrder,
   type BundleProduct,
@@ -18,6 +15,9 @@ import {
   type QueuedAction,
   unitPrice,
 } from "../shared/offline.ts";
+import { BackButton } from "./BackButton.tsx";
+import { SignaturePad } from "./SignaturePad.tsx";
+import { findCustomer } from "./route-helpers.ts";
 
 /** Quick reasons for a partial or refused delivery (translated once, when the module loads). */
 export const DELIVERY_ISSUE_REASONS = [

@@ -5,8 +5,8 @@ import { translate } from "../i18n/translate.ts";
 import { Badge } from "../shared/Badge.tsx";
 import { Field } from "../shared/Form.tsx";
 import { formatMoney } from "../shared/format.ts";
-import { amountDue } from "./route-helpers.ts";
 import type { BundleStop, LocalRouteView } from "../shared/offline.ts";
+import { amountDue } from "./route-helpers.ts";
 
 interface StopListProps {
   work: LocalRouteView;

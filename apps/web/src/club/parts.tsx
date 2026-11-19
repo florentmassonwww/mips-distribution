@@ -1,9 +1,9 @@
 // Small pieces shared by several club screens.
-import type { Billing } from "./types.ts";
 import { REMINDER_LEVELS } from "../admin/clubLabels.ts";
 import { translate } from "../i18n/translate.ts";
 import { Badge, StatusBadge } from "../shared/Badge.tsx";
 import { BANK_SETTLEMENT_STATUS, CONFIRMATION_SOURCE, PAYMENT_STATUS } from "../shared/labels.ts";
+import type { Billing } from "./types.ts";
 
 /** " / mois" or " / an", appended to a plan's fee. */
 export const billingSuffix = (billing: Billing): string => (billing === "monthly" ? translate(" / mois") : translate(" / an"));

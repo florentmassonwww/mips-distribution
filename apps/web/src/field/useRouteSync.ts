@@ -4,9 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { translate } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { useFeedback } from "../shared/Feedback.tsx";
-import type { NetworkState } from "../shared/offline.ts";
-import { applySyncResults, queuedActions, syncRequest } from "./offline-queue.ts";
 import {
+  type NetworkState,
   type QueuedAction,
   readBundle,
   readQueue,
@@ -14,6 +13,7 @@ import {
   writeBundle,
   writeQueue,
 } from "../shared/offline.ts";
+import { applySyncResults, queuedActions, syncRequest } from "./offline-queue.ts";
 import type { SyncResult } from "./types.ts";
 
 const SYNC_INTERVAL_MS = 20000;

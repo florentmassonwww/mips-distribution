@@ -1,5 +1,4 @@
 import { Link, useParams } from "react-router-dom";
-import { ERP_ENTRY_KIND_LABELS } from "./labels.ts";
 import { translate } from "../i18n/translate.ts";
 import { Badge, StatusBadge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
@@ -16,6 +15,7 @@ import {
 } from "../shared/labels.ts";
 import { Card, PageHeader } from "../shared/Layout.tsx";
 import { QueryView } from "../shared/QueryView.tsx";
+import { ERP_ENTRY_KIND_LABELS } from "./labels.ts";
 import type { OrderChainData } from "./types.ts";
 
 type ChainStep = readonly [label: string, value: string, state: string];

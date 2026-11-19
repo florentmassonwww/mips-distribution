@@ -3,10 +3,10 @@ import { translate } from "../i18n/translate.ts";
 import { Badge, StatusBadge } from "../shared/Badge.tsx";
 import { formatMoney } from "../shared/format.ts";
 import { INVOICE_STATUS, ORDER_STATUS } from "../shared/labels.ts";
+import type { BundleInvoice, BundleOrder, LocalRouteView } from "../shared/offline.ts";
 import { BackButton } from "./BackButton.tsx";
 import { amountDue, findCustomer } from "./route-helpers.ts";
 import type { FieldView } from "./RouteScreen.tsx";
-import type { BundleInvoice, BundleOrder, LocalRouteView } from "../shared/offline.ts";
 
 interface StopScreenProps {
   work: LocalRouteView;

@@ -10,12 +10,12 @@ import { Field } from "../shared/Form.tsx";
 import { formatMoney, formatMoneyInput, parseMoney } from "../shared/format.ts";
 import { useApi } from "../shared/hooks.ts";
 import { CONFIRMATION_SOURCE, INVOICE_STATUS, PAYMENT_CHANNEL, PAYMENT_STATUS } from "../shared/labels.ts";
+import { newId, type PaymentMethodOption } from "../shared/offline.ts";
 import { QueryView } from "../shared/QueryView.tsx";
 import { useSession } from "../shared/session.ts";
 import { BackButton } from "./BackButton.tsx";
 import { PaymentQrCode } from "./PaymentQrCode.tsx";
 import { amountDue } from "./route-helpers.ts";
-import { newId, type PaymentMethodOption } from "../shared/offline.ts";
 import type { Receipt, ReceiptPayment, SimulationResult } from "./types.ts";
 
 /** The receipt is polled every 2.5 s: the provider's confirmation arrives on the server. */

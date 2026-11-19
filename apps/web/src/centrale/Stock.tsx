@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { STOCK_MOVEMENT_LABELS } from "./labels.ts";
 import { translate } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { DataTable } from "../shared/DataTable.tsx";
@@ -10,6 +9,7 @@ import { useApi } from "../shared/hooks.ts";
 import { Card, PageHeader } from "../shared/Layout.tsx";
 import { QueryView } from "../shared/QueryView.tsx";
 import { useSession } from "../shared/session.ts";
+import { STOCK_MOVEMENT_LABELS } from "./labels.ts";
 import type { StockData } from "./types.ts";
 
 const REFRESH_MS = 1e4;
