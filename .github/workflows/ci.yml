@@ -9,7 +9,7 @@ jobs:
   characterization:
     name: Typecheck and characterization (reference and rebuilt API)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,3 +21,7 @@ jobs:
       - run: npm run test:api
       - run: npx playwright install --with-deps chromium
       - run: npm run test:reference
+      - run: npm run build
+      # The full comparison (4 widths, 288 screenshots) runs locally with npm run test:visual;
+      # CI checks the narrowest and a laptop width to stay within its time budget.
+      - run: node --no-warnings tests/visual/run.mjs --widths=1366,390
