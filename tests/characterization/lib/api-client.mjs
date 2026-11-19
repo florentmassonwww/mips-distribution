@@ -22,7 +22,7 @@ function seeded(seed) {
 }
 
 export async function launchApi() {
-  const { createInstance } = await import("../../../apps/api/src/app.mjs");
+  const { createInstance } = await import("../../../apps/api/src/app.ts");
   const { randomBytes, setRandomGenerator } = await import("../../../apps/api/src/core/random.ts");
   const random = { bytes: randomBytes, setGenerator: setRandomGenerator };
   return {
