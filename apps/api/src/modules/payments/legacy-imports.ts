@@ -1,12 +1,12 @@
 // Typed bindings to functions of modules not rewritten yet (removed once they are).
 // Bound at call time: the legacy modules form import cycles with this one.
-// @ts-expect-error -- legacy module without type declarations
-import * as distribution from "../../legacy/distribution.mjs";
-// @ts-expect-error -- legacy module without type declarations
-import * as club from "../../legacy/club.mjs";
 import type { Db } from "../../core/db.ts";
 import type { ErpSettings, PaymentMethod, PaymentNotification } from "../connectors/index.ts";
 import type { PaymentRow } from "./types.ts";
+import * as m_club_member_payments from "../club/member-payments.ts";
+import * as m_club_payment_view from "../club/payment-view.ts";
+import * as m_distribution_exceptions from "../distribution/exceptions.ts";
+import * as m_distribution_settings from "../distribution/settings.ts";
 
 export interface PaymentMethodSettings {
   enabled: boolean;
@@ -27,7 +27,7 @@ export interface CompanySettings {
 }
 
 export function companySettings(db: Db, companyId: string | null): CompanySettings {
-  return distribution.Xu(db, companyId);
+  return m_distribution_settings.readCompanySettings(db, companyId);
 }
 
 /** Opens a finance exception, unless one is already open for the same type and entity. */
@@ -42,12 +42,12 @@ export function openException(
   details: unknown = {},
   now: Date = new Date(),
 ): void {
-  distribution.U(db, companyId, domain, type, entity, entityId, message, details, now);
+  m_distribution_exceptions.raiseException(db, companyId, domain, type, entity, entityId, message, details, now);
 }
 
 /** Resolves automatically the open exceptions of these types on an entity. */
 export function resolveExceptions(db: Db, companyId: string, types: string[], entityId: string, note: string, now: Date = new Date()): void {
-  distribution.ed(db, companyId, types, entityId, note, now);
+  m_distribution_exceptions.autoResolveExceptions(db, companyId, types, entityId, note, now);
 }
 
 /** Queues an accounting entry; idempotent on (company, kind, entity). */
@@ -61,17 +61,17 @@ export function queueAccountingEntry(
   payload: unknown,
   now: Date = new Date(),
 ): void {
-  distribution.W(db, companyId, kind, entityId, label, amountMinor, payload, now);
+  m_distribution_exceptions.queueErpEntry(db, companyId, kind, entityId, label, amountMinor, payload, now);
 }
 
 /** Payment of the company, or 404 "Paiement introuvable.". */
 export function getCompanyPayment(db: Db, companyId: string | null, paymentId: string): PaymentRow {
-  return club.np(db, companyId, paymentId);
+  return m_club_payment_view.requireCompanyPayment(db, companyId, paymentId);
 }
 
 /** Public JSON view of a payment. */
 export function paymentView(payment: PaymentRow): Record<string, unknown> {
-  return club.rp(payment);
+  return m_club_payment_view.serializePayment(payment);
 }
 
 export interface NotificationOutcome {
@@ -87,5 +87,5 @@ export function applyMemberPaymentNotification(
   notification: PaymentNotification,
   now: Date,
 ): NotificationOutcome | null {
-  return club.Of(db, method, notification, now);
+  return m_club_member_payments.applyMemberPaymentNotification(db, method, notification, now);
 }

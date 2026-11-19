@@ -6,19 +6,31 @@
 import type { z } from "zod";
 import type { Db, Row } from "../core/db.ts";
 import type { Actor, Role } from "../core/actor.ts";
+import * as m_club_accounting from "../modules/club/accounting.ts";
+import * as m_club_bank_reconciliation from "../modules/club/bank-reconciliation.ts";
+import * as m_club_charges from "../modules/club/charges.ts";
+import * as m_club_dashboard from "../modules/club/dashboard.ts";
+import * as m_club_dues from "../modules/club/dues.ts";
+import * as m_club_gate from "../modules/club/gate.ts";
+import * as m_club_member_payments from "../modules/club/member-payments.ts";
+import * as m_club_members from "../modules/club/members.ts";
+import * as m_club_payment_view from "../modules/club/payment-view.ts";
+import * as m_club_portal from "../modules/club/portal.ts";
+import * as m_club_reminders from "../modules/club/reminders.ts";
+import * as m_club_statements from "../modules/club/statements.ts";
+import * as m_connectors_index from "../modules/connectors/index.ts";
+import * as m_distribution_agent_sync from "../modules/distribution/agent-sync.ts";
+import * as m_distribution_dashboard from "../modules/distribution/dashboard.ts";
+import * as m_distribution_delivery_routes from "../modules/distribution/delivery-routes.ts";
+import * as m_distribution_exceptions from "../modules/distribution/exceptions.ts";
+import * as m_distribution_orders from "../modules/distribution/orders.ts";
+import * as m_distribution_settings from "../modules/distribution/settings.ts";
+import * as m_distribution_stock from "../modules/distribution/stock.ts";
+import * as m_finance_index from "../modules/finance/index.ts";
+import * as m_payments_index from "../modules/payments/index.ts";
 
 // The legacy modules are plain JavaScript without declarations: their exports arrive untyped
 // and receive their types below.
-// @ts-expect-error -- untyped legacy module
-import * as distribution from "../legacy/distribution.mjs";
-// @ts-expect-error -- untyped legacy module
-import * as club from "../legacy/club.mjs";
-// @ts-expect-error -- untyped legacy module
-import * as payments from "../legacy/payments.mjs";
-// @ts-expect-error -- untyped legacy module
-import * as finance from "../legacy/finance.mjs";
-// @ts-expect-error -- untyped legacy module
-import * as connectors from "../legacy/connectors.mjs";
 
 // ---------------------------------------------------------------------------------------------
 // Shared vocabulary
@@ -165,205 +177,102 @@ export interface DailyClose extends Row {
 // ---------------------------------------------------------------------------------------------
 // Distribution
 
-export const PAYMENT_METHODS: PaymentMethod[] = distribution.Gu;
+export const PAYMENT_METHODS = m_distribution_settings.PAYMENT_METHODS;
 /** Roles that run operations (orders, routes, stock). */
-export const OPS_ROLES: Role[] = distribution.Ku;
+export const OPS_ROLES = m_distribution_settings.OPS_ROLES;
 /** Roles that handle money (journal, reconciliation, close). */
-export const FINANCE_ROLES: Role[] = distribution.qu;
-export const CLUB_OUTLETS: ClubOutlet[] = distribution.Ju;
+export const FINANCE_ROLES = m_distribution_settings.FINANCE_ROLES;
+export const CLUB_OUTLETS = m_distribution_settings.CLUB_OUTLETS;
 
-export const defaultSettings: () => CompanySettings = distribution.Yu;
-export const companySettings: (db: Db, companyId: string) => CompanySettings = distribution.Xu;
+export const defaultSettings = m_distribution_settings.defaultCompanySettings;
+export const companySettings = m_distribution_settings.readCompanySettings;
 
-export const orderInputSchema: z.ZodType<OrderInput> = distribution.ld;
-export const routeInputSchema: z.ZodObject<{
-  name: z.ZodString;
-  day: z.ZodString;
-  agentId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-  vehicle: z.ZodDefault<z.ZodString>;
-  customerIds: z.ZodDefault<z.ZodArray<z.ZodString>>;
-}> = distribution.hd;
-export const syncActionSchema: z.ZodType<SyncAction> = distribution.jd;
+export const orderInputSchema = m_distribution_orders.createOrderInput;
+export const routeInputSchema = m_distribution_delivery_routes.createRouteInput;
+export const syncActionSchema = m_distribution_agent_sync.syncActionInput;
 
-export const createOrder: (db: Db, actor: Actor, input: OrderInput, now?: Date) => Row & { id: string } = distribution.ud;
-export const assignOrder: (db: Db, actor: Actor, orderId: string, routeId: string | null, now?: Date) => void = distribution.dd;
-export const setOrderStatus: (db: Db, actor: Actor, orderId: string, status: string, now?: Date) => void = distribution.fd;
-export const listOrders: (db: Db, companyId: string, filters: { status?: string; routeId?: string }) => Row[] = distribution.pd;
-export const orderChain: (db: Db, companyId: string, id: string) => Row = distribution.md;
-export const createRoute: (db: Db, actor: Actor, input: RouteInput, now?: Date) => Row & { id: string } = distribution._d;
-export const updateRoute: (db: Db, actor: Actor, routeId: string, patch: Partial<RouteInput>, now?: Date) => void = distribution.vd;
-export const loadRoute: (db: Db, actor: Actor, routeId: string, extras: OrderLineInput[], now?: Date) => void = distribution.yd;
-export const startRoute: (db: Db, actor: Actor, routeId: string, now?: Date) => void = distribution.Td;
-export const routeBundle: (db: Db, actor: Actor, routeId: string, now?: Date) => Row = distribution.Ed;
-export const routeSummary: (db: Db, companyId: string, routeId: string) => Row = distribution.xd;
-export const listRoutes: (db: Db, companyId: string, agentId?: string) => Row[] = distribution.bd;
-export const closeRoute: (db: Db, actor: Actor, routeId: string, now?: Date) => Row = distribution.Ld;
-export const applySyncAction: (db: Db, actor: Actor, action: SyncAction, now?: Date) => SyncActionResult = distribution.Id;
-export const stockLevels: (db: Db, companyId: string) => Row = distribution.Sd;
-export const adjustStock: (db: Db, actor: Actor, productId: string, delta: number, reason: string, now?: Date) => void =
-  distribution.Cd;
-export const listExceptions: (db: Db, companyId: string, domain: "ops" | "finance", status: "open" | "resolved") => Row[] =
-  distribution.td;
-export const resolveException: (
-  db: Db,
-  actor: Actor,
-  exceptionId: string,
-  domains: string[],
-  resolution: "approved" | "rejected",
-  note: string,
-  now?: Date,
-) => void = distribution.Rd;
-export const centraleDashboard: (db: Db, companyId: string, now?: Date) => Row = distribution.zd;
+export const createOrder = m_distribution_orders.createOrder;
+export const assignOrder = m_distribution_orders.assignOrder;
+export const setOrderStatus = m_distribution_orders.setOrderStatus;
+export const listOrders = m_distribution_orders.listOrders;
+export const orderChain = m_distribution_orders.orderChain;
+export const createRoute = m_distribution_delivery_routes.createRoute;
+export const updateRoute = m_distribution_delivery_routes.updateRoute;
+export const loadRoute = m_distribution_delivery_routes.loadRoute;
+export const startRoute = m_distribution_agent_sync.startRoute;
+export const routeBundle = m_distribution_agent_sync.routeBundle;
+export const routeSummary = m_distribution_delivery_routes.routeSummary;
+export const listRoutes = m_distribution_delivery_routes.listRoutes;
+export const closeRoute = m_distribution_agent_sync.closeRoute;
+export const applySyncAction = m_distribution_agent_sync.applySyncAction;
+export const stockLevels = m_distribution_stock.readStock;
+export const adjustStock = m_distribution_stock.adjustStock;
+export const listExceptions = m_distribution_exceptions.listExceptions;
+export const resolveException = m_distribution_exceptions.resolveException;
+export const centraleDashboard = m_distribution_dashboard.dashboard;
 
 // ---------------------------------------------------------------------------------------------
 // Payments
 
-export const requestPayment: (
-  db: Db,
-  connectors: Connectors,
-  actor: Actor,
-  request: PaymentRequest,
-  origin: string,
-  now?: Date,
-) => Promise<{ payment: Row; replayed: boolean }> = payments.dp;
-export const getPayment: (db: Db, actor: Actor, paymentId: string) => Row = payments.up;
-export const checkPayment: (db: Db, connectors: Connectors, actor: Actor, paymentId: string, now?: Date) => Promise<Row> =
-  payments.fp;
-export const cancelPayment: (db: Db, connectors: Connectors, actor: Actor, paymentId: string, now?: Date) => Promise<Row> =
-  payments.pp;
-export const claimPayment: (db: Db, actor: Actor, paymentId: string, now?: Date) => Row = payments.mp;
-export const invoiceReceipt: (db: Db, actor: Actor, invoiceId: string) => Row = payments.vp;
-export const refundPayment: (
-  db: Db,
-  connectors: Connectors,
-  actor: Actor,
-  paymentId: string,
-  amountMinor: number,
-  reason: string,
-  now?: Date,
-) => Promise<Row> = payments._p;
-export const handleNotification: (
-  db: Db,
-  connectors: Connectors,
-  method: PaymentMethod,
-  rawBody: string,
-  signature: string | undefined,
-  now?: Date,
-) => NotificationOutcome = payments.hp;
+export const requestPayment = m_payments_index.initiatePayment;
+export const getPayment = m_payments_index.getPaymentForUser;
+export const checkPayment = m_payments_index.checkPaymentStatus;
+export const cancelPayment = m_payments_index.cancelPayment;
+export const claimPayment = m_payments_index.claimPayment;
+export const invoiceReceipt = m_payments_index.getReceipt;
+export const refundPayment = m_payments_index.refundPayment;
+export const handleNotification = m_payments_index.processNotification;
 
 // ---------------------------------------------------------------------------------------------
 // Finance
 
-export const paymentJournal: (
-  db: Db,
-  companyId: string,
-  filters: { status?: string; method?: string; day?: string; settlement?: string },
-) => Row[] = finance.bp;
-export const invoiceList: (db: Db, companyId: string) => Row[] = finance.xp;
-export const reconciliation: (db: Db, companyId: string) => Row & { lines: Row[] } = finance.wp;
-export const demoBankStatement: (db: Db, companyId: string, withAnomalies: boolean, now?: Date) => string = finance.Sp;
-export const importBankStatement: (
-  db: Db,
-  connectors: Connectors,
-  actor: Actor,
-  filename: string,
-  content: string,
-  now?: Date,
-) => Row = finance.Cp;
-export const dailyCloses: (db: Db, companyId: string) => DailyClose[] = finance.Dp;
-export const closePreview: (db: Db, companyId: string, day: string) => Row = finance.Tp;
-export const closeDay: (db: Db, actor: Actor, day: string, now?: Date) => Row = finance.Ep;
-export const erpEntries: (db: Db, companyId: string) => Row[] = finance.Op;
-export const syncErp: (
-  db: Db,
-  connectors: Connectors,
-  companyId: string,
-  options?: ErpSyncOptions,
-  actor?: Actor,
-  now?: Date,
-) => Promise<Row> = finance.kp;
+export const paymentJournal = m_finance_index.listJournal;
+export const invoiceList = m_finance_index.listInvoices;
+export const reconciliation = m_finance_index.getReconciliation;
+export const demoBankStatement = m_finance_index.generateDemoStatement;
+export const importBankStatement = m_finance_index.importStatement;
+export const dailyCloses = m_finance_index.listDailyCloses;
+export const closePreview = m_finance_index.getDayTotals;
+export const closeDay = m_finance_index.closeDay;
+export const erpEntries = m_finance_index.listAccountingEntries;
+export const syncErp = m_finance_index.syncAccountingEntries;
 
 // ---------------------------------------------------------------------------------------------
 // Club
 
-export const clubDashboard: (db: Db, companyId: string, now?: Date) => Row = club.Mf;
-export const listMembers: (
-  db: Db,
-  companyId: string,
-  now: Date,
-  options: { q?: string; filter?: string; sort?: string },
-) => Row[] = club.jf;
-export const createMember: (db: Db, actor: Actor, input: MemberInput, now?: Date) => { id: string; number: string; reference: string } =
-  club.pf;
-export const memberDetail: (db: Db, companyId: string, memberId: string, now?: Date) => Row = club.Nf;
-export const updateMember: (db: Db, actor: Actor, memberId: string, patch: MemberPatch, now?: Date) => void = club.mf;
-export const addCharge: (db: Db, actor: Actor, memberId: string, input: ChargeInput, now?: Date) => Row = club.gf;
-export const cancelCharge: (db: Db, actor: Actor, chargeId: string, reason: string, now?: Date) => void = club._f;
-export const recordCashPayment: (
-  db: Db,
-  actor: Actor,
-  memberId: string,
-  amountMinor: number,
-  note: string,
-  idempotencyKey: string,
-  now?: Date,
-) => { payment: Row; replayed: boolean } = club.Tf;
-export const memberStatement: (db: Db, actor: Actor, memberId: string, origin: string, now?: Date) => Row = club.Lf;
-export const listDues: (db: Db, companyId: string) => Row = club.bf;
-export const runDues: (db: Db, actor: Actor, period: string, now?: Date) => Row = club.yf;
-export const listReminders: (db: Db, companyId: string) => Row[] = club.Rf;
-export const runReminders: (db: Db, actor: Actor, origin: string, now?: Date) => Row = club.If;
-export const memberPayments: (db: Db, companyId: string, filters: { status?: string; method?: string }) => Row[] = club.kf;
-export const checkMemberPayment: (
-  db: Db,
-  connectors: Connectors,
-  actor: Actor,
-  paymentId: string,
-  now?: Date,
-) => Promise<{ id: string; status: string }> = club.Df;
-export const clubReconciliation: (db: Db, companyId: string) => Row = club.Qf;
-export const demoClubStatement: (db: Db, companyId: string, now?: Date) => string = club.qf;
-export const importClubStatement: (
-  db: Db,
-  connectors: Connectors,
-  actor: Actor,
-  filename: string,
-  content: string,
-  now?: Date,
-) => Row = club.Xf;
-export const assignBankLine: (db: Db, actor: Actor, bankLineId: string, memberId: string, note: string, now?: Date) => Row =
-  club.Zf;
-export const accountingExport: (db: Db, companyId: string, from: string, to: string) => Row & { lines: Row[] } = club.$f;
-export const checkGateCredential: (db: Db, actor: Actor, credential: string, now?: Date) => Row = club.Uf;
-export const gateEvents: (db: Db, companyId: string, since?: string) => Row[] = club.Kf;
+export const clubDashboard = m_club_dashboard.clubDashboard;
+export const listMembers = m_club_members.listMembers;
+export const createMember = m_club_members.createMember;
+export const memberDetail = m_club_members.memberDetail;
+export const updateMember = m_club_members.updateMember;
+export const addCharge = m_club_charges.chargeMember;
+export const cancelCharge = m_club_charges.cancelCharge;
+export const recordCashPayment = m_club_member_payments.recordCashPayment;
+export const memberStatement = m_club_statements.sendStatement;
+export const listDues = m_club_dues.duesOverview;
+export const runDues = m_club_dues.runDues;
+export const listReminders = m_club_reminders.listReminders;
+export const runReminders = m_club_reminders.runReminders;
+export const memberPayments = m_club_member_payments.listMemberPayments;
+export const checkMemberPayment = m_club_member_payments.checkMemberPaymentStatus;
+export const clubReconciliation = m_club_bank_reconciliation.reconciliationOverview;
+export const demoClubStatement = m_club_bank_reconciliation.demoStatement;
+export const importClubStatement = m_club_bank_reconciliation.importStatement;
+export const assignBankLine = m_club_bank_reconciliation.assignBankLine;
+export const accountingExport = m_club_accounting.accountingExport;
+export const checkGateCredential = m_club_gate.checkAtDesk;
+export const gateEvents = m_club_gate.listGateEvents;
 /** Request from a physical gate reader, authenticated by its signature. */
-export const readerAccessCheck: (
-  db: Db,
-  connectors: Connectors,
-  webhookSecret: string,
-  device: string,
-  rawBody: string,
-  signature: string | undefined,
-  now?: Date,
-) => Row = club.Wf;
+export const readerAccessCheck = m_club_gate.handleReaderRequest;
 /** Reader passage recorded directly (used by the seed to simulate the gate). */
-export const recordGatePassage: (db: Db, companyId: string, deviceId: string, credential: string, at?: Date) => Row = club.Gf;
-export const publicMemberView: (db: Db, token: string, now?: Date) => Row = club.ep;
-export const memberByToken: (db: Db, token: string) => Row = club.tp;
-export const startMemberLinkPayment: (
-  db: Db,
-  connectors: Connectors,
-  companyId: string,
-  memberId: string,
-  idempotencyKey: string,
-  origin: string,
-  actor: Actor,
-  now?: Date,
-) => Promise<{ payment: Row; replayed: boolean }> = club.Ef;
+export const recordGatePassage = m_club_gate.readerDecision;
+export const publicMemberView = m_club_portal.memberPortal;
+export const memberByToken = m_club_portal.requireMemberByPortalToken;
+export const startMemberLinkPayment = m_club_member_payments.startLinkPayment;
 /** Public (camelCase) view of a distribution payment row. */
-export const presentPayment: (payment: Row) => Row = club.rp;
+export const presentPayment = m_club_payment_view.serializePayment;
 
 // ---------------------------------------------------------------------------------------------
 // Connectors
 
-export const createConnectors: (db: Db, webhookSecret: string, toleranceSeconds: number) => Connectors = connectors.Yd;
+export const createConnectors = m_connectors_index.createDemoConnectors;
