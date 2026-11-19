@@ -1,17 +1,13 @@
 // "Actions" card of the member detail: send the statement, open the member's page, record cash
 // (accounting), change status and plan (secretariat), and charge a consumption to an active member.
-import {
-  ACCOUNTING_ROLES,
-  Card,
-  Field,
-  hashHref,
-  MEMBER_STATUS,
-  OUTLET_LABELS,
-  parseMoney,
-  QrCode,
-  SECRETARIAT_ROLES,
-  t,
-} from "./legacy.ts";
+import { FINANCE_ROLES, OPS_ROLES } from "../admin/roles.ts";
+import { PaymentQrCode } from "../field/PaymentQrCode.tsx";
+import { translate } from "../i18n/translate.ts";
+import { Field } from "../shared/Form.tsx";
+import { parseMoney } from "../shared/format.ts";
+import { CLUB_OUTLET, MEMBER_STATUS } from "../shared/labels.ts";
+import { Card } from "../shared/Layout.tsx";
+import { hashHref } from "../shared/links.ts";
 import type { MemberDetailData, Plan, SentStatement } from "./types.ts";
 
 /** Consumption being typed: outlet key, optional label, amount as typed (rupees). */
@@ -48,26 +44,26 @@ export function MemberActions({
   onUpdate,
   onAddCharge,
 }: MemberActionsProps) {
-  const isSecretariat = SECRETARIAT_ROLES.includes(role);
+  const isSecretariat = OPS_ROLES.includes(role);
   return (
-    <Card title={t("Actions")}>
+    <Card title={translate("Actions")}>
       <div className="stack">
         <div className="row">
-          <button onClick={onSendStatement}>{t("Envoyer le relevé et le lien de paiement")}</button>
+          <button onClick={onSendStatement}>{translate("Envoyer le relevé et le lien de paiement")}</button>
           <a className="btn secondary" href={hashHref(portalPath)} target="_blank" rel="noreferrer">
-            {t("Ouvrir la page du membre")}
+            {translate("Ouvrir la page du membre")}
           </a>
-          {ACCOUNTING_ROLES.includes(role) && (
+          {FINANCE_ROLES.includes(role) && (
             <button className="secondary" onClick={onRecordCash}>
-              {t("Enregistrer des espèces")}
+              {translate("Enregistrer des espèces")}
             </button>
           )}
           {isSecretariat && (
             <>
               <select
                 value={member.status}
-                onChange={(event) => onUpdate({ status: event.target.value }, t("État du membre modifié."))}
-                aria-label={t("État du membre")}
+                onChange={(event) => onUpdate({ status: event.target.value }, translate("État du membre modifié."))}
+                aria-label={translate("État du membre")}
                 style={{ width: "auto" }}
               >
                 {Object.entries(MEMBER_STATUS).map(([status, [label]]) => (
@@ -78,14 +74,14 @@ export function MemberActions({
               </select>
               <select
                 value={member.plan?.id ?? ""}
-                onChange={(event) => onUpdate({ planId: event.target.value || null }, t("Catégorie modifiée."))}
-                aria-label={t("Catégorie d'adhésion")}
+                onChange={(event) => onUpdate({ planId: event.target.value || null }, translate("Catégorie modifiée."))}
+                aria-label={translate("Catégorie d'adhésion")}
                 style={{ width: "auto" }}
               >
-                <option value="">{t("sans catégorie")}</option>
+                <option value="">{translate("sans catégorie")}</option>
                 {plans?.map((plan) => (
                   <option key={plan.id} value={plan.id}>
-                    {t(plan.name)}
+                    {translate(plan.name)}
                   </option>
                 ))}
               </select>
@@ -95,15 +91,15 @@ export function MemberActions({
         {sentStatement && (
           <div className="grid g2">
             <div className="notice">
-              <strong>{t("Message enregistré (démonstration : rien n'est réellement envoyé)")}</strong>
+              <strong>{translate("Message enregistré (démonstration : rien n'est réellement envoyé)")}</strong>
               <p className="small" style={{ marginTop: 6 }}>
                 {sentStatement.message}
               </p>
             </div>
             <div className="stack">
-              <QrCode value={sentStatement.url} />
+              <PaymentQrCode value={sentStatement.url} />
               <div className="small muted" style={{ textAlign: "center" }}>
-                {t("Le membre peut aussi scanner ce code au secrétariat.")}
+                {translate("Le membre peut aussi scanner ce code au secrétariat.")}
               </div>
             </div>
           </div>
@@ -111,24 +107,24 @@ export function MemberActions({
         {/* Only active members can be charged a consumption. */}
         {isSecretariat && member.status === "active" && (
           <div className="grid g4">
-            <Field label={t("Lieu")}>
+            <Field label={translate("Lieu")}>
               <select value={charge.outlet} onChange={(event) => onChargeChange({ ...charge, outlet: event.target.value })}>
-                {Object.entries(OUTLET_LABELS).map(([outlet, label]) => (
+                {Object.entries(CLUB_OUTLET).map(([outlet, label]) => (
                   <option key={outlet} value={outlet}>
                     {label}
                   </option>
                 ))}
               </select>
             </Field>
-            <Field label={t("Libellé")}>
+            <Field label={translate("Libellé")}>
               <input
                 type="text"
                 value={charge.label}
-                placeholder={OUTLET_LABELS[charge.outlet]}
+                placeholder={CLUB_OUTLET[charge.outlet]}
                 onChange={(event) => onChargeChange({ ...charge, label: event.target.value })}
               />
             </Field>
-            <Field label={t("Montant (Rs)")}>
+            <Field label={translate("Montant (Rs)")}>
               <input
                 type="text"
                 inputMode="decimal"
@@ -138,7 +134,7 @@ export function MemberActions({
             </Field>
             <div className="row" style={{ alignItems: "flex-end" }}>
               <button className="secondary" disabled={!(parseMoney(charge.amount) ?? 0)} onClick={onAddCharge}>
-                {t("Imputer au compte")}
+                {translate("Imputer au compte")}
               </button>
             </div>
           </div>

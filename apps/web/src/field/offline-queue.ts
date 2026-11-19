@@ -2,10 +2,9 @@
 // POST /api/agent/sync when the network is back. localStorage key (unchanged from v0.1.0):
 // md_queue_<user id>, a JSON array of QueuedAction. Each action keeps the id generated on the
 // device: the server applies an id only once, so sending an action again is harmless.
-import { translateServerMessage } from "./legacy-bridge.js";
-import type { QueuedAction, SyncResult } from "./types.ts";
-
-export { readQueue, writeQueue, newId as newActionId } from "./legacy-bridge.js";
+import { localizeErrorMessage } from "../shared/errors.ts";
+import type { QueuedAction } from "../shared/offline.ts";
+import type { SyncResult } from "./types.ts";
 
 export const queuedActions = (queue: QueuedAction[]): QueuedAction[] => queue.filter((action) => action.state === "queued");
 
@@ -27,7 +26,7 @@ export function applySyncResults(queue: QueuedAction[], results: SyncResult[]): 
       result.status === "rejected"
         ? next.map((action) =>
             action.id === result.id
-              ? { ...action, state: "rejected", message: result.message ? translateServerMessage(result.code ?? "", result.message) : undefined }
+              ? { ...action, state: "rejected", message: result.message ? localizeErrorMessage(result.code ?? "", result.message) : undefined }
               : action,
           )
         : next.filter((action) => action.id !== result.id);

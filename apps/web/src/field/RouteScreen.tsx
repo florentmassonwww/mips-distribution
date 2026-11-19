@@ -1,9 +1,14 @@
 // The route open on the phone: sync bar, then the tabs (stops, catalogue, history, summary) or
 // one of the sub-screens (stop, delivery, sale, payment, receipt).
 import { useMemo, useState } from "react";
-import { formatDate, formatDay, formatTime, LanguageToggle, t, translateServerMessage, useNetwork, useSession, useUi } from "./legacy-bridge.js";
-import { applyQueue } from "./bundle-cache.ts";
-import { queuedActions, readQueue, rejectedActions } from "./offline-queue.ts";
+import { translate } from "../i18n/translate.ts";
+import { localizeErrorMessage } from "../shared/errors.ts";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatDayLong, formatTime } from "../shared/format.ts";
+import { LanguageToggle } from "../shared/LanguageToggle.tsx";
+import { applyQueuedActions, readQueue, useNetwork } from "../shared/offline.ts";
+import { useSession } from "../shared/session.ts";
+import { queuedActions, rejectedActions } from "./offline-queue.ts";
 import { useRouteSync } from "./useRouteSync.ts";
 import { StopList } from "./StopList.tsx";
 import { CatalogTab } from "./CatalogTab.tsx";
@@ -32,20 +37,20 @@ interface RouteScreenProps {
 
 export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
   const { session } = useSession();
-  const userId = session.user.id;
-  const ui = useUi();
+  const userId = session.user!.id;
+  const ui = useFeedback();
   const network = useNetwork();
   const { bundle, queue, setQueue, syncing, lastSyncAt, sync, submit } = useRouteSync(routeId, userId, network, onLeave);
   const [view, setView] = useState<FieldView>({ name: "home" });
   const [tab, setTab] = useState<Tab>("route");
-  const work = useMemo(() => (bundle ? applyQueue(bundle, queue) : null), [bundle, queue]);
+  const work = useMemo(() => (bundle ? applyQueuedActions(bundle, queue) : null), [bundle, queue]);
 
   if (!bundle || !work) {
     return (
       <div className="stack">
-        <div className="notice warn">{t("Tournée non disponible hors ligne : connectez-vous au réseau une première fois.")}</div>
+        <div className="notice warn">{translate("Tournée non disponible hors ligne : connectez-vous au réseau une première fois.")}</div>
         <button className="secondary" onClick={onLeave}>
-          {t("Retour")}
+          {translate("Retour")}
         </button>
       </div>
     );
@@ -66,19 +71,19 @@ export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
   // offline, or refused by the server) back to the stop.
   const afterSubmit = (result: SyncResult | null, customerId: string) => {
     if (result?.status === "rejected") {
-      ui.toast(result.message ? translateServerMessage(result.code ?? "", result.message) : t("Action refusée par le serveur."), "err");
+      ui.toast(result.message ? localizeErrorMessage(result.code ?? "", result.message) : translate("Action refusée par le serveur."), "err");
       go({ name: "stop", customerId });
     } else if (result?.result?.invoiceId) {
-      ui.toast(t("{0} enregistrée.", result.result.orderNumber));
+      ui.toast(translate("{0} enregistrée.", result.result.orderNumber));
       go({ name: "pay", invoiceId: result.result.invoiceId });
     } else go({ name: "stop", customerId });
   };
 
   const tabs: [Tab, string][] = [
-    ["route", t("Tournée")],
-    ["catalog", t("Catalogue")],
-    ["history", t("Historique")],
-    ["summary", t("Bilan")],
+    ["route", translate("Tournée")],
+    ["catalog", translate("Catalogue")],
+    ["history", translate("Historique")],
+    ["summary", translate("Bilan")],
   ];
 
   return (
@@ -89,43 +94,43 @@ export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
           <span className="row">
             <LanguageToggle />
             <button className="sm ghost" onClick={onLeave}>
-              {t("Tournées")}
+              {translate("Tournées")}
             </button>
           </span>
         </div>
         <div className="muted">
-          {formatDay(bundle.route.day)} · {bundle.route.vehicle}
+          {formatDayLong(bundle.route.day)} · {bundle.route.vehicle}
         </div>
       </div>
       <div className={`syncbar ${network.online ? (pendingCount ? "warn" : "ok") : "off"}`} role="status">
         <div>
-          <strong>{network.online ? t("En ligne") : t("Hors ligne")}</strong>
+          <strong>{network.online ? translate("En ligne") : translate("Hors ligne")}</strong>
           {" · "}
-          {pendingCount ? t("{0} action(s) à synchroniser", pendingCount) : t("tout est synchronisé")}
+          {pendingCount ? translate("{0} action(s) à synchroniser", pendingCount) : translate("tout est synchronisé")}
           <div className="small">
             {syncing
-              ? t("Synchronisation…")
+              ? translate("Synchronisation…")
               : lastSyncAt
-                ? t("Dernière synchro {0}", formatTime(lastSyncAt))
-                : t("Données du {0}", formatDate(bundle.generatedAt, true))}
+                ? translate("Dernière synchro {0}", formatTime(lastSyncAt))
+                : translate("Données du {0}", formatDate(bundle.generatedAt, true))}
           </div>
         </div>
         <div className="row">
           {network.online && (
             <button className="sm secondary" disabled={syncing} onClick={() => ui.run(sync)}>
-              {t("Synchroniser")}
+              {translate("Synchroniser")}
             </button>
           )}
           {session.demoMode && (
             <button className="sm secondary" onClick={() => network.setForced(!network.forced)}>
-              {network.forced ? t("Rétablir le réseau") : t("Simuler hors ligne")}
+              {network.forced ? translate("Rétablir le réseau") : translate("Simuler hors ligne")}
             </button>
           )}
         </div>
       </div>
       {rejected.length > 0 && (
         <div className="notice err" role="alert">
-          {rejected.length} {t("action(s) refusée(s) par le serveur : voir l'onglet Historique.")}
+          {rejected.length} {translate("action(s) refusée(s) par le serveur : voir l'onglet Historique.")}
         </div>
       )}
       {view.name === "home" && (

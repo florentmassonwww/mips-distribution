@@ -1,23 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  apiRequest,
-  Card,
-  CONFIRMED_VIA_LABELS,
-  CsvExportLink,
-  formatDate,
-  formatMoney,
-  PageHead,
-  PAYMENT_METHOD_LABELS,
-  PAYMENT_STATUS,
-  QueryView,
-  SETTLEMENT_STATUS,
-  StatusBadge,
-  Table,
-  t,
-  useApi,
-  useFeedback,
-} from "../centrale/legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { BANK_SETTLEMENT_STATUS, CONFIRMATION_SOURCE, PAYMENT_CHANNEL, PAYMENT_STATUS } from "../shared/labels.ts";
+import { Card, CsvExportLink, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
 import type { JournalEntry } from "./types.ts";
 
 const REFRESH_MS = 8e3;
@@ -66,7 +58,7 @@ export function TransactionJournal() {
   const checkWithProvider = (entry: JournalEntry) =>
     feedback.run(async () => {
       const result = await apiRequest<{ status: string }>(`POST`, `/api/payments/${entry.id}/check`);
-      feedback.toast(t(`Réponse du prestataire appliquée : {0}.`, PAYMENT_STATUS[result.status]?.[0] ?? result.status));
+      feedback.toast(translate(`Réponse du prestataire appliquée : {0}.`, PAYMENT_STATUS[result.status]?.[0] ?? result.status));
       await journal.reload();
     });
 
@@ -74,75 +66,75 @@ export function TransactionJournal() {
   const refund = async (entry: JournalEntry) => {
     const amountMinor = await feedback.ask({
       kind: `money`,
-      title: t(`Rembourser {0}`, entry.invoice),
-      text: t(
+      title: translate(`Rembourser {0}`, entry.invoice),
+      text: translate(
         `Solde remboursable : {0}. Le remboursement est demandé au prestataire.`,
         formatMoney(entry.amount_minor - entry.refunded_minor),
       ),
-      label: t(`Montant à rembourser (Rs)`),
-      confirm: t(`Continuer`),
+      label: translate(`Montant à rembourser (Rs)`),
+      confirm: translate(`Continuer`),
     });
     if (!amountMinor) return;
-    const reason = await feedback.ask({ title: t(`Motif du remboursement`), confirm: t(`Rembourser`), danger: true });
+    const reason = await feedback.ask({ title: translate(`Motif du remboursement`), confirm: translate(`Rembourser`), danger: true });
     if (reason)
       await feedback.run(async () => {
         await apiRequest(`POST`, `/api/finance/payments/${entry.id}/refund`, { amountMinor: Number(amountMinor), reason });
         await journal.reload();
-      }, t(`Remboursement enregistré.`));
+      }, translate(`Remboursement enregistré.`));
   };
 
   const setFilter = (key: keyof JournalFilters) => (value: string) => setFilters({ ...filters, [key]: value });
 
   return (
     <>
-      <PageHead
-        title={t(`Journal des transactions`)}
-        sub={t(
+      <PageHeader
+        title={translate(`Journal des transactions`)}
+        sub={translate(
           `Une ligne par tentative de paiement. « Confirmé » (prestataire) et « réglé en banque » (relevé) sont suivis séparément.`,
         )}
       >
         <FilterSelect
           value={filters.status}
           onChange={setFilter(`status`)}
-          label={t(`Tous les états`)}
+          label={translate(`Tous les états`)}
           options={Object.entries(PAYMENT_STATUS).map(([status, [label]]) => [status, label] as const)}
         />
         <FilterSelect
           value={filters.method}
           onChange={setFilter(`method`)}
-          label={t(`Tous les moyens`)}
-          options={Object.entries(PAYMENT_METHOD_LABELS)}
+          label={translate(`Tous les moyens`)}
+          options={Object.entries(PAYMENT_CHANNEL)}
         />
         <FilterSelect
           value={filters.settlement}
           onChange={setFilter(`settlement`)}
-          label={t(`Règlement`)}
+          label={translate(`Règlement`)}
           options={[
-            [`unsettled`, t(`Confirmé, non réglé`)],
-            [`settled`, t(`Réglé en banque`)],
+            [`unsettled`, translate(`Confirmé, non réglé`)],
+            [`settled`, translate(`Réglé en banque`)],
           ]}
         />
         <input
           type="date"
           value={filters.day}
           onChange={(event) => setFilters({ ...filters, day: event.target.value })}
-          aria-label={t(`Jour`)}
+          aria-label={translate(`Jour`)}
           style={{ width: `auto` }}
         />
         <CsvExportLink href={`/api/finance/journal?format=csv${query ? `&${query}` : ``}`} />
-      </PageHead>
-      <Card title={t(`Transactions`)} flush>
+      </PageHeader>
+      <Card title={translate(`Transactions`)} flush>
         <QueryView q={journal}>
           {(rows) => (
-            <Table
+            <DataTable
               rows={rows}
               rowKey={(entry) => entry.id}
-              empty={t(`Aucune transaction pour ces critères.`)}
+              empty={translate(`Aucune transaction pour ces critères.`)}
               onRow={(entry) => navigate(`/finance/chaine/${entry.order_id}`)}
               cols={[
-                [t(`Créée`), (entry) => formatDate(entry.created_at, true)],
+                [translate(`Créée`), (entry) => formatDate(entry.created_at, true)],
                 [
-                  t(`Facture`),
+                  translate(`Facture`),
                   (entry) => (
                     <>
                       <strong>{entry.invoice}</strong>
@@ -151,16 +143,16 @@ export function TransactionJournal() {
                   ),
                 ],
                 // Agent names carry their role in parentheses: show the name only.
-                [t(`Agent`), (entry) => entry.agent?.split(` (`)[0] ?? `—`],
-                [t(`Moyen`), (entry) => PAYMENT_METHOD_LABELS[entry.method]],
+                [translate(`Agent`), (entry) => entry.agent?.split(` (`)[0] ?? `—`],
+                [translate(`Moyen`), (entry) => PAYMENT_CHANNEL[entry.method]],
                 [
-                  t(`Montant`),
+                  translate(`Montant`),
                   (entry) => (
                     <>
                       {formatMoney(entry.amount_minor)}
                       {entry.refunded_minor ? (
                         <div className="small muted">
-                          {t(`remboursé`)} {formatMoney(entry.refunded_minor)}
+                          {translate(`remboursé`)} {formatMoney(entry.refunded_minor)}
                         </div>
                       ) : null}
                     </>
@@ -168,37 +160,37 @@ export function TransactionJournal() {
                   `right`,
                 ],
                 [
-                  t(`Paiement`),
+                  translate(`Paiement`),
                   (entry) => (
                     <>
                       <StatusBadge map={PAYMENT_STATUS} value={entry.status} />
                       {entry.confirmed_via && (
                         <div className="small muted">
-                          {t(`par`)} {CONFIRMED_VIA_LABELS[entry.confirmed_via]}
+                          {translate(`par`)} {CONFIRMATION_SOURCE[entry.confirmed_via]}
                         </div>
                       )}
                       {(entry.failure_reason ?? entry.verify_reason) && (
-                        <div className="small muted">{t(entry.failure_reason ?? entry.verify_reason ?? ``)}</div>
+                        <div className="small muted">{translate(entry.failure_reason ?? entry.verify_reason ?? ``)}</div>
                       )}
                     </>
                   ),
                 ],
                 [
-                  t(`Règlement bancaire`),
+                  translate(`Règlement bancaire`),
                   (entry) =>
                     [`confirmed`, `refunded`].includes(entry.status) ? (
-                      <StatusBadge map={SETTLEMENT_STATUS} value={entry.settlement_status} />
+                      <StatusBadge map={BANK_SETTLEMENT_STATUS} value={entry.settlement_status} />
                     ) : (
                       `—`
                     ),
                 ],
                 [
-                  t(`Frais`),
+                  translate(`Frais`),
                   (entry) =>
                     entry.fee_actual_minor === null ? (
                       entry.status === `confirmed` ? (
                         <span className="muted">
-                          {formatMoney(entry.fee_expected_minor)} {t(`att.`)}
+                          {formatMoney(entry.fee_expected_minor)} {translate(`att.`)}
                         </span>
                       ) : (
                         `—`
@@ -208,7 +200,7 @@ export function TransactionJournal() {
                     ),
                   `right`,
                 ],
-                [t(`Référence`), (entry) => <span className="code">{entry.provider_ref ?? `—`}</span>],
+                [translate(`Référence`), (entry) => <span className="code">{entry.provider_ref ?? `—`}</span>],
                 [
                   ``,
                   (entry) => (
@@ -216,12 +208,12 @@ export function TransactionJournal() {
                     <div className="row" onClick={(event) => event.stopPropagation()}>
                       {(entry.status === `pending` || entry.status === `to_verify`) && (
                         <button className="sm" onClick={() => checkWithProvider(entry)}>
-                          {t(`Interroger le prestataire`)}
+                          {translate(`Interroger le prestataire`)}
                         </button>
                       )}
                       {entry.status === `confirmed` && (
                         <button className="sm danger" onClick={() => refund(entry)}>
-                          {t(`Rembourser`)}
+                          {translate(`Rembourser`)}
                         </button>
                       )}
                     </div>

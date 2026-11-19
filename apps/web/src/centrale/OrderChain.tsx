@@ -1,24 +1,21 @@
 import { Link, useParams } from "react-router-dom";
 import { ERP_ENTRY_KIND_LABELS } from "./labels.ts";
+import { translate } from "../i18n/translate.ts";
+import { Badge, StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
 import {
-  Badge,
-  Card,
-  CONFIRMED_VIA_LABELS,
-  ERP_STATUS,
-  formatDate,
-  formatMoney,
+  BANK_SETTLEMENT_STATUS,
+  CONFIRMATION_SOURCE,
+  ERP_SYNC_STATUS,
   INVOICE_STATUS,
   ORDER_STATUS,
-  PageHead,
-  PAYMENT_METHOD_LABELS,
+  PAYMENT_CHANNEL,
   PAYMENT_STATUS,
-  QueryView,
-  SETTLEMENT_STATUS,
-  StatusBadge,
-  Table,
-  t,
-  useApi,
-} from "./legacy.ts";
+} from "../shared/labels.ts";
+import { Card, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
 import type { OrderChainData } from "./types.ts";
 
 type ChainStep = readonly [label: string, value: string, state: string];
@@ -31,40 +28,40 @@ function chainSteps(chain: OrderChainData): ChainStep[] {
     .filter((payment) => payment.settlement_status === `settled`)
     .reduce((sum, payment) => sum + payment.amount_minor - payment.refunded_minor, 0);
   const deliveryOutcomes: Record<string, string> = {
-    full: t(`Complète`),
-    partial: t(`Partielle`),
-    refused: t(`Refusée`),
+    full: translate(`Complète`),
+    partial: translate(`Partielle`),
+    refused: translate(`Refusée`),
   };
   return [
-    [t(`Commande`), order.number, ORDER_STATUS[order.status]?.[0] ?? order.status],
+    [translate(`Commande`), order.number, ORDER_STATUS[order.status]?.[0] ?? order.status],
     [
-      t(`Livraison`),
+      translate(`Livraison`),
       delivery ? formatDate(delivery.at, true) : `—`,
-      delivery ? (deliveryOutcomes[delivery.outcome] ?? ``) : t(`À faire`),
+      delivery ? (deliveryOutcomes[delivery.outcome] ?? ``) : translate(`À faire`),
     ],
     [
-      t(`Facture`),
+      translate(`Facture`),
       invoice ? `${invoice.number} · ${formatMoney(invoice.amount_minor)}` : `—`,
-      invoice ? INVOICE_STATUS[invoice.status]![0] : t(`Aucune`),
+      invoice ? INVOICE_STATUS[invoice.status]![0] : translate(`Aucune`),
     ],
     [
-      t(`Transaction`),
+      translate(`Transaction`),
       payments.length ? `${payments.length} tentative(s)` : `—`,
-      invoice ? t(`{0} confirmé`, formatMoney(invoice.paid_minor - invoice.refunded_minor)) : ``,
+      invoice ? translate(`{0} confirmé`, formatMoney(invoice.paid_minor - invoice.refunded_minor)) : ``,
     ],
     [
-      t(`Règlement bancaire`),
+      translate(`Règlement bancaire`),
       formatMoney(settled),
-      invoice && settled >= invoice.amount_minor ? t(`Réglé`) : t(settled > 0 ? `Partiel` : `Non réglé`),
+      invoice && settled >= invoice.amount_minor ? translate(`Réglé`) : translate(settled > 0 ? `Partiel` : `Non réglé`),
     ],
     [
       `ERP`,
       `${erp.filter((entry) => entry.status === `synced`).length}/${erp.length} écriture(s)`,
       erp.some((entry) => entry.status === `failed`)
-        ? t(`En erreur`)
+        ? translate(`En erreur`)
         : erp.length && erp.every((entry) => entry.status === `synced`)
-          ? t(`Synchronisé`)
-          : t(`En attente`),
+          ? translate(`Synchronisé`)
+          : translate(`En attente`),
     ],
   ];
 }
@@ -84,14 +81,14 @@ export function OrderChain({ back }: OrderChainProps) {
         const { order, delivery } = chain;
         return (
           <>
-            <PageHead
+            <PageHeader
               title={`${order.number} · ${order.customer}`}
               sub={
                 <>
-                  <Link to={back}>{t(`← Retour`)}</Link>
+                  <Link to={back}>{translate(`← Retour`)}</Link>
                   {` · `}
-                  {order.kind === `route_sale` ? t(`Vente sur place`) : t(`Commande`)}
-                  {order.route ? ` · ${order.route}` : ``} {t(`· créée le`)} {formatDate(order.created_at, true)}
+                  {order.kind === `route_sale` ? translate(`Vente sur place`) : translate(`Commande`)}
+                  {order.route ? ` · ${order.route}` : ``} {translate(`· créée le`)} {formatDate(order.created_at, true)}
                   {order.created_by_name ? ` par ${order.created_by_name}` : ``}
                 </>
               }
@@ -107,14 +104,14 @@ export function OrderChain({ back }: OrderChainProps) {
                 ))}
               </ol>
               <div className="grid g2">
-                <Card title={t(`Lignes`)} flush>
-                  <Table
+                <Card title={translate(`Lignes`)} flush>
+                  <DataTable
                     rows={chain.lines}
                     rowKey={(line) => line.id}
                     empty={`—`}
                     cols={[
                       [
-                        t(`Produit`),
+                        translate(`Produit`),
                         (line) => (
                           <>
                             {line.product}
@@ -122,40 +119,40 @@ export function OrderChain({ back }: OrderChainProps) {
                           </>
                         ),
                       ],
-                      [t(`Commandé`), (line) => line.qty_ordered, `right`],
-                      [t(`Livré`), (line) => (delivery ? line.qty_delivered : `—`), `right`],
-                      [t(`Prix`), (line) => formatMoney(line.unit_price_minor), `right`],
+                      [translate(`Commandé`), (line) => line.qty_ordered, `right`],
+                      [translate(`Livré`), (line) => (delivery ? line.qty_delivered : `—`), `right`],
+                      [translate(`Prix`), (line) => formatMoney(line.unit_price_minor), `right`],
                       [
-                        t(`Facturé`),
+                        translate(`Facturé`),
                         (line) => (delivery ? formatMoney(line.qty_delivered * line.unit_price_minor) : `—`),
                         `right`,
                       ],
                     ]}
                   />
                 </Card>
-                <Card title={t(`Livraison et preuve`)}>
+                <Card title={translate(`Livraison et preuve`)}>
                   {delivery ? (
                     <dl className="kv">
-                      <dt>{t(`Agent`)}</dt>
+                      <dt>{translate(`Agent`)}</dt>
                       <dd>{delivery.agent}</dd>
-                      <dt>{t(`Date du geste`)}</dt>
+                      <dt>{translate(`Date du geste`)}</dt>
                       <dd>
                         {formatDate(delivery.at, true)}{" "}
                         {delivery.offline ? (
                           <Badge kind="warn">
-                            {t(`saisi hors ligne, synchronisé`)} {formatDate(delivery.synced_at, true)}
+                            {translate(`saisi hors ligne, synchronisé`)} {formatDate(delivery.synced_at, true)}
                           </Badge>
                         ) : null}
                       </dd>
                       {delivery.reason && (
                         <>
-                          <dt>{t(`Motif`)}</dt>
+                          <dt>{translate(`Motif`)}</dt>
                           <dd>{delivery.reason}</dd>
                         </>
                       )}
                       {delivery.returns_minor > 0 && (
                         <>
-                          <dt>{t(`Retours`)}</dt>
+                          <dt>{translate(`Retours`)}</dt>
                           <dd>
                             {(JSON.parse(delivery.returns_json) as { qty: number; product: string }[])
                               .map((item) => `${item.qty} × ${item.product}`)
@@ -165,41 +162,41 @@ export function OrderChain({ back }: OrderChainProps) {
                           </dd>
                         </>
                       )}
-                      <dt>{t(`Reçu par`)}</dt>
+                      <dt>{translate(`Reçu par`)}</dt>
                       <dd>{delivery.pod_name || `—`}</dd>
                       {delivery.pod_signature && (
                         <>
-                          <dt>{t(`Signature`)}</dt>
+                          <dt>{translate(`Signature`)}</dt>
                           <dd>
-                            <img className="sigimg" src={delivery.pod_signature} alt={t(`Signature du réceptionnaire`)} />
+                            <img className="sigimg" src={delivery.pod_signature} alt={translate(`Signature du réceptionnaire`)} />
                           </dd>
                         </>
                       )}
                     </dl>
                   ) : (
                     <div className="muted">
-                      {t(`Pas encore livrée.`)}
-                      {order.note ? t(` Consigne : {0}`, order.note) : ``}
+                      {translate(`Pas encore livrée.`)}
+                      {order.note ? translate(` Consigne : {0}`, order.note) : ``}
                     </div>
                   )}
                 </Card>
               </div>
-              <Card title={t(`Transactions`)} flush>
-                <Table
+              <Card title={translate(`Transactions`)} flush>
+                <DataTable
                   rows={chain.payments}
                   rowKey={(payment) => payment.id}
-                  empty={t(`Aucune tentative de paiement.`)}
+                  empty={translate(`Aucune tentative de paiement.`)}
                   cols={[
-                    [t(`Créée`), (payment) => formatDate(payment.created_at, true)],
-                    [t(`Moyen`), (payment) => PAYMENT_METHOD_LABELS[payment.method]],
+                    [translate(`Créée`), (payment) => formatDate(payment.created_at, true)],
+                    [translate(`Moyen`), (payment) => PAYMENT_CHANNEL[payment.method]],
                     [
-                      t(`Montant`),
+                      translate(`Montant`),
                       (payment) => (
                         <>
                           {formatMoney(payment.amount_minor)}
                           {payment.refunded_minor ? (
                             <div className="small muted">
-                              {t(`remboursé`)} {formatMoney(payment.refunded_minor)}
+                              {translate(`remboursé`)} {formatMoney(payment.refunded_minor)}
                             </div>
                           ) : null}
                         </>
@@ -207,28 +204,28 @@ export function OrderChain({ back }: OrderChainProps) {
                       `right`,
                     ],
                     [
-                      t(`Paiement`),
+                      translate(`Paiement`),
                       (payment) => (
                         <>
                           <StatusBadge map={PAYMENT_STATUS} value={payment.status} />
                           {payment.confirmed_via && (
                             <div className="small muted">
-                              {t(`par`)} {CONFIRMED_VIA_LABELS[payment.confirmed_via]}
+                              {translate(`par`)} {CONFIRMATION_SOURCE[payment.confirmed_via]}
                             </div>
                           )}
                           {(payment.failure_reason || payment.verify_reason) && (
-                            <div className="small muted">{t(payment.failure_reason ?? payment.verify_reason ?? ``)}</div>
+                            <div className="small muted">{translate(payment.failure_reason ?? payment.verify_reason ?? ``)}</div>
                           )}
                         </>
                       ),
                     ],
                     [
-                      t(`Règlement`),
+                      translate(`Règlement`),
                       (payment) =>
                         // Only money the provider confirmed can be settled by the bank.
                         [`confirmed`, `refunded`].includes(payment.status) ? (
                           <>
-                            <StatusBadge map={SETTLEMENT_STATUS} value={payment.settlement_status} />
+                            <StatusBadge map={BANK_SETTLEMENT_STATUS} value={payment.settlement_status} />
                             {payment.settled_at && <div className="small muted">{formatDate(payment.settled_at)}</div>}
                           </>
                         ) : (
@@ -236,12 +233,12 @@ export function OrderChain({ back }: OrderChainProps) {
                         ),
                     ],
                     [
-                      t(`Frais`),
+                      translate(`Frais`),
                       (payment) =>
                         payment.fee_actual_minor === null ? (
                           payment.status === `confirmed` ? (
                             <span className="muted">
-                              {formatMoney(payment.fee_expected_minor)} {t(`attendu`)}
+                              {formatMoney(payment.fee_expected_minor)} {translate(`attendu`)}
                             </span>
                           ) : (
                             `—`
@@ -251,34 +248,34 @@ export function OrderChain({ back }: OrderChainProps) {
                             {formatMoney(payment.fee_actual_minor)}
                             {payment.fee_actual_minor !== payment.fee_expected_minor && (
                               <div className="small muted">
-                                {t(`attendu`)} {formatMoney(payment.fee_expected_minor)}
+                                {translate(`attendu`)} {formatMoney(payment.fee_expected_minor)}
                               </div>
                             )}
                           </>
                         ),
                       `right`,
                     ],
-                    [t(`Référence`), (payment) => <span className="code">{payment.provider_ref ?? `—`}</span>],
-                    [t(`Agent`), (payment) => payment.agent ?? `—`],
+                    [translate(`Référence`), (payment) => <span className="code">{payment.provider_ref ?? `—`}</span>],
+                    [translate(`Agent`), (payment) => payment.agent ?? `—`],
                   ]}
                 />
               </Card>
-              <Card title={t(`Écritures ERP`)} flush>
-                <Table
+              <Card title={translate(`Écritures ERP`)} flush>
+                <DataTable
                   rows={chain.erp}
                   rowKey={(entry) => entry.id}
-                  empty={t(`Aucune écriture.`)}
+                  empty={translate(`Aucune écriture.`)}
                   cols={[
-                    [t(`Type`), (entry) => ERP_ENTRY_KIND_LABELS[entry.kind] ?? entry.kind],
-                    [t(`Libellé`), (entry) => entry.label],
-                    [t(`Montant`), (entry) => formatMoney(entry.amount_minor), `right`],
-                    [t(`État`), (entry) => <StatusBadge map={ERP_STATUS} value={entry.status} />],
+                    [translate(`Type`), (entry) => ERP_ENTRY_KIND_LABELS[entry.kind] ?? entry.kind],
+                    [translate(`Libellé`), (entry) => entry.label],
+                    [translate(`Montant`), (entry) => formatMoney(entry.amount_minor), `right`],
+                    [translate(`État`), (entry) => <StatusBadge map={ERP_SYNC_STATUS} value={entry.status} />],
                     [
-                      t(`Référence ERP`),
+                      translate(`Référence ERP`),
                       (entry) =>
                         entry.external_ref ? <span className="code">{entry.external_ref}</span> : (entry.last_error ?? `—`),
                     ],
-                    [t(`Tentatives`), (entry) => entry.attempts, `right`],
+                    [translate(`Tentatives`), (entry) => entry.attempts, `right`],
                   ]}
                 />
               </Card>

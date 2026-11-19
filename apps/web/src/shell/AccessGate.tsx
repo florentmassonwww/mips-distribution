@@ -1,10 +1,13 @@
 // Access code asked before anything else when the server is started with ACCESS_CODE.
 import { useState } from "react";
-import { K } from "../legacy/i18n.js";
-import { $ as Field, J as api, _v as useUi, yv as LanguageToggle } from "../legacy/shared.js";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { Field } from "../shared/Form.tsx";
+import { LanguageToggle } from "../shared/LanguageToggle.tsx";
 
 export function AccessGate({ onOk }: { onOk: () => void }) {
-  const ui = useUi();
+  const ui = useFeedback();
   const [code, setCode] = useState("");
   return (
     <div className="mobile stack">
@@ -13,24 +16,24 @@ export function AccessGate({ onOk }: { onOk: () => void }) {
           <h1>MIPS Distribution</h1>
           <LanguageToggle />
         </div>
-        <div className="muted">{K("Démonstration à accès réservé")}</div>
+        <div className="muted">{translate("Démonstration à accès réservé")}</div>
       </div>
       <form
         className="card"
         onSubmit={(event) => {
           event.preventDefault();
           void ui.run(async () => {
-            await api("POST", "/api/gate", { code });
+            await apiRequest("POST", "/api/gate", { code });
             onOk();
           });
         }}
       >
         <div className="body stack">
-          <Field label={K("Code d'accès")}>
+          <Field label={translate("Code d'accès")}>
             <input type="password" value={code} onChange={(event) => setCode(event.target.value)} autoFocus autoComplete="off" />
           </Field>
           <button className="big" disabled={!code}>
-            {K("Entrer")}
+            {translate("Entrer")}
           </button>
         </div>
       </form>

@@ -2,22 +2,18 @@
 // transfers that could not be matched, online payments awaiting settlement, lines and statements.
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  api,
-  Card,
-  Field,
-  formatDate,
-  formatMoney,
-  Loaded,
-  MATCH_STATUS,
-  PageHead,
-  StatusBadge,
-  Table,
-  t,
-  useApi,
-  useSession,
-  useUi,
-} from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { Field } from "../shared/Form.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { RECONCILIATION_STATUS } from "../shared/labels.ts";
+import { Card, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import type { BankLine, MemberListItem, ReconciliationData } from "./types.ts";
 
 interface ImportResult {
@@ -41,7 +37,7 @@ function BankLabel({ line }: { line: BankLine }) {
 }
 
 export function ClubReconciliation() {
-  const ui = useUi();
+  const ui = useFeedback();
   const { session } = useSession();
   const reconciliation = useApi<ReconciliationData>("/api/club/reconciliation");
   const members = useApi<MemberListItem[]>("/api/club/members");
@@ -52,7 +48,7 @@ export function ClubReconciliation() {
 
   const loadDemoStatement = () =>
     ui.run(async () => {
-      const demo = await api<{ filename: string; content: string }>("GET", "/api/club/statements/demo");
+      const demo = await apiRequest<{ filename: string; content: string }>("GET", "/api/club/statements/demo");
       setFilename(demo.filename);
       setContent(demo.content);
     });
@@ -66,12 +62,12 @@ export function ClubReconciliation() {
 
   const importStatement = () =>
     ui.run(async () => {
-      const result = await api<ImportResult>("POST", "/api/club/statements", {
+      const result = await apiRequest<ImportResult>("POST", "/api/club/statements", {
         filename: filename || "releve.csv",
         content,
       });
       ui.toast(
-        t("{0} ligne(s) rapprochée(s), {1} en exception, {2} déjà importée(s).", result.matched, result.exceptions, result.skipped),
+        translate("{0} ligne(s) rapprochée(s), {1} en exception, {2} déjà importée(s).", result.matched, result.exceptions, result.skipped),
       );
       setContent("");
       setFilename("");
@@ -82,54 +78,54 @@ export function ClubReconciliation() {
   // The justification is recorded in the audit log with the assignment.
   const assign = async (lineId: string) => {
     const note = await ui.ask({
-      title: t("Affecter ce virement"),
-      text: t(
+      title: translate("Affecter ce virement"),
+      text: translate(
         "Le virement est enregistré comme encaissement du membre choisi. La décision est tracée dans le journal d'audit.",
       ),
-      label: t("Justification (nom sur le virement, appel du membre...)"),
-      confirm: t("Affecter"),
+      label: translate("Justification (nom sur le virement, appel du membre...)"),
+      confirm: translate("Affecter"),
     });
     if (note) {
       await ui.run(async () => {
-        await api("POST", `/api/club/bank-lines/${lineId}/assign`, { memberId: assignees[lineId], note });
+        await apiRequest("POST", `/api/club/bank-lines/${lineId}/assign`, { memberId: assignees[lineId], note });
         await reconciliation.reload();
         await members.reload();
-      }, t("Virement affecté au membre."));
+      }, translate("Virement affecté au membre."));
     }
   };
 
   return (
     <>
-      <PageHead
-        title={t("Rapprochement bancaire")}
-        sub={t(
+      <PageHeader
+        title={translate("Rapprochement bancaire")}
+        sub={translate(
           "Chaque virement est identifié par la référence structurée du membre ; les paiements en ligne par la référence du prestataire.",
         )}
       />
-      <Loaded q={reconciliation}>
+      <QueryView q={reconciliation}>
         {(data) => {
           const toAssign = data.lines.filter(awaitingAssignment);
           return (
             <div className="stack">
-              <Card title={t("Importer un relevé")}>
+              <Card title={translate("Importer un relevé")}>
                 <div className="stack">
                   <div className="row">
                     <input
                       type="file"
                       accept=".csv,text/csv"
                       onChange={(event) => void readFile(event.target.files?.[0])}
-                      aria-label={t("Fichier de relevé")}
+                      aria-label={translate("Fichier de relevé")}
                       style={{ width: "auto" }}
                     />
                     {session.demoMode && (
                       <button className="secondary" onClick={loadDemoStatement}>
-                        {t("Générer un relevé de démonstration (virements bien et mal référencés)")}
+                        {translate("Générer un relevé de démonstration (virements bien et mal référencés)")}
                       </button>
                     )}
                   </div>
                   <Field
-                    label={t("Contenu {0}", filename ? `· ${filename}` : "")}
-                    hint={t(
+                    label={translate("Contenu {0}", filename ? `· ${filename}` : "")}
+                    hint={translate(
                       "Format de démonstration : date;reference;libelle;montant_brut;frais;montant_net. Le format réel dépend de la banque (à vérifier).",
                     )}
                   >
@@ -143,30 +139,30 @@ export function ClubReconciliation() {
                   </Field>
                   <div>
                     <button disabled={content.trim().length < 10} onClick={importStatement}>
-                      {t("Importer et rapprocher")}
+                      {translate("Importer et rapprocher")}
                     </button>
                   </div>
                 </div>
               </Card>
-              <Card title={t("Virements à affecter ({0})", toAssign.length)} flush>
-                <Table
+              <Card title={translate("Virements à affecter ({0})", toAssign.length)} flush>
+                <DataTable
                   rows={toAssign}
                   rowKey={(line) => line.id}
-                  empty={t("Aucun virement en attente d'affectation.")}
+                  empty={translate("Aucun virement en attente d'affectation.")}
                   cols={[
-                    [t("Date de valeur"), (line) => line.value_date],
-                    [t("Libellé"), (line) => <BankLabel line={line} />],
-                    [t("Montant"), (line) => formatMoney(line.gross_minor), "right"],
+                    [translate("Date de valeur"), (line) => line.value_date],
+                    [translate("Libellé"), (line) => <BankLabel line={line} />],
+                    [translate("Montant"), (line) => formatMoney(line.gross_minor), "right"],
                     [
-                      t("Membre"),
+                      translate("Membre"),
                       (line) => (
                         <select
                           value={assignees[line.id] ?? ""}
                           onChange={(event) => setAssignees({ ...assignees, [line.id]: event.target.value })}
-                          aria-label={t("Membre à qui affecter")}
+                          aria-label={translate("Membre à qui affecter")}
                           style={{ minWidth: 220 }}
                         >
-                          <option value="">{t("Choisir un membre")}</option>
+                          <option value="">{translate("Choisir un membre")}</option>
                           {members.data?.map((member) => (
                             <option key={member.id} value={member.id}>
                               {member.number}
@@ -182,49 +178,49 @@ export function ClubReconciliation() {
                       "",
                       (line) => (
                         <button className="sm" disabled={!assignees[line.id]} onClick={() => assign(line.id)}>
-                          {t("Affecter")}
+                          {translate("Affecter")}
                         </button>
                       ),
                     ],
                   ]}
                 />
               </Card>
-              <Card title={t("Paiements en ligne confirmés, non réglés en banque ({0})", data.unsettled.length)} flush>
-                <Table
+              <Card title={translate("Paiements en ligne confirmés, non réglés en banque ({0})", data.unsettled.length)} flush>
+                <DataTable
                   rows={data.unsettled}
                   rowKey={(payment) => payment.id}
-                  empty={t("Tous les paiements en ligne confirmés sont réglés.")}
+                  empty={translate("Tous les paiements en ligne confirmés sont réglés.")}
                   cols={[
-                    [t("Confirmé"), (payment) => formatDate(payment.confirmed_at, true)],
-                    [t("Membre"), (payment) => `${payment.member_number} · ${payment.member}`],
-                    [t("Montant"), (payment) => formatMoney(payment.amount_minor), "right"],
-                    [t("Référence attendue sur le relevé"), (payment) => <span className="code nb">{payment.provider_ref}</span>],
+                    [translate("Confirmé"), (payment) => formatDate(payment.confirmed_at, true)],
+                    [translate("Membre"), (payment) => `${payment.member_number} · ${payment.member}`],
+                    [translate("Montant"), (payment) => formatMoney(payment.amount_minor), "right"],
+                    [translate("Référence attendue sur le relevé"), (payment) => <span className="code nb">{payment.provider_ref}</span>],
                   ]}
                 />
               </Card>
-              <Card title={t("Lignes de relevé")} flush>
-                <Table
+              <Card title={translate("Lignes de relevé")} flush>
+                <DataTable
                   rows={data.lines}
                   rowKey={(line) => line.id}
-                  empty={t("Aucun relevé importé.")}
+                  empty={translate("Aucun relevé importé.")}
                   cols={[
-                    [t("Date de valeur"), (line) => line.value_date],
-                    [t("Libellé"), (line) => <BankLabel line={line} />],
-                    [t("Brut"), (line) => formatMoney(line.gross_minor), "right"],
-                    [t("Frais"), (line) => formatMoney(line.fee_minor), "right"],
+                    [translate("Date de valeur"), (line) => line.value_date],
+                    [translate("Libellé"), (line) => <BankLabel line={line} />],
+                    [translate("Brut"), (line) => formatMoney(line.gross_minor), "right"],
+                    [translate("Frais"), (line) => formatMoney(line.fee_minor), "right"],
                     [
-                      t("Rapprochement"),
+                      translate("Rapprochement"),
                       (line) => (
                         <>
-                          <StatusBadge map={MATCH_STATUS} value={line.match_status} />
+                          <StatusBadge map={RECONCILIATION_STATUS} value={line.match_status} />
                           {line.confirmed_via === "manual_assignment" && (
-                            <div className="small muted">{t("affecté à la main")}</div>
+                            <div className="small muted">{translate("affecté à la main")}</div>
                           )}
                         </>
                       ),
                     ],
                     [
-                      t("Membre"),
+                      translate("Membre"),
                       (line) =>
                         line.member ? (
                           <Link to={`/club/membres/${line.member_id}`}>
@@ -239,25 +235,25 @@ export function ClubReconciliation() {
                   ]}
                 />
               </Card>
-              <Card title={t("Relevés importés")} flush>
-                <Table
+              <Card title={translate("Relevés importés")} flush>
+                <DataTable
                   rows={data.statements}
                   rowKey={(statement) => statement.id}
-                  empty={t("Aucun relevé importé.")}
+                  empty={translate("Aucun relevé importé.")}
                   cols={[
-                    [t("Importé"), (statement) => formatDate(statement.imported_at, true)],
-                    [t("Fichier"), (statement) => statement.filename],
-                    [t("Par"), (statement) => statement.imported_by_name ?? "—"],
-                    [t("Lignes"), (statement) => statement.line_count, "right"],
-                    [t("Rapprochées"), (statement) => statement.matched_count, "right"],
-                    [t("Déjà importées"), (statement) => statement.skipped_count, "right"],
+                    [translate("Importé"), (statement) => formatDate(statement.imported_at, true)],
+                    [translate("Fichier"), (statement) => statement.filename],
+                    [translate("Par"), (statement) => statement.imported_by_name ?? "—"],
+                    [translate("Lignes"), (statement) => statement.line_count, "right"],
+                    [translate("Rapprochées"), (statement) => statement.matched_count, "right"],
+                    [translate("Déjà importées"), (statement) => statement.skipped_count, "right"],
                   ]}
                 />
               </Card>
             </div>
           );
         }}
-      </Loaded>
+      </QueryView>
     </>
   );
 }

@@ -1,20 +1,15 @@
 // Reminders (/club/relances): reminders and statements sent, and the reminder run (accounting).
 import { useNavigate } from "react-router-dom";
-import {
-  ACCOUNTING_ROLES,
-  api,
-  Card,
-  formatDate,
-  formatDays,
-  formatMoney,
-  Loaded,
-  PageHead,
-  Table,
-  t,
-  useApi,
-  useRole,
-  useUi,
-} from "./legacy.ts";
+import { formatOverdueDays } from "../admin/clubLabels.ts";
+import { FINANCE_ROLES, useCurrentRole } from "../admin/roles.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { Card, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
 import { channelLabel, MemberCell, ReminderLevelBadge } from "./parts.tsx";
 import type { Reminder } from "./types.ts";
 
@@ -25,17 +20,17 @@ interface ReminderRun {
 }
 
 export function Reminders() {
-  const ui = useUi();
+  const ui = useFeedback();
   const navigate = useNavigate();
-  const role = useRole();
+  const role = useCurrentRole();
   const reminders = useApi<Reminder[]>("/api/club/reminders");
 
   // One reminder per level and debt cycle: running twice sends nothing more.
   const runReminders = () =>
     ui.run(async () => {
-      const run = await api<ReminderRun>("POST", "/api/club/reminders/run");
+      const run = await apiRequest<ReminderRun>("POST", "/api/club/reminders/run");
       ui.toast(
-        t(
+        translate(
           "{0} relance(s) envoyée(s) (niveaux 1 / 2 / 3 : {1} / {2} / {3}), {4} déjà faite(s).",
           run.sent,
           run.byLevel[1] ?? 0,
@@ -49,40 +44,40 @@ export function Reminders() {
 
   return (
     <>
-      <PageHead
-        title={t("Relances")}
-        sub={t(
+      <PageHeader
+        title={translate("Relances")}
+        sub={translate(
           "Le moteur relance chaque membre en retard selon l'ancienneté de sa plus vieille dette. Une relance par niveau : relancer deux fois n'envoie rien de plus.",
         )}
       >
-        {ACCOUNTING_ROLES.includes(role) && <button onClick={runReminders}>{t("Lancer les relances")}</button>}
-      </PageHead>
+        {FINANCE_ROLES.includes(role) && <button onClick={runReminders}>{translate("Lancer les relances")}</button>}
+      </PageHeader>
       <div className="stack">
         <div className="notice warn">
-          {t(
+          {translate(
             "Démonstration : aucun e-mail ni SMS n'est réellement envoyé. Chaque relance est enregistrée avec son texte, le lien vers la page du membre et sa référence de paiement.",
           )}
         </div>
-        <Card title={t("Relances et relevés envoyés")} flush>
-          <Loaded q={reminders}>
+        <Card title={translate("Relances et relevés envoyés")} flush>
+          <QueryView q={reminders}>
             {(rows) => (
-              <Table
+              <DataTable
                 rows={rows}
                 rowKey={(reminder) => reminder.id}
-                empty={t("Aucune relance.")}
+                empty={translate("Aucune relance.")}
                 onRow={(reminder) => navigate(`/club/membres/${reminder.member_id}`)}
                 cols={[
-                  [t("Envoyée"), (reminder) => formatDate(reminder.sent_at, true)],
-                  [t("Membre"), (reminder) => <MemberCell name={reminder.member} number={reminder.member_number} />],
-                  [t("Niveau"), (reminder) => <ReminderLevelBadge level={reminder.level} />],
-                  [t("Retard"), (reminder) => (reminder.overdue_days ? formatDays(reminder.overdue_days) : "—"), "right"],
-                  [t("Montant dû"), (reminder) => formatMoney(reminder.amount_minor), "right"],
-                  [t("Canal"), (reminder) => channelLabel(reminder.channel)],
-                  [t("Par"), (reminder) => reminder.sent_by ?? "—"],
+                  [translate("Envoyée"), (reminder) => formatDate(reminder.sent_at, true)],
+                  [translate("Membre"), (reminder) => <MemberCell name={reminder.member} number={reminder.member_number} />],
+                  [translate("Niveau"), (reminder) => <ReminderLevelBadge level={reminder.level} />],
+                  [translate("Retard"), (reminder) => (reminder.overdue_days ? formatOverdueDays(reminder.overdue_days) : "—"), "right"],
+                  [translate("Montant dû"), (reminder) => formatMoney(reminder.amount_minor), "right"],
+                  [translate("Canal"), (reminder) => channelLabel(reminder.channel)],
+                  [translate("Par"), (reminder) => reminder.sent_by ?? "—"],
                 ]}
               />
             )}
-          </Loaded>
+          </QueryView>
         </Card>
       </div>
     </>

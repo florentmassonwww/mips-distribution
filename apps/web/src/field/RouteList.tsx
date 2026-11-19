@@ -1,7 +1,16 @@
 // First screen of /terrain: the routes assigned to the agent.
-import { api, formatDay, LanguageToggle, QueryView, ROUTE_STATUS, StatusBadge, t, useApi, useSession, useUi } from "./legacy-bridge.js";
-import { saveBundle } from "./bundle-cache.ts";
-import type { AgentRoute, RouteBundle } from "./types.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDayLong } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { ROUTE_STATUS } from "../shared/labels.ts";
+import { LanguageToggle } from "../shared/LanguageToggle.tsx";
+import { type RouteBundle, writeBundle } from "../shared/offline.ts";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
+import type { AgentRoute } from "./types.ts";
 
 interface RouteListProps {
   onPick: (routeId: string) => void;
@@ -10,14 +19,14 @@ interface RouteListProps {
 
 export function RouteList({ onPick, onLogout }: RouteListProps) {
   const { session } = useSession();
-  const ui = useUi();
+  const ui = useFeedback();
   const routes = useApi<AgentRoute[]>("/api/agent/routes");
 
   // Starting a loaded route, then downloading its bundle, so the route works offline from here.
   const open = (route: AgentRoute) =>
     ui.run(async () => {
-      if (route.status === "loaded") await api("POST", `/api/agent/routes/${route.id}/start`);
-      saveBundle(await api<RouteBundle>("GET", `/api/agent/routes/${route.id}/bundle`));
+      if (route.status === "loaded") await apiRequest("POST", `/api/agent/routes/${route.id}/start`);
+      writeBundle(await apiRequest<RouteBundle>("GET", `/api/agent/routes/${route.id}/bundle`));
       onPick(route.id);
     });
 
@@ -25,22 +34,22 @@ export function RouteList({ onPick, onLogout }: RouteListProps) {
     <div className="stack">
       <div className="mobile-head">
         <div className="row spread">
-          <h1>{t("Mes tournées")}</h1>
+          <h1>{translate("Mes tournées")}</h1>
           <span className="row">
             <LanguageToggle />
             <button className="sm ghost" onClick={onLogout}>
-              {t("Déconnexion")}
+              {translate("Déconnexion")}
             </button>
           </span>
         </div>
         <div className="muted">
-          {session.user.name} · {session.user.companyName}
+          {session.user!.name} · {session.user!.companyName}
         </div>
       </div>
       <QueryView q={routes}>
         {(list) =>
           list.length === 0 ? (
-            <div className="empty">{t("Aucune tournée ne vous est affectée.")}</div>
+            <div className="empty">{translate("Aucune tournée ne vous est affectée.")}</div>
           ) : (
             <ul className="plain tap">
               {list.map((route) => (
@@ -50,19 +59,19 @@ export function RouteList({ onPick, onLogout }: RouteListProps) {
                     <StatusBadge map={ROUTE_STATUS} value={route.status} />
                   </div>
                   <div className="small muted">
-                    {formatDay(route.day)} · {route.vehicle || t("véhicule non précisé")} · {route.stops} {t("arrêt(s) ·")}{" "}
-                    {route.orders_done}/{route.orders_total} {t("commande(s)")}
+                    {formatDayLong(route.day)} · {route.vehicle || translate("véhicule non précisé")} · {route.stops} {translate("arrêt(s) ·")}{" "}
+                    {route.orders_done}/{route.orders_total} {translate("commande(s)")}
                   </div>
                   <div style={{ marginTop: 8 }}>
                     {route.status === "planned" ? (
-                      <div className="notice">{t("Le véhicule n'est pas encore chargé par la centrale.")}</div>
+                      <div className="notice">{translate("Le véhicule n'est pas encore chargé par la centrale.")}</div>
                     ) : (
                       <button className="big" onClick={() => open(route)}>
                         {route.status === "loaded"
-                          ? t("Démarrer la tournée")
+                          ? translate("Démarrer la tournée")
                           : route.status === "in_progress"
-                            ? t("Reprendre la tournée")
-                            : t("Voir le bilan")}
+                            ? translate("Reprendre la tournée")
+                            : translate("Voir le bilan")}
                       </button>
                     )}
                   </div>

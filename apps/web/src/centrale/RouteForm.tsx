@@ -1,4 +1,6 @@
-import { Card, Field, t } from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { Field } from "../shared/Form.tsx";
+import { Card } from "../shared/Layout.tsx";
 import type { ReferenceData } from "./types.ts";
 
 export interface RouteDraft {
@@ -22,23 +24,23 @@ interface RouteFormProps {
 /** New route card. The draft is owned by the page, so it survives closing and reopening the form. */
 export function RouteForm({ reference, draft, onChange, onToggleCustomer, onSubmit }: RouteFormProps) {
   return (
-    <Card title={t(`Nouvelle tournée`)}>
+    <Card title={translate(`Nouvelle tournée`)}>
       <div className="stack">
         <div className="grid g4">
-          <Field label={t(`Nom`)}>
+          <Field label={translate(`Nom`)}>
             <input
               type="text"
               value={draft.name}
               onChange={(event) => onChange({ ...draft, name: event.target.value })}
-              placeholder={t(`Ex. Est - Flacq`)}
+              placeholder={translate(`Ex. Est - Flacq`)}
             />
           </Field>
-          <Field label={t(`Jour`)}>
+          <Field label={translate(`Jour`)}>
             <input type="date" value={draft.day} onChange={(event) => onChange({ ...draft, day: event.target.value })} />
           </Field>
-          <Field label={t(`Agent`)}>
+          <Field label={translate(`Agent`)}>
             <select value={draft.agentId} onChange={(event) => onChange({ ...draft, agentId: event.target.value })}>
-              <option value="">{t(`À affecter`)}</option>
+              <option value="">{translate(`À affecter`)}</option>
               {reference.agents.map((agent) => (
                 <option key={agent.id} value={agent.id}>
                   {agent.name}
@@ -46,13 +48,13 @@ export function RouteForm({ reference, draft, onChange, onToggleCustomer, onSubm
               ))}
             </select>
           </Field>
-          <Field label={t(`Véhicule`)}>
+          <Field label={translate(`Véhicule`)}>
             <input type="text" value={draft.vehicle} onChange={(event) => onChange({ ...draft, vehicle: event.target.value })} />
           </Field>
         </div>
         <div>
           <div className="small muted" style={{ marginBottom: 6 }}>
-            {t(`Commerces à visiter, dans l'ordre de sélection`)}
+            {translate(`Commerces à visiter, dans l'ordre de sélection`)}
           </div>
           <div className="chips">
             {reference.customers.map((customer) => {
@@ -70,7 +72,7 @@ export function RouteForm({ reference, draft, onChange, onToggleCustomer, onSubm
         </div>
         <div>
           <button disabled={draft.name.trim().length < 2 || !draft.day} onClick={onSubmit}>
-            {t(`Créer la tournée`)}
+            {translate(`Créer la tournée`)}
           </button>
         </div>
       </div>

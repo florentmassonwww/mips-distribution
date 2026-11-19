@@ -1,5 +1,5 @@
 // Company roles and the role checks shared by the admin and club screens.
-import { xv as useSession } from "../legacy/shared.js";
+import { useSession } from "../shared/session.ts";
 
 /** Roles a company administrator can give, in the order of the role pickers. */
 export const COMPANY_ROLES = ["company_admin", "dispatcher", "finance", "agent"] as const;

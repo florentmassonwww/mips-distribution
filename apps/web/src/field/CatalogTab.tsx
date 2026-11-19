@@ -1,18 +1,22 @@
 // "Catalogue" tab: the products with the price for a chosen shop (its price list, if any) and the
 // stock on board (after the actions still queued offline).
 import { useState } from "react";
-import { Badge, Field, formatMoney, t, unitPrice } from "./legacy-bridge.js";
+import { translate } from "../i18n/translate.ts";
+import { Badge } from "../shared/Badge.tsx";
+import { Field } from "../shared/Form.tsx";
+import { formatMoney } from "../shared/format.ts";
+import { unitPrice } from "../shared/offline.ts";
 import { findCustomer } from "./route-helpers.ts";
-import type { RouteWork } from "./types.ts";
+import type { LocalRouteView } from "../shared/offline.ts";
 
-export function CatalogTab({ work }: { work: RouteWork }) {
+export function CatalogTab({ work }: { work: LocalRouteView }) {
   const [customerId, setCustomerId] = useState("");
   const customer = findCustomer(work, customerId);
   return (
     <div className="stack">
-      <Field label={t("Prix applicables pour")}>
+      <Field label={translate("Prix applicables pour")}>
         <select value={customerId} onChange={(event) => setCustomerId(event.target.value)}>
-          <option value="">{t("Tarif de base")}</option>
+          <option value="">{translate("Tarif de base")}</option>
           {work.customers.map((option) => (
             <option key={option.id} value={option.id}>
               {option.name}
@@ -36,7 +40,7 @@ export function CatalogTab({ work }: { work: RouteWork }) {
                 <div>
                   {/* A negative stock means more went out than was loaded: shown as a variance. */}
                   <Badge kind={onBoard > 5 ? "ok" : onBoard > 0 ? "warn" : "err"}>
-                    {onBoard > 0 ? t("{0} à bord", onBoard) : onBoard < 0 ? t("{0} (écart)", onBoard) : t("épuisé")}
+                    {onBoard > 0 ? translate("{0} à bord", onBoard) : onBoard < 0 ? translate("{0} (écart)", onBoard) : translate("épuisé")}
                   </Badge>
                 </div>
               </div>

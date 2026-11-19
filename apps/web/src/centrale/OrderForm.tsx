@@ -1,4 +1,7 @@
-import { Card, Field, formatDay, t } from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { Field } from "../shared/Form.tsx";
+import { formatDayLong } from "../shared/format.ts";
+import { Card } from "../shared/Layout.tsx";
 import { ProductQuantities } from "./ProductQuantities.tsx";
 import type { QuantityLines, ReferenceData, RouteSummary } from "./types.ts";
 
@@ -25,12 +28,12 @@ interface OrderFormProps {
 export function OrderForm({ reference, plannedRoutes, draft, onChange, onSubmit }: OrderFormProps) {
   const hasQuantity = Object.values(draft.lines).some((qty) => qty > 0);
   return (
-    <Card title={t(`Nouvelle commande`)}>
+    <Card title={translate(`Nouvelle commande`)}>
       <div className="stack">
         <div className="grid g3">
-          <Field label={t(`Commerce`)}>
+          <Field label={translate(`Commerce`)}>
             <select value={draft.customerId} onChange={(event) => onChange({ ...draft, customerId: event.target.value })}>
-              <option value="">{t(`Choisir…`)}</option>
+              <option value="">{translate(`Choisir…`)}</option>
               {reference.customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name} · {customer.zone}
@@ -39,17 +42,17 @@ export function OrderForm({ reference, plannedRoutes, draft, onChange, onSubmit 
               ))}
             </select>
           </Field>
-          <Field label={t(`Tournée (facultatif)`)}>
+          <Field label={translate(`Tournée (facultatif)`)}>
             <select value={draft.routeId} onChange={(event) => onChange({ ...draft, routeId: event.target.value })}>
-              <option value="">{t(`À affecter plus tard`)}</option>
+              <option value="">{translate(`À affecter plus tard`)}</option>
               {plannedRoutes.map((route) => (
                 <option key={route.id} value={route.id}>
-                  {route.name} · {formatDay(route.day)}
+                  {route.name} · {formatDayLong(route.day)}
                 </option>
               ))}
             </select>
           </Field>
-          <Field label={t(`Consigne de livraison`)}>
+          <Field label={translate(`Consigne de livraison`)}>
             <input type="text" value={draft.note} onChange={(event) => onChange({ ...draft, note: event.target.value })} />
           </Field>
         </div>
@@ -57,14 +60,14 @@ export function OrderForm({ reference, plannedRoutes, draft, onChange, onSubmit 
           products={reference.products}
           lines={draft.lines}
           onChange={(lines) => onChange({ ...draft, lines })}
-          stockLabel={t(`stock dépôt`)}
+          stockLabel={translate(`stock dépôt`)}
         />
         <div className="small muted">
-          {t(`Le prix appliqué est celui de la liste de prix du commerce, fixé à la création de la commande.`)}
+          {translate(`Le prix appliqué est celui de la liste de prix du commerce, fixé à la création de la commande.`)}
         </div>
         <div>
           <button disabled={!draft.customerId || !hasQuantity} onClick={onSubmit}>
-            {t(`Créer la commande`)}
+            {translate(`Créer la commande`)}
           </button>
         </div>
       </div>

@@ -1,6 +1,12 @@
 // Receipt of an invoice: delivered lines, returns, collections and proof of delivery; printable
 // and shareable. Online only (built by the server).
-import { formatDate, formatMoney, INVOICE_STATUS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS, QueryView, StatusBadge, t, useApi, useSession } from "./legacy-bridge.js";
+import { translate } from "../i18n/translate.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { INVOICE_STATUS, PAYMENT_CHANNEL, PAYMENT_STATUS } from "../shared/labels.ts";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import { BackButton } from "./BackButton.tsx";
 import { amountDue } from "./route-helpers.ts";
 import type { Receipt } from "./types.ts";
@@ -19,8 +25,8 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
   if (!online) {
     return (
       <div className="stack">
-        <BackButton onClick={() => onBack()}>{t("Retour")}</BackButton>
-        <div className="notice warn">{t("Reçu indisponible hors ligne.")}</div>
+        <BackButton onClick={() => onBack()}>{translate("Retour")}</BackButton>
+        <div className="notice warn">{translate("Reçu indisponible hors ligne.")}</div>
       </div>
     );
   }
@@ -41,12 +47,12 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                 <div>
                   <strong>{invoice.company}</strong>
                   <div className="small muted">
-                    {t("Reçu ·")} {invoice.number} {t("· commande")} {invoice.order_number}
+                    {translate("Reçu ·")} {invoice.number} {translate("· commande")} {invoice.order_number}
                   </div>
                 </div>
                 <StatusBadge map={INVOICE_STATUS} value={invoice.status} />
               </div>
-              {session.demoMode && <div className="small muted">{t("Document de démonstration, sans valeur fiscale.")}</div>}
+              {session.demoMode && <div className="small muted">{translate("Document de démonstration, sans valeur fiscale.")}</div>}
               <hr />
               <div>
                 <strong>{invoice.customer}</strong>
@@ -64,7 +70,7 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                           {line.product}
                           <div className="small muted">
                             {line.qty_delivered} × {formatMoney(line.unit_price_minor)}
-                            {line.qty_delivered < line.qty_ordered ? t(" (commandé : {0})", line.qty_ordered) : ""}
+                            {line.qty_delivered < line.qty_ordered ? translate(" (commandé : {0})", line.qty_ordered) : ""}
                           </div>
                         </td>
                         <td className="right nowrap">{formatMoney(line.qty_delivered * line.unit_price_minor)}</td>
@@ -73,7 +79,7 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                   {data.delivery?.returns.map((returned) => (
                     <tr key={`r-${returned.product}`}>
                       <td>
-                        {t("Retour ·")} {returned.product}
+                        {translate("Retour ·")} {returned.product}
                         <div className="small muted">
                           {returned.qty} × {formatMoney(returned.unitPriceMinor)}
                         </div>
@@ -82,18 +88,18 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                     </tr>
                   ))}
                   <tr className="total">
-                    <td>{t("Total")}</td>
+                    <td>{translate("Total")}</td>
                     <td className="right nowrap">{formatMoney(invoice.amount_minor)}</td>
                   </tr>
                 </tbody>
               </table>
               <hr />
-              <strong>{t("Encaissements")}</strong>
-              {data.payments.length === 0 && <div className="small muted">{t("Aucun encaissement.")}</div>}
+              <strong>{translate("Encaissements")}</strong>
+              {data.payments.length === 0 && <div className="small muted">{translate("Aucun encaissement.")}</div>}
               {data.payments.map((payment) => (
                 <div key={payment.id} className="row spread small">
                   <span>
-                    {PAYMENT_METHOD_LABELS[payment.method]} · {formatDate(payment.createdAt, true)}
+                    {PAYMENT_CHANNEL[payment.method]} · {formatDate(payment.createdAt, true)}
                     {payment.providerRef ? (
                       <>
                         {" · "}
@@ -107,12 +113,12 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                 </div>
               ))}
               <div className="row spread">
-                <span>{t("Encaissé (confirmé par le prestataire)")}</span>
+                <span>{translate("Encaissé (confirmé par le prestataire)")}</span>
                 <strong>{formatMoney(collected)}</strong>
               </div>
               {due > 0 && (
                 <div className="row spread">
-                  <span>{t("Reste dû")}</span>
+                  <span>{translate("Reste dû")}</span>
                   <strong>{formatMoney(due)}</strong>
                 </div>
               )}
@@ -120,20 +126,20 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                 <>
                   <hr />
                   <div className="small">
-                    {t("Reçu par")} <strong>{data.delivery.pod_name}</strong> {t("le")} {formatDate(data.delivery.at, true)}
+                    {translate("Reçu par")} <strong>{data.delivery.pod_name}</strong> {translate("le")} {formatDate(data.delivery.at, true)}
                   </div>
-                  {data.delivery.pod_signature && <img className="sigimg" src={data.delivery.pod_signature} alt={t("Signature du réceptionnaire")} />}
+                  {data.delivery.pod_signature && <img className="sigimg" src={data.delivery.pod_signature} alt={translate("Signature du réceptionnaire")} />}
                 </>
               )}
             </div>
             <div className="row noprint">
               {due > 0 && (
                 <button className="grow" onClick={onPay}>
-                  {t("Encaisser")}
+                  {translate("Encaisser")}
                 </button>
               )}
               <button className="secondary grow" onClick={() => window.print()}>
-                {t("Imprimer")}
+                {translate("Imprimer")}
               </button>
               {typeof navigator.share === "function" && (
                 <button
@@ -141,8 +147,8 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                   onClick={() =>
                     void navigator
                       .share({
-                        title: t("Reçu {0}", invoice.number),
-                        text: t(
+                        title: translate("Reçu {0}", invoice.number),
+                        text: translate(
                           "{0} - {1} - {2}\nMontant : {3}\nÉtat : {4}\nEncaissé (confirmé) : {5}",
                           invoice.company,
                           invoice.number,
@@ -155,7 +161,7 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                       .catch(() => null)
                   }
                 >
-                  {t("Partager")}
+                  {translate("Partager")}
                 </button>
               )}
             </div>

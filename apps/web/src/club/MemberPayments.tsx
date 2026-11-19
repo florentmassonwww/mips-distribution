@@ -2,21 +2,15 @@
 // by status and method. "Confirmed" and "settled in the bank" are tracked separately.
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  api,
-  Card,
-  CsvLink,
-  formatDate,
-  formatMoney,
-  Loaded,
-  PageHead,
-  PAYMENT_METHOD_LABELS,
-  PAYMENT_STATUS,
-  Table,
-  t,
-  useApi,
-  useUi,
-} from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { MEMBER_PAYMENT_METHOD, PAYMENT_STATUS } from "../shared/labels.ts";
+import { Card, CsvExportLink, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
 import { canQueryProvider, filtersQuery, MemberCell, PaymentStatusCell, SettlementCell } from "./parts.tsx";
 import type { MemberPaymentListItem } from "./types.ts";
 
@@ -25,7 +19,7 @@ type PaymentFilters = { status: string; method: string };
 const FILTERABLE_STATUSES = ["pending", "to_verify", "confirmed", "failed"];
 
 export function MemberPayments() {
-  const ui = useUi();
+  const ui = useFeedback();
   const navigate = useNavigate();
   const [filters, setFilters] = useState<PaymentFilters>({ status: "", method: "" });
   const query = filtersQuery(filters);
@@ -33,26 +27,26 @@ export function MemberPayments() {
 
   const queryProvider = (paymentId: string) =>
     ui.run(async () => {
-      const payment = await api<{ status: string }>("POST", `/api/club/payments/${paymentId}/check`);
-      ui.toast(t("Réponse du prestataire appliquée : {0}.", PAYMENT_STATUS[payment.status]?.[0] ?? payment.status));
+      const payment = await apiRequest<{ status: string }>("POST", `/api/club/payments/${paymentId}/check`);
+      ui.toast(translate("Réponse du prestataire appliquée : {0}.", PAYMENT_STATUS[payment.status]?.[0] ?? payment.status));
       await payments.reload();
     });
 
   return (
     <>
-      <PageHead
-        title={t("Encaissements")}
-        sub={t(
+      <PageHeader
+        title={translate("Encaissements")}
+        sub={translate(
           "Paiements en ligne, virements identifiés sur le relevé, espèces au bureau. « Confirmé » et « réglé en banque » sont suivis séparément.",
         )}
       >
         <select
           value={filters.status}
           onChange={(event) => setFilters({ ...filters, status: event.target.value })}
-          aria-label={t("État")}
+          aria-label={translate("État")}
           style={{ width: "auto" }}
         >
-          <option value="">{t("Tous les états")}</option>
+          <option value="">{translate("Tous les états")}</option>
           {FILTERABLE_STATUSES.map((status) => (
             <option key={status} value={status}>
               {PAYMENT_STATUS[status]?.[0]}
@@ -62,33 +56,33 @@ export function MemberPayments() {
         <select
           value={filters.method}
           onChange={(event) => setFilters({ ...filters, method: event.target.value })}
-          aria-label={t("Moyen")}
+          aria-label={translate("Moyen")}
           style={{ width: "auto" }}
         >
-          <option value="">{t("Tous les moyens")}</option>
-          {Object.entries(PAYMENT_METHOD_LABELS).map(([method, label]) => (
+          <option value="">{translate("Tous les moyens")}</option>
+          {Object.entries(MEMBER_PAYMENT_METHOD).map(([method, label]) => (
             <option key={method} value={method}>
               {label}
             </option>
           ))}
         </select>
-        <CsvLink href={`/api/club/payments?format=csv${query ? `&${query}` : ""}`} />
-      </PageHead>
-      <Card title={t("Encaissements des membres")} flush>
-        <Loaded q={payments}>
+        <CsvExportLink href={`/api/club/payments?format=csv${query ? `&${query}` : ""}`} />
+      </PageHeader>
+      <Card title={translate("Encaissements des membres")} flush>
+        <QueryView q={payments}>
           {(rows) => (
-            <Table
+            <DataTable
               rows={rows}
               rowKey={(payment) => payment.id}
-              empty={t("Aucun encaissement pour ces critères.")}
+              empty={translate("Aucun encaissement pour ces critères.")}
               onRow={(payment) => navigate(`/club/membres/${payment.member_id}`)}
               cols={[
-                [t("Date"), (payment) => formatDate(payment.created_at, true)],
-                [t("Membre"), (payment) => <MemberCell name={payment.member} number={payment.member_number} />],
-                [t("Moyen"), (payment) => PAYMENT_METHOD_LABELS[payment.method]],
-                [t("Montant"), (payment) => formatMoney(payment.amount_minor), "right"],
+                [translate("Date"), (payment) => formatDate(payment.created_at, true)],
+                [translate("Membre"), (payment) => <MemberCell name={payment.member} number={payment.member_number} />],
+                [translate("Moyen"), (payment) => MEMBER_PAYMENT_METHOD[payment.method]],
+                [translate("Montant"), (payment) => formatMoney(payment.amount_minor), "right"],
                 [
-                  t("Paiement"),
+                  translate("Paiement"),
                   (payment) => (
                     <PaymentStatusCell
                       status={payment.status}
@@ -99,17 +93,17 @@ export function MemberPayments() {
                   ),
                 ],
                 [
-                  t("Règlement bancaire"),
+                  translate("Règlement bancaire"),
                   (payment) => (
                     <SettlementCell status={payment.status} method={payment.method} settlement={payment.settlement_status} />
                   ),
                 ],
                 [
-                  t("Frais"),
+                  translate("Frais"),
                   (payment) => (payment.fee_actual_minor === null ? "—" : formatMoney(payment.fee_actual_minor)),
                   "right",
                 ],
-                [t("Référence"), (payment) => <span className="code nb">{payment.provider_ref ?? payment.reference}</span>],
+                [translate("Référence"), (payment) => <span className="code nb">{payment.provider_ref ?? payment.reference}</span>],
                 [
                   "",
                   (payment) =>
@@ -117,7 +111,7 @@ export function MemberPayments() {
                       // The row opens the member: the button must not.
                       <span onClick={(event) => event.stopPropagation()}>
                         <button className="sm" onClick={() => queryProvider(payment.id)}>
-                          {t("Interroger le prestataire")}
+                          {translate("Interroger le prestataire")}
                         </button>
                       </span>
                     ) : null,
@@ -125,7 +119,7 @@ export function MemberPayments() {
               ]}
             />
           )}
-        </Loaded>
+        </QueryView>
       </Card>
     </>
   );

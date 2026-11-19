@@ -1,10 +1,20 @@
 // Keeps the open route in step with the server: sends the offline queue, then downloads a fresh
 // bundle. Runs at once and every 20 s while online (none while offline, real or simulated).
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, t, useUi, type Network } from "./legacy-bridge.js";
-import { readBundle, saveBundle } from "./bundle-cache.ts";
-import { applySyncResults, queuedActions, readQueue, syncRequest, writeQueue } from "./offline-queue.ts";
-import type { QueuedAction, RouteBundle, SyncResult } from "./types.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { useFeedback } from "../shared/Feedback.tsx";
+import type { NetworkState } from "../shared/offline.ts";
+import { applySyncResults, queuedActions, syncRequest } from "./offline-queue.ts";
+import {
+  type QueuedAction,
+  readBundle,
+  readQueue,
+  type RouteBundle,
+  writeBundle,
+  writeQueue,
+} from "../shared/offline.ts";
+import type { SyncResult } from "./types.ts";
 
 const SYNC_INTERVAL_MS = 20000;
 
@@ -26,8 +36,8 @@ export interface RouteSync {
   submit: (action: QueuedAction) => Promise<SyncResult | null>;
 }
 
-export function useRouteSync(routeId: string, userId: string, network: Network, onLeave: () => void): RouteSync {
-  const ui = useUi();
+export function useRouteSync(routeId: string, userId: string, network: NetworkState, onLeave: () => void): RouteSync {
+  const ui = useFeedback();
   const [bundle, setBundle] = useState<RouteBundle | null>(() => readBundle(routeId));
   const [queue, setQueueState] = useState<QueuedAction[]>(() => readQueue(userId));
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
@@ -52,12 +62,12 @@ export function useRouteSync(routeId: string, userId: string, network: Network, 
       // Read from storage, not state: another tab or a just-queued action may have changed it.
       const queued = queuedActions(readQueue(userId));
       if (queued.length) {
-        const answer = await api<{ results: SyncResult[] }>("POST", "/api/agent/sync", syncRequest(queued));
+        const answer = await apiRequest<{ results: SyncResult[] }>("POST", "/api/agent/sync", syncRequest(queued));
         for (const result of answer.results) results.set(result.id, result);
         setQueue(applySyncResults(readQueue(userId), answer.results));
       }
-      const fresh = await api<RouteBundle>("GET", `/api/agent/routes/${routeId}/bundle`);
-      saveBundle(fresh);
+      const fresh = await apiRequest<RouteBundle>("GET", `/api/agent/routes/${routeId}/bundle`);
+      writeBundle(fresh);
       setBundle(fresh);
       setLastSyncAt(Date.now());
     } finally {
@@ -85,13 +95,13 @@ export function useRouteSync(routeId: string, userId: string, network: Network, 
     // Always stored first: nothing is lost if the network drops during the request.
     setQueue([...readQueue(userId), action]);
     if (!network.online) {
-      ui.toast(t("Enregistré sur le téléphone. Synchronisation au retour du réseau."));
+      ui.toast(translate("Enregistré sur le téléphone. Synchronisation au retour du réseau."));
       return null;
     }
     try {
       return (await sync()).get(action.id) ?? null;
     } catch {
-      ui.toast(t("Réseau instable : action conservée, elle sera synchronisée automatiquement."));
+      ui.toast(translate("Réseau instable : action conservée, elle sera synchronisée automatiquement."));
       return null;
     }
   };

@@ -1,6 +1,6 @@
 // Areas of the back office: the navigation of each role and the home page of each profile.
 // Labels are translated once, when the module loads: changing the language reloads the page.
-import { K } from "../legacy/i18n.js";
+import { translate } from "../i18n/translate.ts";
 
 /** [path, label] of a navigation link. */
 export type NavLink = readonly [path: string, label: string];
@@ -8,34 +8,34 @@ export type NavLink = readonly [path: string, label: string];
 export type NavGroup = readonly [title: string, links: readonly NavLink[]];
 
 export const CENTRALE_NAV: NavGroup = [
-  K("Centrale"),
+  translate("Centrale"),
   [
-    ["/centrale", K("Tableau de bord")],
-    ["/centrale/commandes", K("Commandes")],
-    ["/centrale/tournees", K("Tournées")],
-    ["/centrale/stocks", K("Stocks")],
-    ["/centrale/incidents", K("Incidents")],
+    ["/centrale", translate("Tableau de bord")],
+    ["/centrale/commandes", translate("Commandes")],
+    ["/centrale/tournees", translate("Tournées")],
+    ["/centrale/stocks", translate("Stocks")],
+    ["/centrale/incidents", translate("Incidents")],
   ],
 ];
 
 export const FINANCE_NAV: NavGroup = [
-  K("Finance"),
+  translate("Finance"),
   [
-    ["/finance", K("Journal des transactions")],
-    ["/finance/factures", K("Factures")],
-    ["/finance/rapprochement", K("Rapprochement")],
-    ["/finance/exceptions", K("Exceptions")],
-    ["/finance/cloture", K("Clôture quotidienne")],
+    ["/finance", translate("Journal des transactions")],
+    ["/finance/factures", translate("Factures")],
+    ["/finance/rapprochement", translate("Rapprochement")],
+    ["/finance/exceptions", translate("Exceptions")],
+    ["/finance/cloture", translate("Clôture quotidienne")],
     ["/finance/erp", "ERP"],
   ],
 ];
 
 export const ADMIN_NAV: NavGroup = [
-  K("Administration"),
+  translate("Administration"),
   [
-    ["/admin/utilisateurs", K("Utilisateurs")],
-    ["/admin/parametres", K("Paramètres")],
-    ["/admin/audit", K("Journal d'audit")],
+    ["/admin/utilisateurs", translate("Utilisateurs")],
+    ["/admin/parametres", translate("Paramètres")],
+    ["/admin/audit", translate("Journal d'audit")],
   ],
 ];
 
@@ -45,11 +45,11 @@ export const DISTRIBUTION_NAV: Record<string, readonly NavGroup[]> = {
   // Finance follows operations read-only.
   finance: [
     [
-      K("Suivi"),
+      translate("Suivi"),
       [
-        ["/centrale", K("Tableau de bord")],
-        ["/centrale/commandes", K("Commandes")],
-        ["/centrale/tournees", K("Tournées")],
+        ["/centrale", translate("Tableau de bord")],
+        ["/centrale/commandes", translate("Commandes")],
+        ["/centrale/tournees", translate("Tournées")],
       ],
     ],
     FINANCE_NAV,
@@ -57,10 +57,10 @@ export const DISTRIBUTION_NAV: Record<string, readonly NavGroup[]> = {
   company_admin: [CENTRALE_NAV, FINANCE_NAV, ADMIN_NAV],
   platform_admin: [
     [
-      K("Plateforme"),
+      translate("Plateforme"),
       [
-        ["/plateforme", K("Entreprises")],
-        ["/plateforme/audit", K("Journal d'audit")],
+        ["/plateforme", translate("Entreprises")],
+        ["/plateforme/audit", translate("Journal d'audit")],
       ],
     ],
   ],
@@ -76,24 +76,24 @@ export const DISTRIBUTION_HOME: Record<string, string> = {
 };
 
 export const CLUB_NAV_GROUP: NavGroup = [
-  K("Club"),
+  translate("Club"),
   [
-    ["/club", K("Recouvrement")],
-    ["/club/membres", K("Membres")],
-    ["/club/cotisations", K("Cotisations")],
-    ["/club/relances", K("Relances")],
-    ["/club/barriere", K("Barrière")],
+    ["/club", translate("Recouvrement")],
+    ["/club/membres", translate("Membres")],
+    ["/club/cotisations", translate("Cotisations")],
+    ["/club/relances", translate("Relances")],
+    ["/club/barriere", translate("Barrière")],
   ],
 ];
 
 export const CLUB_ACCOUNTING_NAV: NavGroup = [
-  K("Comptabilité"),
+  translate("Comptabilité"),
   [
-    ["/club/encaissements", K("Encaissements")],
-    ["/club/rapprochement", K("Rapprochement")],
-    ["/club/exceptions", K("Exceptions")],
-    ["/club/export", K("Export comptable")],
-    ["/club/erp", K("Synchronisation comptable")],
+    ["/club/encaissements", translate("Encaissements")],
+    ["/club/rapprochement", translate("Rapprochement")],
+    ["/club/exceptions", translate("Exceptions")],
+    ["/club/export", translate("Export comptable")],
+    ["/club/erp", translate("Synchronisation comptable")],
   ],
 ];
 

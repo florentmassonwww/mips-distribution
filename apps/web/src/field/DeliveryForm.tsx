@@ -2,21 +2,30 @@
 // from the vehicle stock; with goods returns and the proof of delivery. Produces a queued action
 // (see offline-queue.ts): it is sent at once when online, kept on the phone otherwise.
 import { useMemo, useState } from "react";
-import { Field, formatMoney, Stepper, t } from "./legacy-bridge.js";
-import { unitPrice } from "./bundle-cache.ts";
-import { newActionId } from "./offline-queue.ts";
+import { translate } from "../i18n/translate.ts";
+import { Field, Stepper } from "../shared/Form.tsx";
+import { formatMoney } from "../shared/format.ts";
 import { BackButton } from "./BackButton.tsx";
 import { SignaturePad } from "./SignaturePad.tsx";
 import { findCustomer } from "./route-helpers.ts";
-import type { HandoverFields, Order, Product, QuantityLine, QueuedAction, RouteWork } from "./types.ts";
+import {
+  type BundleOrder,
+  type BundleProduct,
+  type HandoverFields,
+  type LocalRouteView,
+  newId,
+  type QuantityLine,
+  type QueuedAction,
+  unitPrice,
+} from "../shared/offline.ts";
 
 /** Quick reasons for a partial or refused delivery (translated once, when the module loads). */
 export const DELIVERY_ISSUE_REASONS = [
-  t("Commerce fermé"),
-  t("Client absent"),
-  t("Refus du client"),
-  t("Produit endommagé"),
-  t("Manque dans le véhicule"),
+  translate("Commerce fermé"),
+  translate("Client absent"),
+  translate("Refus du client"),
+  translate("Produit endommagé"),
+  translate("Manque dans le véhicule"),
 ];
 
 /** One quantity row: an order line, or a product of the catalogue for a sale. */
@@ -31,9 +40,9 @@ interface FormLine {
 type Outcome = "full" | "partial" | "refused";
 
 interface DeliveryFormProps {
-  work: RouteWork;
+  work: LocalRouteView;
   /** The pre-order delivered; none for an on-the-spot sale. */
-  order?: Order;
+  order?: BundleOrder;
   customerId: string;
   onCancel: (customerId: string) => void;
   onSubmit: (action: QueuedAction) => Promise<void>;
@@ -73,7 +82,7 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
   const [search, setSearch] = useState("");
   const [sending, setSending] = useState(false);
 
-  const product = (productId: string): Product => productsById.get(productId)!;
+  const product = (productId: string): BundleProduct => productsById.get(productId)!;
   const deliveredQty = lines.reduce((sum, line) => sum + (quantities[line.key] ?? 0), 0);
   const orderedQty = lines.reduce((sum, line) => sum + line.ordered, 0);
   // Returns are credited at the customer's price.
@@ -83,13 +92,13 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
   const needsReason = outcome !== "full";
   const problem =
     !order && deliveredQty === 0
-      ? t("Ajoutez au moins un produit.")
+      ? translate("Ajoutez au moins un produit.")
       : needsReason && reason.trim().length < 3
-        ? t("Indiquez le motif.")
+        ? translate("Indiquez le motif.")
         : outcome !== "refused" && receiverName.trim().length < 2
-          ? t("Indiquez le nom du réceptionnaire.")
+          ? translate("Indiquez le nom du réceptionnaire.")
           : total < 0
-            ? t("Les retours dépassent la valeur livrée.")
+            ? translate("Les retours dépassent la valeur livrée.")
             : null;
 
   const submit = async () => {
@@ -109,7 +118,7 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
     };
     const action: QueuedAction = order
       ? {
-          id: newActionId(),
+          id: newId(),
           type: "deliver",
           state: "queued",
           createdAt: handover.at,
@@ -117,7 +126,7 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
           orderId: order.id,
           totalMinor: Math.max(0, total),
           items,
-          label: `${t(outcome === "refused" ? "Non-livraison" : outcome === "partial" ? "Livraison partielle" : "Livraison")} ${order.number}`,
+          label: `${translate(outcome === "refused" ? "Non-livraison" : outcome === "partial" ? "Livraison partielle" : "Livraison")} ${order.number}`,
           payload: {
             orderId: order.id,
             lines: lines.map((line) => ({ lineId: line.key, qtyDelivered: quantities[line.key] ?? 0 })),
@@ -126,14 +135,14 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
           },
         }
       : {
-          id: newActionId(),
+          id: newId(),
           type: "sale",
           state: "queued",
           createdAt: handover.at,
           customerId,
           totalMinor: total,
           items,
-          label: t("Vente sur place · {0}", customer?.name ?? ""),
+          label: translate("Vente sur place · {0}", customer?.name ?? ""),
           payload: { routeId: work.route.id, customerId, lines: items, ...handover },
         };
     try {
@@ -149,14 +158,14 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
   return (
     <div className="stack">
       <BackButton onClick={() => onCancel(customerId)}>{customer?.name}</BackButton>
-      <h1>{order ? t("Livrer {0}", order.number) : t("Vente sur place")}</h1>
+      <h1>{order ? translate("Livrer {0}", order.number) : translate("Vente sur place")}</h1>
       {!order && (
         <input
           type="text"
-          placeholder={t("Rechercher un produit…")}
+          placeholder={translate("Rechercher un produit…")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          aria-label={t("Rechercher un produit")}
+          aria-label={translate("Rechercher un produit")}
         />
       )}
       <ul className="plain">
@@ -169,11 +178,11 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
                 <div className="small muted">
                   {lineProduct.unit} · {formatMoney(line.price)}
                   {" · "}
-                  {order ? t("commandé : {0}", line.ordered) : t("stock véhicule : {0}", line.max)}
+                  {order ? translate("commandé : {0}", line.ordered) : translate("stock véhicule : {0}", line.max)}
                 </div>
               </div>
               <Stepper
-                label={t("Quantité {0}", lineProduct.name)}
+                label={translate("Quantité {0}", lineProduct.name)}
                 value={quantities[line.key] ?? 0}
                 max={line.max}
                 onChange={(qty) => setQuantities((current) => ({ ...current, [line.key]: qty }))}
@@ -185,17 +194,17 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
       {order && (
         <div className="row">
           <button type="button" className="secondary grow" onClick={() => setAll((line) => line.ordered)}>
-            {t("Tout livrer")}
+            {translate("Tout livrer")}
           </button>
           <button type="button" className="danger grow" onClick={() => setAll(() => 0)}>
-            {t("Rien livré")}
+            {translate("Rien livré")}
           </button>
         </div>
       )}
       {needsReason && (
         <div className="card">
           <div className="body stack">
-            <strong>{t(outcome === "refused" ? "Motif de non-livraison" : "Motif de la livraison partielle")}</strong>
+            <strong>{translate(outcome === "refused" ? "Motif de non-livraison" : "Motif de la livraison partielle")}</strong>
             <div className="row">
               {DELIVERY_ISSUE_REASONS.map((quickReason) => (
                 <button key={quickReason} type="button" className={`sm ${reason === quickReason ? "" : "secondary"}`} onClick={() => setReason(quickReason)}>
@@ -203,20 +212,20 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
                 </button>
               ))}
             </div>
-            <input type="text" value={reason} onChange={(event) => setReason(event.target.value)} placeholder={t("Précisez si besoin")} aria-label={t("Motif")} />
+            <input type="text" value={reason} onChange={(event) => setReason(event.target.value)} placeholder={translate("Précisez si besoin")} aria-label={translate("Motif")} />
           </div>
         </div>
       )}
       {outcome !== "refused" && (
         <>
           <button type="button" className="secondary" onClick={() => setShowReturns(!showReturns)}>
-            {t(showReturns ? "Masquer les retours" : "Ajouter un retour de marchandise")}
+            {translate(showReturns ? "Masquer les retours" : "Ajouter un retour de marchandise")}
           </button>
           {showReturns && (
             <div className="card">
               <div className="body">
                 <div className="small muted" style={{ marginBottom: 8 }}>
-                  {t("Les retours sont déduits de la facture au tarif du commerce et soumis à validation de la centrale.")}
+                  {translate("Les retours sont déduits de la facture au tarif du commerce et soumis à validation de la centrale.")}
                 </div>
                 <ul className="plain">
                   {work.products.map((returned) => (
@@ -226,7 +235,7 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
                         <div className="small muted">{formatMoney(unitPrice(work, customer, returned))}</div>
                       </div>
                       <Stepper
-                        label={t("Retour {0}", returned.name)}
+                        label={translate("Retour {0}", returned.name)}
                         value={returns[returned.id] ?? 0}
                         max={999}
                         onChange={(qty) => setReturns((current) => ({ ...current, [returned.id]: qty }))}
@@ -239,8 +248,8 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
           )}
           <div className="card">
             <div className="body stack">
-              <strong>{t("Preuve de livraison")}</strong>
-              <Field label={t("Nom du réceptionnaire")}>
+              <strong>{translate("Preuve de livraison")}</strong>
+              <Field label={translate("Nom du réceptionnaire")}>
                 <input type="text" value={receiverName} onChange={(event) => setReceiverName(event.target.value)} autoComplete="off" />
               </Field>
               <SignaturePad onChange={setSignature} />
@@ -252,14 +261,14 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
         <div>
           {returnsValue > 0 && (
             <div className="small">
-              {t("Retours :")} {formatMoney(-returnsValue)}
+              {translate("Retours :")} {formatMoney(-returnsValue)}
             </div>
           )}
-          <div className="small">{t(outcome === "refused" ? "Aucune facture" : "À facturer")}</div>
+          <div className="small">{translate(outcome === "refused" ? "Aucune facture" : "À facturer")}</div>
           <strong>{formatMoney(Math.max(0, total))}</strong>
         </div>
         <button disabled={!!problem || sending} onClick={submit}>
-          {t(sending ? "Envoi…" : outcome === "refused" ? "Déclarer non livrée" : order ? "Confirmer la livraison" : "Valider la vente")}
+          {translate(sending ? "Envoi…" : outcome === "refused" ? "Déclarer non livrée" : order ? "Confirmer la livraison" : "Valider la vente")}
         </button>
       </div>
       {problem && (

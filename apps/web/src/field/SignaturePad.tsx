@@ -1,7 +1,7 @@
 // Receiver's signature, drawn with a finger, mouse or pen. Reported as a PNG data URL (the format
 // the server accepts: data:image/png;base64,…) after each stroke, null once cleared.
 import { useRef, useState, type PointerEvent } from "react";
-import { t } from "./legacy-bridge.js";
+import { translate } from "../i18n/translate.ts";
 
 interface SignaturePadProps {
   onChange: (signature: string | null) => void;
@@ -66,13 +66,13 @@ export function SignaturePad({ onChange }: SignaturePadProps) {
         onPointerMove={move}
         onPointerUp={end}
         onPointerCancel={end}
-        aria-label={t("Zone de signature du réceptionnaire")}
+        aria-label={translate("Zone de signature du réceptionnaire")}
       />
       <div className="row spread small">
-        <span className="muted">{t(signed ? "Signature enregistrée" : "Signature du réceptionnaire (facultative)")}</span>
+        <span className="muted">{translate(signed ? "Signature enregistrée" : "Signature du réceptionnaire (facultative)")}</span>
         {signed && (
           <button type="button" className="sm secondary" onClick={clear}>
-            {t("Effacer")}
+            {translate("Effacer")}
           </button>
         )}
       </div>

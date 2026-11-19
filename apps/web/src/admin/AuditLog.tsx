@@ -1,19 +1,13 @@
 // Audit log of a company (administration) or of the platform (company, user and settings changes).
 import { useState } from "react";
-import { K } from "../legacy/i18n.js";
-import {
-  type Column,
-  Q as Card,
-  X as formatMoney,
-  Y as useQuery,
-  Z as formatDate,
-  dv as CsvExportLink,
-  fv as PageHead,
-  mv as Table,
-  pv as Loaded,
-  tv as roleLabel,
-  xv as useSession,
-} from "../legacy/shared.js";
+import { translate } from "../i18n/translate.ts";
+import { type Column, DataTable } from "../shared/DataTable.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { roleLabel } from "../shared/labels.ts";
+import { Card, CsvExportLink, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 
 export type AuditScope = "admin" | "platform";
 
@@ -42,14 +36,14 @@ const formatDetails = (details: Record<string, unknown>): string =>
 
 export function AuditLogPage({ scope }: { scope: AuditScope }) {
   const vertical = useSession().session.user?.vertical;
-  const entries = useQuery<AuditEntry[]>(`/api/${scope}/audit`);
+  const entries = useApi<AuditEntry[]>(`/api/${scope}/audit`);
   const [filter, setFilter] = useState("");
 
   const columns: Column<AuditEntry>[] = [
-    [K("Date"), (entry) => <span className="nowrap">{formatDate(entry.at, true)}</span>],
-    ...(scope === "platform" ? [[K("Entreprise"), (entry: AuditEntry) => entry.company ?? "—"] as const] : []),
+    [translate("Date"), (entry) => <span className="nowrap">{formatDate(entry.at, true)}</span>],
+    ...(scope === "platform" ? [[translate("Entreprise"), (entry: AuditEntry) => entry.company ?? "—"] as const] : []),
     [
-      K("Acteur"),
+      translate("Acteur"),
       (entry) => (
         <>
           {entry.actor}
@@ -57,15 +51,15 @@ export function AuditLogPage({ scope }: { scope: AuditScope }) {
         </>
       ),
     ],
-    [K("Action"), (entry) => <span className="code">{entry.action}</span>],
-    [K("Détails"), (entry) => <span className="small">{formatDetails(entry.details)}</span>],
+    [translate("Action"), (entry) => <span className="code">{entry.action}</span>],
+    [translate("Détails"), (entry) => <span className="small">{formatDetails(entry.details)}</span>],
   ];
 
   return (
     <>
-      <PageHead
-        title={K("Journal d'audit")}
-        sub={K(
+      <PageHeader
+        title={translate("Journal d'audit")}
+        sub={translate(
           scope === "platform"
             ? "Actions d'administration : entreprises, utilisateurs, paramètres."
             : "Qui a fait quoi, et quand. Le journal n'est ni modifiable ni supprimable depuis l'application.",
@@ -75,24 +69,24 @@ export function AuditLogPage({ scope }: { scope: AuditScope }) {
           type="text"
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          placeholder={K("Filtrer (action, acteur, objet)")}
-          aria-label={K("Filtrer")}
+          placeholder={translate("Filtrer (action, acteur, objet)")}
+          aria-label={translate("Filtrer")}
           style={{ width: 260 }}
         />
         <CsvExportLink href={`/api/${scope}/audit?format=csv`} />
-      </PageHead>
-      <Card title={K("500 dernières entrées")} flush>
-        <Loaded q={entries}>
+      </PageHeader>
+      <Card title={translate("500 dernières entrées")} flush>
+        <QueryView q={entries}>
           {(rows) => (
-            <Table
+            <DataTable
               // The filter matches anywhere in the entry (action, actor, object, details).
               rows={rows.filter((entry) => !filter || JSON.stringify(entry).toLowerCase().includes(filter.toLowerCase()))}
               rowKey={(entry) => entry.id}
-              empty={K("Aucune entrée.")}
+              empty={translate("Aucune entrée.")}
               cols={columns}
             />
           )}
-        </Loaded>
+        </QueryView>
       </Card>
     </>
   );

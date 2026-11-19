@@ -1,19 +1,17 @@
 // Tabs of the member detail: dues, account statement, payments, reminders, gate passages.
+import { describeGateDecision } from "../admin/clubLabels.ts";
+import { translate } from "../i18n/translate.ts";
+import { Badge, StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
 import {
-  Badge,
-  Card,
-  CHARGE_KIND_LABELS,
-  CHARGE_STATUS,
-  formatDate,
-  formatMoney,
-  GATE_DECISION,
-  gateReason,
-  OUTLET_LABELS,
-  PAYMENT_METHOD_LABELS,
-  StatusBadge,
-  Table,
-  t,
-} from "./legacy.ts";
+  ACCESS_DECISION,
+  CLUB_OUTLET,
+  MEMBER_CHARGE_KIND,
+  MEMBER_CHARGE_STATUS,
+  MEMBER_PAYMENT_METHOD,
+} from "../shared/labels.ts";
+import { Card } from "../shared/Layout.tsx";
 import { canQueryProvider, channelLabel, PaymentStatusCell, ReminderLevelBadge, SettlementCell } from "./parts.tsx";
 import type { MemberCharge, MemberDetailData } from "./types.ts";
 
@@ -31,11 +29,11 @@ interface MemberTabsProps {
 
 export function MemberTabs({ data, tab, onTab, canCancel, onCancelCharge, onQueryProvider }: MemberTabsProps) {
   const tabs: [MemberTab, string][] = [
-    ["dues", t("Dus")],
-    ["statement", t("Relevé")],
-    ["payments", t("Encaissements")],
-    ["reminders", t("Relances")],
-    ["gate", t("Barrière")],
+    ["dues", translate("Dus")],
+    ["statement", translate("Relevé")],
+    ["payments", translate("Encaissements")],
+    ["reminders", translate("Relances")],
+    ["gate", translate("Barrière")],
   ];
   return (
     <>
@@ -47,43 +45,43 @@ export function MemberTabs({ data, tab, onTab, canCancel, onCancelCharge, onQuer
         ))}
       </div>
       {tab === "dues" && (
-        <Card title={t("Cotisations, consommations et frais")} flush>
-          <Table
+        <Card title={translate("Cotisations, consommations et frais")} flush>
+          <DataTable
             rows={data.charges}
             rowKey={(charge) => charge.id}
-            empty={t("Aucun dû.")}
+            empty={translate("Aucun dû.")}
             cols={[
-              [t("Pièce"), (charge) => <span className="code nb">{charge.number}</span>],
+              [translate("Pièce"), (charge) => <span className="code nb">{charge.number}</span>],
               [
-                t("Nature"),
+                translate("Nature"),
                 (charge) => (
                   <>
-                    {CHARGE_KIND_LABELS[charge.kind]}
-                    {charge.outlet && <div className="small muted">{OUTLET_LABELS[charge.outlet]}</div>}
+                    {MEMBER_CHARGE_KIND[charge.kind]}
+                    {charge.outlet && <div className="small muted">{CLUB_OUTLET[charge.outlet]}</div>}
                   </>
                 ),
               ],
-              [t("Libellé"), (charge) => t(charge.label)],
+              [translate("Libellé"), (charge) => translate(charge.label)],
               [
-                t("Date d'échéance"),
+                translate("Date d'échéance"),
                 (charge) => (
                   <>
                     {formatDate(charge.due_date)}
                     {charge.overdue && (
                       <div>
-                        <Badge kind="err">{t("en retard")}</Badge>
+                        <Badge kind="err">{translate("en retard")}</Badge>
                       </div>
                     )}
                   </>
                 ),
               ],
-              [t("Montant"), (charge) => formatMoney(charge.amount_minor), "right"],
-              [t("Reste dû"), (charge) => formatMoney(charge.remaining_minor), "right"],
+              [translate("Montant"), (charge) => formatMoney(charge.amount_minor), "right"],
+              [translate("Reste dû"), (charge) => formatMoney(charge.remaining_minor), "right"],
               [
-                t("État"),
+                translate("État"),
                 (charge) => (
                   <>
-                    <StatusBadge map={CHARGE_STATUS} value={charge.status} />
+                    <StatusBadge map={MEMBER_CHARGE_STATUS} value={charge.status} />
                     {charge.cancel_reason && <div className="small muted">{charge.cancel_reason}</div>}
                   </>
                 ),
@@ -93,7 +91,7 @@ export function MemberTabs({ data, tab, onTab, canCancel, onCancelCharge, onQuer
                 (charge) =>
                   canCancel && charge.status !== "cancelled" ? (
                     <button className="sm danger" onClick={() => onCancelCharge(charge)}>
-                      {t("Annuler")}
+                      {translate("Annuler")}
                     </button>
                   ) : null,
               ],
@@ -102,34 +100,34 @@ export function MemberTabs({ data, tab, onTab, canCancel, onCancelCharge, onQuer
         </Card>
       )}
       {tab === "statement" && (
-        <Card title={t("Relevé de compte")} flush>
-          <Table
+        <Card title={translate("Relevé de compte")} flush>
+          <DataTable
             rows={data.statement}
             rowKey={(line) => `${line.at}${line.ref}`}
-            empty={t("Aucun mouvement.")}
+            empty={translate("Aucun mouvement.")}
             cols={[
-              [t("Date"), (line) => formatDate(line.at)],
-              [t("Pièce"), (line) => <span className="code nb">{line.ref}</span>],
-              [t("Libellé"), (line) => t(line.label)],
-              [t("Débit"), (line) => (line.debit ? formatMoney(line.debit) : ""), "right"],
-              [t("Crédit"), (line) => (line.credit ? formatMoney(line.credit) : ""), "right"],
-              [t("Solde"), (line) => formatMoney(line.balance), "right"],
+              [translate("Date"), (line) => formatDate(line.at)],
+              [translate("Pièce"), (line) => <span className="code nb">{line.ref}</span>],
+              [translate("Libellé"), (line) => translate(line.label)],
+              [translate("Débit"), (line) => (line.debit ? formatMoney(line.debit) : ""), "right"],
+              [translate("Crédit"), (line) => (line.credit ? formatMoney(line.credit) : ""), "right"],
+              [translate("Solde"), (line) => formatMoney(line.balance), "right"],
             ]}
           />
         </Card>
       )}
       {tab === "payments" && (
-        <Card title={t("Encaissements")} flush>
-          <Table
+        <Card title={translate("Encaissements")} flush>
+          <DataTable
             rows={data.payments}
             rowKey={(payment) => payment.id}
-            empty={t("Aucun encaissement.")}
+            empty={translate("Aucun encaissement.")}
             cols={[
-              [t("Date"), (payment) => formatDate(payment.created_at, true)],
-              [t("Moyen"), (payment) => PAYMENT_METHOD_LABELS[payment.method]],
-              [t("Montant"), (payment) => formatMoney(payment.amount_minor), "right"],
+              [translate("Date"), (payment) => formatDate(payment.created_at, true)],
+              [translate("Moyen"), (payment) => MEMBER_PAYMENT_METHOD[payment.method]],
+              [translate("Montant"), (payment) => formatMoney(payment.amount_minor), "right"],
               [
-                t("Paiement"),
+                translate("Paiement"),
                 (payment) => (
                   <PaymentStatusCell
                     status={payment.status}
@@ -140,18 +138,18 @@ export function MemberTabs({ data, tab, onTab, canCancel, onCancelCharge, onQuer
                 ),
               ],
               [
-                t("Règlement bancaire"),
+                translate("Règlement bancaire"),
                 (payment) => (
                   <SettlementCell status={payment.status} method={payment.method} settlement={payment.settlement_status} />
                 ),
               ],
-              [t("Référence"), (payment) => <span className="code nb">{payment.provider_ref ?? "—"}</span>],
+              [translate("Référence"), (payment) => <span className="code nb">{payment.provider_ref ?? "—"}</span>],
               [
                 "",
                 (payment) =>
                   canQueryProvider(payment) ? (
                     <button className="sm" onClick={() => onQueryProvider(payment.id)}>
-                      {t("Interroger le prestataire")}
+                      {translate("Interroger le prestataire")}
                     </button>
                   ) : null,
               ],
@@ -160,32 +158,32 @@ export function MemberTabs({ data, tab, onTab, canCancel, onCancelCharge, onQuer
         </Card>
       )}
       {tab === "reminders" && (
-        <Card title={t("Relances et relevés envoyés")} flush>
-          <Table
+        <Card title={translate("Relances et relevés envoyés")} flush>
+          <DataTable
             rows={data.reminders}
             rowKey={(reminder) => reminder.id}
-            empty={t("Aucune relance.")}
+            empty={translate("Aucune relance.")}
             cols={[
-              [t("Envoyée"), (reminder) => formatDate(reminder.sent_at, true)],
-              [t("Niveau"), (reminder) => <ReminderLevelBadge level={reminder.level} />],
-              [t("Canal"), (reminder) => channelLabel(reminder.channel)],
-              [t("Montant dû"), (reminder) => formatMoney(reminder.amount_minor), "right"],
-              [t("Message"), (reminder) => <span className="small">{reminder.message}</span>],
+              [translate("Envoyée"), (reminder) => formatDate(reminder.sent_at, true)],
+              [translate("Niveau"), (reminder) => <ReminderLevelBadge level={reminder.level} />],
+              [translate("Canal"), (reminder) => channelLabel(reminder.channel)],
+              [translate("Montant dû"), (reminder) => formatMoney(reminder.amount_minor), "right"],
+              [translate("Message"), (reminder) => <span className="small">{reminder.message}</span>],
             ]}
           />
         </Card>
       )}
       {tab === "gate" && (
-        <Card title={t("Passages à la barrière")} flush>
-          <Table
+        <Card title={translate("Passages à la barrière")} flush>
+          <DataTable
             rows={data.gateEvents}
             rowKey={(event) => event.id}
-            empty={t("Aucun passage enregistré.")}
+            empty={translate("Aucun passage enregistré.")}
             cols={[
-              [t("Date"), (event) => formatDate(event.at, true)],
-              [t("Décision"), (event) => <StatusBadge map={GATE_DECISION} value={event.decision} />],
-              [t("Motif"), (event) => gateReason(event)],
-              [t("Contrôle"), (event) => (event.source === "reader" ? t("lecteur") : t("accueil"))],
+              [translate("Date"), (event) => formatDate(event.at, true)],
+              [translate("Décision"), (event) => <StatusBadge map={ACCESS_DECISION} value={event.decision} />],
+              [translate("Motif"), (event) => describeGateDecision(event)],
+              [translate("Contrôle"), (event) => (event.source === "reader" ? translate("lecteur") : translate("accueil"))],
             ]}
           />
         </Card>

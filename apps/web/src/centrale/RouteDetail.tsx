@@ -1,26 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  apiRequest,
-  Badge,
-  Card,
-  Field,
-  formatDate,
-  formatDay,
-  formatMoney,
-  INVOICE_STATUS,
-  ORDER_STATUS,
-  PageHead,
-  QueryView,
-  ROUTE_STATUS,
-  StatusBadge,
-  Table,
-  Tile,
-  t,
-  useApi,
-  useFeedback,
-  useSession,
-} from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { Badge, StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { Field } from "../shared/Form.tsx";
+import { formatDate, formatDayLong, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { INVOICE_STATUS, ORDER_STATUS, ROUTE_STATUS } from "../shared/labels.ts";
+import { Card, PageHeader, Tile } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import { ProductQuantities } from "./ProductQuantities.tsx";
 import type { OrderSummary, QuantityLines, ReferenceData, RouteDetailData } from "./types.ts";
 
@@ -41,12 +32,12 @@ interface LoadingCardProps {
 /** Agent assignment and, while the route is planned, vehicle loading. */
 function LoadingCard({ route, reference, unprepared, extras, onExtrasChange, onAgentChange, onLoad }: LoadingCardProps) {
   return (
-    <Card title={t(`Agent et chargement`)}>
+    <Card title={translate(`Agent et chargement`)}>
       <div className="stack">
         <div className="grid g3">
-          <Field label={t(`Agent affecté`)}>
+          <Field label={translate(`Agent affecté`)}>
             <select value={route.agent_id ?? ``} onChange={(event) => onAgentChange(event.target.value || null)}>
-              <option value="">{t(`À affecter`)}</option>
+              <option value="">{translate(`À affecter`)}</option>
               {reference.agents.map((agent) => (
                 <option key={agent.id} value={agent.id}>
                   {agent.name}
@@ -59,24 +50,24 @@ function LoadingCard({ route, reference, unprepared, extras, onExtrasChange, onA
           <>
             {unprepared.length > 0 && (
               <div className="notice warn">
-                {t(`À préparer avant le chargement :`)} {unprepared.map((order) => order.number).join(`, `)}{" "}
-                {t(`(page Commandes).`)}
+                {translate(`À préparer avant le chargement :`)} {unprepared.map((order) => order.number).join(`, `)}{" "}
+                {translate(`(page Commandes).`)}
               </div>
             )}
             <div>
-              <strong>{t(`Stock de vente libre à charger`)}</strong>
-              <div className="small muted">{t(`En plus des commandes préparées, pour les ventes sur place.`)}</div>
+              <strong>{translate(`Stock de vente libre à charger`)}</strong>
+              <div className="small muted">{translate(`En plus des commandes préparées, pour les ventes sur place.`)}</div>
             </div>
             <ProductQuantities
               products={reference.products}
               lines={extras}
               onChange={onExtrasChange}
-              stockLabel={t(`stock dépôt`)}
+              stockLabel={translate(`stock dépôt`)}
             />
             <div>
               {/* Loading needs every pre-order prepared and an agent to drive the route. */}
               <button disabled={unprepared.length > 0 || !route.agent_id} onClick={onLoad}>
-                {t(`Charger le véhicule`)}
+                {translate(`Charger le véhicule`)}
               </button>
             </div>
           </>
@@ -92,7 +83,7 @@ export function RouteDetail() {
   const feedback = useFeedback();
   const { session } = useSession();
   // Finance follows the route but does not organise it.
-  const canEdit = session.user.role !== `finance`;
+  const canEdit = session.user!.role !== `finance`;
   const detail = useApi<RouteDetailData>(`/api/centrale/routes/${id}`, REFRESH_MS);
   const reference = useApi<ReferenceData>(`/api/centrale/reference`);
   const navigate = useNavigate();
@@ -121,48 +112,48 @@ export function RouteDetail() {
             setExtras({});
             // Loading moves stock out of the warehouse: refresh the catalogue quantities too.
             await Promise.all([detail.reload(), reference.reload()]);
-          }, t(`Véhicule chargé : la tournée peut démarrer.`));
+          }, translate(`Véhicule chargé : la tournée peut démarrer.`));
 
         return (
           <>
-            <PageHead
+            <PageHeader
               title={route.name}
               sub={
                 <>
-                  <Link to="/centrale/tournees">{t(`← Tournées`)}</Link>
+                  <Link to="/centrale/tournees">{translate(`← Tournées`)}</Link>
                   {` · `}
-                  {formatDay(route.day)}
+                  {formatDayLong(route.day)}
                   {` · `}
-                  {route.vehicle || t(`véhicule non précisé`)}
-                  {route.started_at ? t(` · démarrée {0}`, formatDate(route.started_at, true)) : ``}
-                  {route.closed_at ? t(` · clôturée {0}`, formatDate(route.closed_at, true)) : ``}
+                  {route.vehicle || translate(`véhicule non précisé`)}
+                  {route.started_at ? translate(` · démarrée {0}`, formatDate(route.started_at, true)) : ``}
+                  {route.closed_at ? translate(` · clôturée {0}`, formatDate(route.closed_at, true)) : ``}
                 </>
               }
             >
               <StatusBadge map={ROUTE_STATUS} value={route.status} />
-            </PageHead>
+            </PageHeader>
             <div className="stack">
               <div className="grid g4">
                 <Tile
-                  label={t(`Commandes traitées`)}
+                  label={translate(`Commandes traitées`)}
                   value={`${data.orders.delivered + data.orders.partial + data.orders.refused}/${data.orders.total}`}
-                  hint={t(
+                  hint={translate(
                     `{0} partielle(s) · {1} non livrée(s) · {2} vente(s) sur place`,
                     data.orders.partial,
                     data.orders.refused,
                     data.orders.routeSales,
                   )}
                 />
-                <Tile label={t(`Facturé`)} value={formatMoney(data.money.invoiced)} />
+                <Tile label={translate(`Facturé`)} value={formatMoney(data.money.invoiced)} />
                 <Tile
-                  label={t(`Encaissé confirmé`)}
+                  label={translate(`Encaissé confirmé`)}
                   value={formatMoney(data.money.confirmed)}
-                  hint={t(`réglé en banque : {0}`, formatMoney(data.money.settled))}
+                  hint={translate(`réglé en banque : {0}`, formatMoney(data.money.settled))}
                 />
                 <Tile
-                  label={t(`Reste à encaisser`)}
+                  label={translate(`Reste à encaisser`)}
                   value={formatMoney(data.money.invoiced - data.money.confirmed)}
-                  hint={t(`{0} en attente · {1} à vérifier`, formatMoney(data.money.pending), formatMoney(data.money.toVerify))}
+                  hint={translate(`{0} en attente · {1} à vérifier`, formatMoney(data.money.pending), formatMoney(data.money.toVerify))}
                 />
               </div>
               {/* The agent and the load can change until the route starts. */}
@@ -175,60 +166,60 @@ export function RouteDetail() {
                       unprepared={unprepared}
                       extras={extras}
                       onExtrasChange={setExtras}
-                      onAgentChange={(agentId) => updateRoute({ agentId }, t(`Agent affecté.`))}
+                      onAgentChange={(agentId) => updateRoute({ agentId }, translate(`Agent affecté.`))}
                       onLoad={loadVehicle}
                     />
                   )}
                 </QueryView>
               )}
               <div className="grid g2">
-                <Card title={t(`Arrêts`)} flush>
-                  <Table
+                <Card title={translate(`Arrêts`)} flush>
+                  <DataTable
                     rows={data.stops}
                     rowKey={(stop) => stop.customer_id}
-                    empty={t(`Aucun arrêt.`)}
+                    empty={translate(`Aucun arrêt.`)}
                     cols={[
                       [`#`, (stop) => stop.seq],
-                      [t(`Commerce`), (stop) => stop.name],
-                      [t(`Zone`), (stop) => stop.zone],
+                      [translate(`Commerce`), (stop) => stop.name],
+                      [translate(`Zone`), (stop) => stop.zone],
                     ]}
                   />
                 </Card>
-                <Card title={t(`Stock du véhicule`)} flush>
-                  <Table
+                <Card title={translate(`Stock du véhicule`)} flush>
+                  <DataTable
                     rows={data.stock}
                     rowKey={(line) => line.product_id}
-                    empty={t(`Véhicule non chargé.`)}
+                    empty={translate(`Véhicule non chargé.`)}
                     cols={[
-                      [t(`Produit`), (line) => line.name],
-                      [t(`Chargé`), (line) => line.loaded_qty, `right`],
-                      [t(`Sorti`), (line) => line.loaded_qty - line.qty, `right`],
+                      [translate(`Produit`), (line) => line.name],
+                      [translate(`Chargé`), (line) => line.loaded_qty, `right`],
+                      [translate(`Sorti`), (line) => line.loaded_qty - line.qty, `right`],
                       // A negative quantity on board means more was recorded than loaded.
-                      [t(`À bord`), (line) => <Badge kind={line.qty < 0 ? `err` : ``}>{line.qty}</Badge>, `right`],
-                      [t(`Retours`), (line) => line.returned_qty || ``, `right`],
+                      [translate(`À bord`), (line) => <Badge kind={line.qty < 0 ? `err` : ``}>{line.qty}</Badge>, `right`],
+                      [translate(`Retours`), (line) => line.returned_qty || ``, `right`],
                     ]}
                   />
                 </Card>
               </div>
-              <Card title={t(`Commandes et ventes de la tournée`)} flush>
-                <Table
+              <Card title={translate(`Commandes et ventes de la tournée`)} flush>
+                <DataTable
                   rows={data.orderList}
                   rowKey={(order) => order.id}
-                  empty={t(`Aucune commande affectée.`)}
+                  empty={translate(`Aucune commande affectée.`)}
                   onRow={(order) => navigate(`/centrale/commandes/${order.id}`)}
                   cols={[
                     [`N°`, (order) => <strong>{order.number}</strong>],
-                    [t(`Type`), (order) => (order.kind === `route_sale` ? t(`Vente sur place`) : t(`Commande`))],
-                    [t(`Commerce`), (order) => order.customer],
-                    [t(`État`), (order) => <StatusBadge map={ORDER_STATUS} value={order.status} />],
-                    [t(`Commandé`), (order) => formatMoney(order.ordered_minor), `right`],
+                    [translate(`Type`), (order) => (order.kind === `route_sale` ? translate(`Vente sur place`) : translate(`Commande`))],
+                    [translate(`Commerce`), (order) => order.customer],
+                    [translate(`État`), (order) => <StatusBadge map={ORDER_STATUS} value={order.status} />],
+                    [translate(`Commandé`), (order) => formatMoney(order.ordered_minor), `right`],
                     [
-                      t(`Facture`),
+                      translate(`Facture`),
                       (order) =>
                         order.invoice_number ? (
                           <>
                             {formatMoney(order.invoice_minor)}{" "}
-                            <StatusBadge map={INVOICE_STATUS} value={order.invoice_status} />
+                            <StatusBadge map={INVOICE_STATUS} value={order.invoice_status!} />
                           </>
                         ) : (
                           `—`

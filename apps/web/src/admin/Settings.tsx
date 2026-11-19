@@ -1,21 +1,16 @@
 // Company administration: payment methods, settlement, club rules and ERP settings.
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
-import { K } from "../legacy/i18n.js";
-import {
-  $ as Field,
-  J as api,
-  Q as Card,
-  R_ as parseAmount,
-  X_ as METHOD_LABELS,
-  Y as useQuery,
-  Z as formatDate,
-  _v as useUi,
-  cv as Badge,
-  fv as PageHead,
-  pv as Loaded,
-  xv as useSession,
-  z_ as formatAmountInput,
-} from "../legacy/shared.js";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { Badge } from "../shared/Badge.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { Field } from "../shared/Form.tsx";
+import { formatDate, formatMoneyInput, parseMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { PAYMENT_CHANNEL } from "../shared/labels.ts";
+import { Card, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 
 interface PaymentMethodSettings {
   enabled: boolean;
@@ -89,25 +84,25 @@ type ClubDayField = number | "dueDays" | "flagAfterDays" | "denyAfterDays";
 type SetSettings = Dispatch<SetStateAction<CompanySettings | null>>;
 
 const CAPABILITY_LABELS: Record<string, string> = {
-  onSite: K("sur place"),
-  remote: K("à distance"),
-  refund: K("remboursement"),
-  cancel: K("annulation garantie"),
-  statusQuery: K("interrogation de statut"),
+  onSite: translate("sur place"),
+  remote: translate("à distance"),
+  refund: translate("remboursement"),
+  cancel: translate("annulation garantie"),
+  statusQuery: translate("interrogation de statut"),
 };
 
 export function SettingsPage() {
-  const ui = useUi();
-  const settingsQuery = useQuery<SettingsResponse>("/api/admin/settings");
-  const connectorsQuery = useQuery<Connectors>("/api/connectors");
+  const ui = useFeedback();
+  const settingsQuery = useApi<SettingsResponse>("/api/admin/settings");
+  const connectorsQuery = useApi<Connectors>("/api/connectors");
   const isClub = useSession().session.user?.vertical === "club";
   const [amounts, setAmounts] = useState<AmountDrafts | null>(null);
   // The form is initialised once from the server, then edited locally until saved.
   useEffect(() => {
     if (settingsQuery.data && !amounts) {
       setAmounts({
-        reminders: formatAmountInput(settingsQuery.data.settings.club.reminders.minAmountMinor),
-        gate: formatAmountInput(settingsQuery.data.settings.club.gate.minAmountMinor),
+        reminders: formatMoneyInput(settingsQuery.data.settings.club.reminders.minAmountMinor),
+        gate: formatMoneyInput(settingsQuery.data.settings.club.gate.minAmountMinor),
       });
     }
   }, [settingsQuery.data, amounts]);
@@ -121,19 +116,19 @@ export function SettingsPage() {
       const club = drafts
         ? {
             dueDays: current.club.dueDays,
-            reminders: { levels: current.club.reminders.levels, minAmountMinor: parseAmount(drafts.reminders) ?? 0 },
-            gate: { ...current.club.gate, minAmountMinor: parseAmount(drafts.gate) ?? 0 },
+            reminders: { levels: current.club.reminders.levels, minAmountMinor: parseMoney(drafts.reminders) ?? 0 },
+            gate: { ...current.club.gate, minAmountMinor: parseMoney(drafts.gate) ?? 0 },
           }
         : undefined;
       // Club rules are sent by club companies only; the server merges them into the stored settings.
-      await api("PUT", "/api/admin/settings", { payments: current.payments, erp: current.erp, ...(isClub ? { club } : {}) });
+      await apiRequest("PUT", "/api/admin/settings", { payments: current.payments, erp: current.erp, ...(isClub ? { club } : {}) });
       await settingsQuery.reload();
-    }, K("Paramètres enregistrés."));
+    }, translate("Paramètres enregistrés."));
 
   return (
     <>
-      <PageHead title={K("Paramètres")} sub={K("Moyens de paiement, compte de règlement et ERP de l'entreprise.")} />
-      <Loaded q={settingsQuery}>
+      <PageHeader title={translate("Paramètres")} sub={translate("Moyens de paiement, compte de règlement et ERP de l'entreprise.")} />
+      <QueryView q={settingsQuery}>
         {(data) =>
           settings ? (
             <div className="stack">
@@ -145,32 +140,32 @@ export function SettingsPage() {
               )}
               <ErpCard settings={settings} setSettings={setSettings} />
               <div>
-                <button onClick={() => save(settings, amounts)}>{K("Enregistrer les paramètres")}</button>
+                <button onClick={() => save(settings, amounts)}>{translate("Enregistrer les paramètres")}</button>
               </div>
-              <Loaded q={connectorsQuery}>{(connectors) => <ConnectorsCard connectors={connectors} isClub={isClub} />}</Loaded>
+              <QueryView q={connectorsQuery}>{(connectors) => <ConnectorsCard connectors={connectors} isClub={isClub} />}</QueryView>
             </div>
           ) : null
         }
-      </Loaded>
+      </QueryView>
     </>
   );
 }
 
 function SubscriptionCard({ subscription }: { subscription: SettingsResponse["subscription"] }) {
   return (
-    <Card title={K("Abonnement (démonstration)")}>
+    <Card title={translate("Abonnement (démonstration)")}>
       <dl className="kv">
-        <dt>{K("Entreprise")}</dt>
+        <dt>{translate("Entreprise")}</dt>
         <dd>
-          {subscription.name} {K("· devise")} {subscription.currency}
+          {subscription.name} {translate("· devise")} {subscription.currency}
         </dd>
-        <dt>{K("Formule")}</dt>
+        <dt>{translate("Formule")}</dt>
         <dd>
-          <Badge kind="info">{K(subscription.plan)}</Badge> {K("· état :")} {K(subscription.subscription_status)}{" "}
-          {K("· échéance :")} {formatDate(subscription.subscription_renews_at)}
+          <Badge kind="info">{translate(subscription.plan)}</Badge> {translate("· état :")} {translate(subscription.subscription_status)}{" "}
+          {translate("· échéance :")} {formatDate(subscription.subscription_renews_at)}
         </dd>
-        <dt>{K("Facturation")}</dt>
-        <dd className="muted">{K("Fictive : aucun prix ni prélèvement n'est défini. La formule se modifie depuis l'espace plateforme.")}</dd>
+        <dt>{translate("Facturation")}</dt>
+        <dd className="muted">{translate("Fictive : aucun prix ni prélèvement n'est défini. La formule se modifie depuis l'espace plateforme.")}</dd>
       </dl>
     </Card>
   );
@@ -196,22 +191,22 @@ function PaymentMethodsCard({ settings, setSettings, connectors, isClub }: Payme
   // A club only collects through payment links.
   const methods = Object.entries(settings.payments.methods).filter(([method]) => !isClub || method === "link");
   return (
-    <Card title={K("Moyens de paiement")} flush>
+    <Card title={translate("Moyens de paiement")} flush>
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>{K("Moyen")}</th>
-              <th>{K("Activé")}</th>
-              <th>{K("Frais attendus (points de base)")}</th>
-              <th>{K("Identifiant marchand")}</th>
-              <th>{K("Connecteur")}</th>
+              <th>{translate("Moyen")}</th>
+              <th>{translate("Activé")}</th>
+              <th>{translate("Frais attendus (points de base)")}</th>
+              <th>{translate("Identifiant marchand")}</th>
+              <th>{translate("Connecteur")}</th>
             </tr>
           </thead>
           <tbody>
             {methods.map(([method, methodSettings]) => {
               const connector = connectors?.payments.find((candidate) => candidate.method === method);
-              const label = METHOD_LABELS[method];
+              const label = PAYMENT_CHANNEL[method];
               return (
                 <tr key={method}>
                   <td>
@@ -222,7 +217,7 @@ function PaymentMethodsCard({ settings, setSettings, connectors, isClub }: Payme
                       type="checkbox"
                       checked={methodSettings.enabled}
                       onChange={(event) => updateMethod(method, { enabled: event.target.checked })}
-                      aria-label={K("Activer {0}", label)}
+                      aria-label={translate("Activer {0}", label)}
                       style={{ width: 20, height: 20 }}
                     />
                   </td>
@@ -233,7 +228,7 @@ function PaymentMethodsCard({ settings, setSettings, connectors, isClub }: Payme
                       max={1000}
                       value={methodSettings.feeBps}
                       onChange={(event) => updateMethod(method, { feeBps: Math.trunc(Number(event.target.value) || 0) })}
-                      aria-label={K("Frais {0}", label)}
+                      aria-label={translate("Frais {0}", label)}
                       style={{ width: 110 }}
                     />{" "}
                     <span className="small muted">
@@ -245,13 +240,13 @@ function PaymentMethodsCard({ settings, setSettings, connectors, isClub }: Payme
                       type="text"
                       value={methodSettings.merchantRef}
                       onChange={(event) => updateMethod(method, { merchantRef: event.target.value })}
-                      aria-label={K("Identifiant marchand {0}", label)}
+                      aria-label={translate("Identifiant marchand {0}", label)}
                     />
                   </td>
                   <td>
                     {connector && (
                       <>
-                        <Badge kind="warn">{connector.demo ? K("Simulé") : K("Réel")}</Badge>
+                        <Badge kind="warn">{connector.demo ? translate("Simulé") : translate("Réel")}</Badge>
                         <div className="small muted">
                           {Object.entries(connector.capabilities ?? {})
                             .filter(([, supported]) => supported)
@@ -273,11 +268,11 @@ function PaymentMethodsCard({ settings, setSettings, connectors, isClub }: Payme
 
 function SettlementCard({ settings, setSettings }: { settings: CompanySettings; setSettings: SetSettings }) {
   return (
-    <Card title={K("Règlement et délais")}>
+    <Card title={translate("Règlement et délais")}>
       <div className="grid g2">
         <Field
-          label={K("Compte de règlement (libellé)")}
-          hint={K(
+          label={translate("Compte de règlement (libellé)")}
+          hint={translate(
             "Le règlement effectif sur ce compte dépend du circuit validé avec chaque prestataire : aucune garantie n'est donnée par l'application.",
           )}
         >
@@ -288,8 +283,8 @@ function SettlementCard({ settings, setSettings }: { settings: CompanySettings; 
           />
         </Field>
         <Field
-          label={K("Durée de validité d'une tentative (minutes)")}
-          hint={K("Passé ce délai sans réponse du prestataire, la tentative passe « à vérifier », jamais « échouée ».")}
+          label={translate("Durée de validité d'une tentative (minutes)")}
+          hint={translate("Passé ce délai sans réponse du prestataire, la tentative passe « à vérifier », jamais « échouée ».")}
         >
           <input
             type="number"
@@ -327,19 +322,19 @@ function ClubRulesCard({ settings, setSettings, amounts, setAmounts }: ClubRules
       return { ...current, club: { ...club, reminders: { ...club.reminders, levels } } };
     });
   return (
-    <Card title={K("Club : échéances, relances et barrière")}>
+    <Card title={translate("Club : échéances, relances et barrière")}>
       <div className="stack">
         <div className="grid g4">
           <Field
-            label={K("Préfixe des références")}
-            hint={K("Fixé à la création du club : les références déjà diffusées aux membres doivent rester valables.")}
+            label={translate("Préfixe des références")}
+            hint={translate("Fixé à la création du club : les références déjà diffusées aux membres doivent rester valables.")}
           >
             <input type="text" value={settings.club.refPrefix} disabled />
           </Field>
-          <Field label={K("Délai de paiement (jours)")}>
+          <Field label={translate("Délai de paiement (jours)")}>
             <input type="number" min={0} max={120} value={settings.club.dueDays} onChange={(event) => setDays("dueDays", event.target.value)} />
           </Field>
-          <Field label={K("Montant dû minimal pour relancer (Rs)")}>
+          <Field label={translate("Montant dû minimal pour relancer (Rs)")}>
             <input
               type="text"
               inputMode="decimal"
@@ -349,7 +344,7 @@ function ClubRulesCard({ settings, setSettings, amounts, setAmounts }: ClubRules
           </Field>
           <div />
           {[0, 1, 2].map((level) => (
-            <Field key={level} label={K("Relance de niveau {0} après (jours de retard)", level + 1)}>
+            <Field key={level} label={translate("Relance de niveau {0} après (jours de retard)", level + 1)}>
               <input
                 type="number"
                 min={1}
@@ -360,7 +355,7 @@ function ClubRulesCard({ settings, setSettings, amounts, setAmounts }: ClubRules
             </Field>
           ))}
           <div />
-          <Field label={K("Barrière : signaler au-delà de (jours)")}>
+          <Field label={translate("Barrière : signaler au-delà de (jours)")}>
             <input
               type="number"
               min={0}
@@ -370,8 +365,8 @@ function ClubRulesCard({ settings, setSettings, amounts, setAmounts }: ClubRules
             />
           </Field>
           <Field
-            label={K("Barrière : refuser au-delà de (jours)")}
-            hint={K("0 : la barrière ne refuse jamais pour une dette, elle signale seulement.")}
+            label={translate("Barrière : refuser au-delà de (jours)")}
+            hint={translate("0 : la barrière ne refuse jamais pour une dette, elle signale seulement.")}
           >
             <input
               type="number"
@@ -381,12 +376,12 @@ function ClubRulesCard({ settings, setSettings, amounts, setAmounts }: ClubRules
               onChange={(event) => setDays("denyAfterDays", event.target.value)}
             />
           </Field>
-          <Field label={K("Barrière : montant en retard minimal (Rs)")}>
+          <Field label={translate("Barrière : montant en retard minimal (Rs)")}>
             <input type="text" inputMode="decimal" value={amounts.gate} onChange={(event) => setAmounts({ ...amounts, gate: event.target.value })} />
           </Field>
         </div>
         <div className="small muted">
-          {K(
+          {translate(
             "Un membre suspendu ou résilié, ou un badge inconnu, est toujours refusé. Les comptes de l'export comptable sont des valeurs de démonstration, à remplacer par le plan comptable du club.",
           )}
         </div>
@@ -401,15 +396,15 @@ function ErpCard({ settings, setSettings }: { settings: CompanySettings; setSett
     <Card title="ERP">
       <div className="stack">
         <div className="grid g3">
-          <Field label={K("Système")}>
+          <Field label={translate("Système")}>
             <input type="text" value={settings.erp.system} onChange={(event) => setErp({ system: event.target.value })} />
           </Field>
-          <Field label={K("Adresse de l'interface")}>
+          <Field label={translate("Adresse de l'interface")}>
             <input type="text" value={settings.erp.endpoint} onChange={(event) => setErp({ endpoint: event.target.value })} />
           </Field>
           <Field
-            label={K("Référence du secret")}
-            hint={K("Nom de la variable d'environnement qui porte la clé. La clé elle-même n'est jamais saisie ni stockée ici.")}
+            label={translate("Référence du secret")}
+            hint={translate("Nom de la variable d'environnement qui porte la clé. La clé elle-même n'est jamais saisie ni stockée ici.")}
           >
             {/* Environment variable names are upper case. */}
             <input type="text" value={settings.erp.secretRef} onChange={(event) => setErp({ secretRef: event.target.value.toUpperCase() })} />
@@ -417,12 +412,12 @@ function ErpCard({ settings, setSettings }: { settings: CompanySettings; setSett
         </div>
         <label className="check">
           <input type="checkbox" checked={settings.erp.autoSync} onChange={(event) => setErp({ autoSync: event.target.checked })} />
-          <span>{K("Synchroniser automatiquement après chaque événement")}</span>
+          <span>{translate("Synchroniser automatiquement après chaque événement")}</span>
         </label>
         <label className="check">
           <input type="checkbox" checked={settings.erp.simulateFailure} onChange={(event) => setErp({ simulateFailure: event.target.checked })} />
           <span>
-            {K("Démonstration : simuler une panne de l'ERP (les écritures passent « en erreur » et attendent leur reprise)")}
+            {translate("Démonstration : simuler une panne de l'ERP (les écritures passent « en erreur » et attendent leur reprise)")}
           </span>
         </label>
       </div>
@@ -439,17 +434,17 @@ function ConnectorsCard({ connectors, isClub }: { connectors: Connectors; isClub
     ...(isClub ? [connectors.access] : []),
   ];
   return (
-    <Card title={K("Connecteurs : capacités à vérifier auprès de chaque prestataire")}>
+    <Card title={translate("Connecteurs : capacités à vérifier auprès de chaque prestataire")}>
       <div className="notice warn" style={{ marginBottom: 12 }}>
-        {K("Tous les connecteurs sont des simulateurs. Aucune API réelle, certification ou garantie de règlement n'est supposée.")}
+        {translate("Tous les connecteurs sont des simulateurs. Aucune API réelle, certification ou garantie de règlement n'est supposée.")}
       </div>
       <div className="grid g2">
         {shown.map((connector) => (
           <div key={connector.label}>
-            <h3>{K(connector.label)}</h3>
+            <h3>{translate(connector.label)}</h3>
             <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
               {connector.toVerify.map((item) => (
-                <li key={item}>{K(item)}</li>
+                <li key={item}>{translate(item)}</li>
               ))}
             </ul>
           </div>

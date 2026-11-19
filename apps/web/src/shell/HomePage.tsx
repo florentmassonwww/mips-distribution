@@ -1,15 +1,13 @@
 // Home page: in demo mode, sign-in by choosing a profile, and the guided demo walkthroughs.
 import { Link, useNavigate } from "react-router-dom";
-import { K } from "../legacy/i18n.js";
-import {
-  J as api,
-  Y as useQuery,
-  _v as useUi,
-  pv as Loaded,
-  tv as roleLabel,
-  xv as useSession,
-  yv as LanguageToggle,
-} from "../legacy/shared.js";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { useApi } from "../shared/hooks.ts";
+import { roleLabel } from "../shared/labels.ts";
+import { LanguageToggle } from "../shared/LanguageToggle.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import { homePathFor } from "./areas.ts";
 
 /** GET /api/demo/users: active users, platform users without a company. */
@@ -26,12 +24,12 @@ interface DemoUser {
 export function HomePage() {
   const { session, refresh } = useSession();
   const navigate = useNavigate();
-  const ui = useUi();
-  const demoUsers = useQuery<DemoUser[]>(session.demoMode ? "/api/demo/users" : null);
+  const ui = useFeedback();
+  const demoUsers = useApi<DemoUser[]>(session.demoMode ? "/api/demo/users" : null);
 
   const signIn = (user: DemoUser) =>
     ui.run(async () => {
-      await api("POST", "/api/demo/login", { userId: user.id });
+      await apiRequest("POST", "/api/demo/login", { userId: user.id });
       await refresh();
       navigate(homePathFor(user.role, user.company_vertical));
     });
@@ -41,7 +39,7 @@ export function HomePage() {
     return (
       <div className="mobile stack">
         <h1>MIPS Distribution</h1>
-        <div className="notice">{K("La connexion passe par l'authentification de l'entreprise, à raccorder avant la mise en production.")}</div>
+        <div className="notice">{translate("La connexion passe par l'authentification de l'entreprise, à raccorder avant la mise en production.")}</div>
       </div>
     );
   }
@@ -54,18 +52,18 @@ export function HomePage() {
           <LanguageToggle />
         </div>
         <div className="muted">
-          {K("Distribution B2B, vente sur la route et paiement à la livraison ; clubs de sport, comptes membres et recouvrement.")} · v
+          {translate("Distribution B2B, vente sur la route et paiement à la livraison ; clubs de sport, comptes membres et recouvrement.")} · v
           {session.version}
         </div>
       </div>
       {session.user && (
         <div className="notice">
-          {K("Connecté :")} {session.user.name}.{" "}
-          <Link to={homePathFor(session.user.role, session.user.vertical)}>{K("Reprendre mon espace →")}</Link>
+          {translate("Connecté :")} {session.user.name}.{" "}
+          <Link to={homePathFor(session.user.role, session.user.vertical)}>{translate("Reprendre mon espace →")}</Link>
         </div>
       )}
-      <h2>{K("Connexion de démonstration : choisissez un profil")}</h2>
-      <Loaded q={demoUsers}>{(users) => <DemoProfiles users={users} onSignIn={signIn} />}</Loaded>
+      <h2>{translate("Connexion de démonstration : choisissez un profil")}</h2>
+      <QueryView q={demoUsers}>{(users) => <DemoProfiles users={users} onSignIn={signIn} />}</QueryView>
       <DistributionWalkthrough />
       <ClubWalkthrough />
     </div>
@@ -82,8 +80,8 @@ function DemoProfiles({ users, onSignIn }: { users: DemoUser[]; onSignIn: (user:
           <header>
             <h2>{company.company_name}</h2>
             <span className="row">
-              <span className="badge info">{company.company_vertical === "club" ? K("Club de sport") : K("Distribution")}</span>
-              {company.company_status !== "active" && <span className="badge err">{K("Accès suspendu")}</span>}
+              <span className="badge info">{company.company_vertical === "club" ? translate("Club de sport") : translate("Distribution")}</span>
+              {company.company_status !== "active" && <span className="badge err">{translate("Accès suspendu")}</span>}
             </span>
           </header>
           <div className="body row">
@@ -100,7 +98,7 @@ function DemoProfiles({ users, onSignIn }: { users: DemoUser[]; onSignIn: (user:
       ))}
       <section className="card">
         <header>
-          <h2>{K("Plateforme SaaS")}</h2>
+          <h2>{translate("Plateforme SaaS")}</h2>
         </header>
         <div className="body row">
           {users
@@ -120,33 +118,33 @@ function DistributionWalkthrough() {
   return (
     <section className="card">
       <header>
-        <h2>{K("Parcours de démonstration (10 minutes)")}</h2>
+        <h2>{translate("Parcours de démonstration (10 minutes)")}</h2>
       </header>
       <div className="body">
         <ol style={{ margin: 0, paddingLeft: 20 }} className="stack">
           <li>
-            <strong>{K("Agent · Ravi")}</strong>{" "}
-            {K(": démarrer « Nord - Grand-Baie », livrer la première commande, encaisser avec PayStation et jouer « Paiement réussi » dans le simulateur.")}
+            <strong>{translate("Agent · Ravi")}</strong>{" "}
+            {translate(": démarrer « Nord - Grand-Baie », livrer la première commande, encaisser avec PayStation et jouer « Paiement réussi » dans le simulateur.")}
           </li>
           <li>
-            {K("Livrer partiellement la deuxième commande (motif obligatoire), encaisser par carte et jouer « Paiement refusé », puis réessayer avec Juice.")}
+            {translate("Livrer partiellement la deuxième commande (motif obligatoire), encaisser par carte et jouer « Paiement refusé », puis réessayer avec Juice.")}
           </li>
           <li>
-            {K("Activer « Simuler hors ligne », faire une vente sur place, puis rétablir le réseau : l'action est synchronisée une seule fois.")}
+            {translate("Activer « Simuler hors ligne », faire une vente sur place, puis rétablir le réseau : l'action est synchronisée une seule fois.")}
           </li>
           <li>
-            <strong>{K("Centrale · Kevin")}</strong>{" "}
-            {K(": le tableau de bord s'actualise seul ; valider l'incident de livraison partielle ; préparer et charger « Centre - Curepipe ».")}
+            <strong>{translate("Centrale · Kevin")}</strong>{" "}
+            {translate(": le tableau de bord s'actualise seul ; valider l'incident de livraison partielle ; préparer et charger « Centre - Curepipe ».")}
           </li>
           <li>
-            <strong>{K("Finance · Sophie")}</strong>{" "}
-            {K(": Rapprochement › générer un relevé avec anomalies et l'importer ; traiter les exceptions ; clôturer la journée ; voir les écritures ERP.")}
+            <strong>{translate("Finance · Sophie")}</strong>{" "}
+            {translate(": Rapprochement › générer un relevé avec anomalies et l'importer ; traiter les exceptions ; clôturer la journée ; voir les écritures ERP.")}
           </li>
           <li>
-            <strong>{K("Administrateur · Anjali")}</strong>{" "}
-            {K(": Paramètres › simuler une panne ERP, refaire une vente, puis reprendre les écritures en erreur depuis Finance › ERP.")}
+            <strong>{translate("Administrateur · Anjali")}</strong>{" "}
+            {translate(": Paramètres › simuler une panne ERP, refaire une vente, puis reprendre les écritures en erreur depuis Finance › ERP.")}
           </li>
-          <li>{K("Se connecter sur « Grossiste Démo Océan » : aucune donnée de la première entreprise n'y apparaît.")}</li>
+          <li>{translate("Se connecter sur « Grossiste Démo Océan » : aucune donnée de la première entreprise n'y apparaît.")}</li>
         </ol>
       </div>
     </section>
@@ -157,30 +155,30 @@ function ClubWalkthrough() {
   return (
     <section className="card">
       <header>
-        <h2>{K("Parcours club de sport (8 minutes)")}</h2>
+        <h2>{translate("Parcours club de sport (8 minutes)")}</h2>
       </header>
       <div className="body">
         <ol style={{ margin: 0, paddingLeft: 20 }} className="stack">
           <li>
-            <strong>{K("Comptabilité · Mélanie")}</strong>{" "}
-            {K(": Recouvrement › qui doit quoi et depuis quand ; ouvrir Yannick Ramsamy, voir son relevé et ses relances.")}
+            <strong>{translate("Comptabilité · Mélanie")}</strong>{" "}
+            {translate(": Recouvrement › qui doit quoi et depuis quand ; ouvrir Yannick Ramsamy, voir son relevé et ses relances.")}
           </li>
           <li>
-            {K("« Envoyer le relevé et le lien de paiement », puis « Ouvrir la page du membre » : payer en ligne et jouer « Paiement réussi ». Le solde tombe à zéro.")}
+            {translate("« Envoyer le relevé et le lien de paiement », puis « Ouvrir la page du membre » : payer en ligne et jouer « Paiement réussi ». Le solde tombe à zéro.")}
           </li>
           <li>
-            {K("Rapprochement › générer le relevé de démonstration et l'importer : les virements bien référencés sont affectés seuls ; affecter à la main le virement sans référence.")}
+            {translate("Rapprochement › générer le relevé de démonstration et l'importer : les virements bien référencés sont affectés seuls ; affecter à la main le virement sans référence.")}
           </li>
           <li>
-            {K("Relances › lancer les relances : un second lancement n'envoie rien de plus. Export comptable : écritures équilibrées, prêtes pour la comptabilité.")}
+            {translate("Relances › lancer les relances : un second lancement n'envoie rien de plus. Export comptable : écritures équilibrées, prêtes pour la comptabilité.")}
           </li>
           <li>
-            <strong>{K("Accueil · Jean-Luc")}</strong>{" "}
-            {K(": contrôler les badges B00001 (à jour), B00008 (en retard : entrée signalée, code de paiement), B00014 (suspendu).")}
+            <strong>{translate("Accueil · Jean-Luc")}</strong>{" "}
+            {translate(": contrôler les badges B00001 (à jour), B00008 (en retard : entrée signalée, code de paiement), B00014 (suspendu).")}
           </li>
           <li>
-            <strong>{K("Direction · Véronique")}</strong>{" "}
-            {K(": Paramètres › refuser l'entrée au-delà de 90 jours de retard, puis recontrôler B00008.")}
+            <strong>{translate("Direction · Véronique")}</strong>{" "}
+            {translate(": Paramètres › refuser l'entrée au-delà de 90 jours de retard, puis recontrôler B00008.")}
           </li>
         </ol>
       </div>

@@ -1,17 +1,12 @@
 // Small pieces shared by several club screens.
 import type { Billing } from "./types.ts";
-import {
-  Badge,
-  CONFIRMED_VIA_LABELS,
-  PAYMENT_STATUS,
-  REMINDER_LEVEL,
-  SETTLEMENT_STATUS,
-  StatusBadge,
-  t,
-} from "./legacy.ts";
+import { REMINDER_LEVELS } from "../admin/clubLabels.ts";
+import { translate } from "../i18n/translate.ts";
+import { Badge, StatusBadge } from "../shared/Badge.tsx";
+import { BANK_SETTLEMENT_STATUS, CONFIRMATION_SOURCE, PAYMENT_STATUS } from "../shared/labels.ts";
 
 /** " / mois" or " / an", appended to a plan's fee. */
-export const billingSuffix = (billing: Billing): string => (billing === "monthly" ? t(" / mois") : t(" / an"));
+export const billingSuffix = (billing: Billing): string => (billing === "monthly" ? translate(" / mois") : translate(" / an"));
 
 /** Query string of the non-empty filters, values URL-encoded, in the filters' key order. */
 export function filtersQuery(filters: Record<string, string>): string {
@@ -32,7 +27,7 @@ export function MemberCell({ name, number }: { name: string | null; number: stri
 }
 
 export function ReminderLevelBadge({ level }: { level: number }) {
-  return <Badge kind={REMINDER_LEVEL[level]?.[1]}>{REMINDER_LEVEL[level]?.[0]}</Badge>;
+  return <Badge kind={REMINDER_LEVELS[level]?.[1]}>{REMINDER_LEVELS[level]?.[0]}</Badge>;
 }
 
 interface PaymentStatusProps {
@@ -49,17 +44,17 @@ export function PaymentStatusCell({ status, confirmedVia, verifyReason, failureR
       <StatusBadge map={PAYMENT_STATUS} value={status} />
       {confirmedVia && (
         <div className="small muted">
-          {t("par")} {CONFIRMED_VIA_LABELS[confirmedVia] ?? confirmedVia}
+          {translate("par")} {CONFIRMATION_SOURCE[confirmedVia] ?? confirmedVia}
         </div>
       )}
-      {(verifyReason ?? failureReason) && <div className="small muted">{t(verifyReason ?? failureReason ?? "")}</div>}
+      {(verifyReason ?? failureReason) && <div className="small muted">{translate(verifyReason ?? failureReason ?? "")}</div>}
     </>
   );
 }
 
 /** Bank settlement is tracked for confirmed payments that went through the bank (not cash). */
 export function SettlementCell({ status, method, settlement }: { status: string; method: string; settlement: string }) {
-  return status === "confirmed" && method !== "cash" ? <StatusBadge map={SETTLEMENT_STATUS} value={settlement} /> : "—";
+  return status === "confirmed" && method !== "cash" ? <StatusBadge map={BANK_SETTLEMENT_STATUS} value={settlement} /> : "—";
 }
 
 /** Online payments still waiting for the provider can be queried on demand. */

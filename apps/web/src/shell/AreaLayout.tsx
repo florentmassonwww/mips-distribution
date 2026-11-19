@@ -1,8 +1,11 @@
 // Layout of a back-office area: sidebar (brand, navigation, profile) and the page.
 import type { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { K } from "../legacy/i18n.js";
-import { J as api, tv as roleLabel, xv as useSession, yv as LanguageToggle } from "../legacy/shared.js";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { roleLabel } from "../shared/labels.ts";
+import { LanguageToggle } from "../shared/LanguageToggle.tsx";
+import { useSession } from "../shared/session.ts";
 import { CLUB_NAV, DISTRIBUTION_NAV, EXACT_MATCH_PATHS } from "./areas.ts";
 import { RequireRole, type RequireRoleProps } from "./RequireRole.tsx";
 
@@ -14,7 +17,7 @@ export function AreaLayout({ roles, children, vertical }: RequireRoleProps & { c
 
   // "Switch profile": sign out, then back to the demo profile list.
   const switchProfile = async () => {
-    await api("POST", "/api/logout");
+    await apiRequest("POST", "/api/logout");
     await refresh();
     navigate("/");
   };
@@ -26,9 +29,9 @@ export function AreaLayout({ roles, children, vertical }: RequireRoleProps & { c
           <aside className="side noprint">
             <div className="brand">
               {isClub ? "MIPS ClubOS" : "MIPS Distribution"}
-              <small>{user.companyName ?? K("Plateforme SaaS")}</small>
+              <small>{user.companyName ?? translate("Plateforme SaaS")}</small>
             </div>
-            <nav aria-label={K("Navigation principale")}>
+            <nav aria-label={translate("Navigation principale")}>
               {((isClub ? CLUB_NAV : DISTRIBUTION_NAV)[user.role] ?? []).map(([title, links]) => (
                 <div className="group" key={title}>
                   <span>{title}</span>
@@ -47,7 +50,7 @@ export function AreaLayout({ roles, children, vertical }: RequireRoleProps & { c
                 {roleLabel(user.role, user.vertical)}
               </div>
               <button className="sm ghost" onClick={switchProfile}>
-                {K("Changer de profil")}
+                {translate("Changer de profil")}
               </button>{" "}
               <LanguageToggle />
             </div>

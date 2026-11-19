@@ -1,21 +1,14 @@
 import { useState } from "react";
-import {
-  apiRequest,
-  Card,
-  CsvExportLink,
-  formatDate,
-  formatDay,
-  formatMoney,
-  PageHead,
-  PAYMENT_METHOD_LABELS,
-  QueryView,
-  Table,
-  Tile,
-  t,
-  useApi,
-  useFeedback,
-  useSession,
-} from "../centrale/legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatDayLong, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { PAYMENT_CHANNEL } from "../shared/labels.ts";
+import { Card, CsvExportLink, PageHeader, Tile } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import type { DailyCloseData } from "./types.ts";
 
 type ClosePreview = DailyCloseData["preview"];
@@ -26,23 +19,23 @@ function CloseStatus({ preview }: { preview: ClosePreview }) {
   if (preview.closed)
     return (
       <div className="notice ok">
-        {t(`Journée clôturée le`)} {formatDate(preview.closed.closed_at, true)} {t(`par`)} {preview.closed.closed_by ?? `—`}.
+        {translate(`Journée clôturée le`)} {formatDate(preview.closed.closed_at, true)} {translate(`par`)} {preview.closed.closed_by ?? `—`}.
       </div>
     );
   // A pending payment has no known outcome yet: the day cannot be frozen.
   if (preview.pending > 0)
     return (
       <div className="notice err" role="alert">
-        <strong>{t(`Clôture bloquée :`)}</strong> {preview.pending}{" "}
-        {t(`paiement(s) encore « en attente ». Interrogez le prestataire depuis le Journal pour connaître leur issue.`)}
+        <strong>{translate(`Clôture bloquée :`)}</strong> {preview.pending}{" "}
+        {translate(`paiement(s) encore « en attente ». Interrogez le prestataire depuis le Journal pour connaître leur issue.`)}
       </div>
     );
   return (
     <div className="notice">
-      {t(`Journée ouverte.`)}{" "}
+      {translate(`Journée ouverte.`)}{" "}
       {outstandingPoints > 0
-        ? t(`Des points restent à traiter ; ils seront consignés dans la clôture.`)
-        : t(`Aucun point en suspens.`)}
+        ? translate(`Des points restent à traiter ; ils seront consignés dans la clôture.`)
+        : translate(`Aucun point en suspens.`)}
     </div>
   );
 }
@@ -57,33 +50,33 @@ export function DailyClose() {
   const closeDay = async () => {
     const confirmed = await feedback.ask({
       kind: `confirm`,
-      title: t(`Clôturer le {0} ?`, formatDay(day)),
-      text: t(`La clôture fige les totaux de la journée. Elle ne peut pas être refaite.`),
-      confirm: t(`Clôturer la journée`),
+      title: translate(`Clôturer le {0} ?`, formatDayLong(day)),
+      text: translate(`La clôture fige les totaux de la journée. Elle ne peut pas être refaite.`),
+      confirm: translate(`Clôturer la journée`),
     });
     if (confirmed)
       await feedback.run(async () => {
         await apiRequest(`POST`, `/api/finance/close`, { day });
         await close.reload();
-      }, t(`Journée clôturée.`));
+      }, translate(`Journée clôturée.`));
   };
 
   return (
     <>
-      <PageHead
-        title={t(`Clôture quotidienne`)}
-        sub={t(`Contrôle des encaissements du jour avant de figer les totaux.`)}
+      <PageHeader
+        title={translate(`Clôture quotidienne`)}
+        sub={translate(`Contrôle des encaissements du jour avant de figer les totaux.`)}
       >
         <input
           type="date"
           value={day}
           max={session.today}
           onChange={(event) => setDay(event.target.value)}
-          aria-label={t(`Journée`)}
+          aria-label={translate(`Journée`)}
           style={{ width: `auto` }}
         />
         <CsvExportLink href={`/api/finance/close?format=csv`} />
-      </PageHead>
+      </PageHeader>
       <QueryView q={close}>
         {({ preview, closes }) => {
           const confirmed = preview.byMethod.reduce((sum, row) => sum + row.confirmed_minor - row.refunded_minor, 0);
@@ -94,25 +87,25 @@ export function DailyClose() {
               <CloseStatus preview={preview} />
               <div className="grid g4">
                 <Tile
-                  label={t(`Facturé`)}
+                  label={translate(`Facturé`)}
                   value={formatMoney(preview.invoiced)}
-                  hint={t(`reste à encaisser : {0}`, formatMoney(preview.outstanding))}
+                  hint={translate(`reste à encaisser : {0}`, formatMoney(preview.outstanding))}
                 />
                 <Tile
-                  label={t(`Encaissé confirmé`)}
+                  label={translate(`Encaissé confirmé`)}
                   value={formatMoney(confirmed)}
-                  hint={t(`{0} tentative(s) échouée(s)`, preview.failed)}
+                  hint={translate(`{0} tentative(s) échouée(s)`, preview.failed)}
                 />
                 <Tile
-                  label={t(`Réglé en banque`)}
+                  label={translate(`Réglé en banque`)}
                   value={formatMoney(settled)}
-                  hint={t(`à recevoir : {0}`, formatMoney(confirmed - settled))}
+                  hint={translate(`à recevoir : {0}`, formatMoney(confirmed - settled))}
                 />
                 <Tile
-                  label={t(`Points en suspens`)}
+                  label={translate(`Points en suspens`)}
                   value={outstandingPoints}
                   kind={outstandingPoints ? `warn` : ``}
-                  hint={t(
+                  hint={translate(
                     `{0} à vérifier · {1} exception(s) · {2} écriture(s) ERP`,
                     preview.toVerify,
                     preview.openExceptions,
@@ -120,43 +113,43 @@ export function DailyClose() {
                   )}
                 />
               </div>
-              <Card title={t(`Encaissements confirmés du {0}`, formatDay(preview.day))} flush>
-                <Table
+              <Card title={translate(`Encaissements confirmés du {0}`, formatDayLong(preview.day))} flush>
+                <DataTable
                   rows={preview.byMethod}
                   rowKey={(row) => row.method}
-                  empty={t(`Aucun encaissement confirmé ce jour.`)}
+                  empty={translate(`Aucun encaissement confirmé ce jour.`)}
                   cols={[
-                    [t(`Moyen`), (row) => PAYMENT_METHOD_LABELS[row.method]],
-                    [t(`Nombre`), (row) => row.count, `right`],
-                    [t(`Confirmé`), (row) => formatMoney(row.confirmed_minor), `right`],
-                    [t(`Remboursé`), (row) => formatMoney(row.refunded_minor), `right`],
-                    [t(`Frais attendus`), (row) => formatMoney(row.fee_expected_minor), `right`],
-                    [t(`Réglé en banque`), (row) => formatMoney(row.settled_minor), `right`],
-                    [t(`Frais prélevés`), (row) => formatMoney(row.fee_actual_minor), `right`],
+                    [translate(`Moyen`), (row) => PAYMENT_CHANNEL[row.method]],
+                    [translate(`Nombre`), (row) => row.count, `right`],
+                    [translate(`Confirmé`), (row) => formatMoney(row.confirmed_minor), `right`],
+                    [translate(`Remboursé`), (row) => formatMoney(row.refunded_minor), `right`],
+                    [translate(`Frais attendus`), (row) => formatMoney(row.fee_expected_minor), `right`],
+                    [translate(`Réglé en banque`), (row) => formatMoney(row.settled_minor), `right`],
+                    [translate(`Frais prélevés`), (row) => formatMoney(row.fee_actual_minor), `right`],
                   ]}
                 />
               </Card>
               {!preview.closed && (
                 <div>
                   <button disabled={preview.pending > 0} onClick={closeDay}>
-                    {t(`Clôturer la journée`)}
+                    {translate(`Clôturer la journée`)}
                   </button>
                 </div>
               )}
-              <Card title={t(`Journées clôturées`)} flush>
-                <Table
+              <Card title={translate(`Journées clôturées`)} flush>
+                <DataTable
                   rows={closes}
                   rowKey={(entry) => entry.day}
-                  empty={t(`Aucune journée clôturée.`)}
+                  empty={translate(`Aucune journée clôturée.`)}
                   onRow={(entry) => setDay(entry.day)}
                   cols={[
-                    [t(`Journée`), (entry) => formatDay(entry.day)],
-                    [t(`Clôturée`), (entry) => formatDate(entry.closed_at, true)],
-                    [t(`Par`), (entry) => entry.closed_by ?? `—`],
-                    [t(`Facturé`), (entry) => formatMoney(entry.totals.invoiced), `right`],
-                    [t(`Reste à encaisser`), (entry) => formatMoney(entry.totals.outstanding), `right`],
-                    [t(`À vérifier`), (entry) => entry.totals.toVerify, `right`],
-                    [t(`Exceptions`), (entry) => entry.totals.openExceptions, `right`],
+                    [translate(`Journée`), (entry) => formatDayLong(entry.day)],
+                    [translate(`Clôturée`), (entry) => formatDate(entry.closed_at, true)],
+                    [translate(`Par`), (entry) => entry.closed_by ?? `—`],
+                    [translate(`Facturé`), (entry) => formatMoney(entry.totals.invoiced), `right`],
+                    [translate(`Reste à encaisser`), (entry) => formatMoney(entry.totals.outstanding), `right`],
+                    [translate(`À vérifier`), (entry) => entry.totals.toVerify, `right`],
+                    [translate(`Exceptions`), (entry) => entry.totals.openExceptions, `right`],
                   ]}
                 />
               </Card>

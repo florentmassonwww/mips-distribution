@@ -1,8 +1,9 @@
 // Role guard of a route: signed-out visitors go to the home page, other profiles get a notice.
 import type { ReactNode } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { K } from "../legacy/i18n.js";
-import { tv as roleLabel, xv as useSession } from "../legacy/shared.js";
+import { translate } from "../i18n/translate.ts";
+import { roleLabel } from "../shared/labels.ts";
+import { useSession } from "../shared/session.ts";
 import { homePathFor } from "./areas.ts";
 
 export interface RequireRoleProps {
@@ -21,11 +22,11 @@ export function RequireRole({ roles, vertical, children }: RequireRoleProps) {
     return (
       <div className="mobile">
         <div className="notice err" role="alert">
-          {K("Cet espace n'est pas accessible avec votre profil (")}
+          {translate("Cet espace n'est pas accessible avec votre profil (")}
           {roleLabel(user.role, user.vertical)}).
         </div>
         <p style={{ marginTop: 12 }}>
-          <Link to={homePathFor(user.role, user.vertical)}>{K("Retour à mon espace")}</Link>
+          <Link to={homePathFor(user.role, user.vertical)}>{translate("Retour à mon espace")}</Link>
         </p>
       </div>
     );

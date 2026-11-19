@@ -1,4 +1,6 @@
-import { formatMoney, Stepper, t } from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { Stepper } from "../shared/Form.tsx";
+import { formatMoney } from "../shared/format.ts";
 import type { Product, QuantityLines } from "./types.ts";
 
 interface ProductQuantitiesProps {
@@ -22,7 +24,7 @@ export function ProductQuantities({ products, lines, onChange, stockLabel }: Pro
             </div>
           </div>
           <Stepper
-            label={t(`Quantité {0}`, product.name)}
+            label={translate(`Quantité {0}`, product.name)}
             value={lines[product.id] ?? 0}
             max={1e5}
             onChange={(qty) => onChange({ ...lines, [product.id]: qty })}

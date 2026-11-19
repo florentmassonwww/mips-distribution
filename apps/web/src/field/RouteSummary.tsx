@@ -1,6 +1,12 @@
 // "Summary" tab: money and orders of the route, collections by method, vehicle stock, and the
 // route close (once everything is synced and every order delivered or declared not delivered).
-import { api, formatDate, formatMoney, PAYMENT_METHOD_LABELS, QueryView, t, useApi, useUi } from "./legacy-bridge.js";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { PAYMENT_CHANNEL } from "../shared/labels.ts";
+import { QueryView } from "../shared/QueryView.tsx";
 import type { RouteSummaryData } from "./types.ts";
 
 interface RouteSummaryProps {
@@ -13,20 +19,20 @@ interface RouteSummaryProps {
 }
 
 export function RouteSummary({ routeId, online, pending, closed, onClosed }: RouteSummaryProps) {
-  const ui = useUi();
+  const ui = useFeedback();
   const summary = useApi<RouteSummaryData>(online ? `/api/agent/routes/${routeId}/summary` : null);
 
-  if (!online) return <div className="notice warn">{t("Le bilan se calcule sur le serveur : il sera disponible au retour du réseau.")}</div>;
+  if (!online) return <div className="notice warn">{translate("Le bilan se calcule sur le serveur : il sera disponible au retour du réseau.")}</div>;
 
   const close = async () => {
     const confirmed = await ui.ask({
       kind: "confirm",
-      title: t("Clôturer la tournée ?"),
-      text: t("Le stock restant revient au dépôt. La tournée ne pourra plus être modifiée."),
-      confirm: t("Clôturer"),
+      title: translate("Clôturer la tournée ?"),
+      text: translate("Le stock restant revient au dépôt. La tournée ne pourra plus être modifiée."),
+      confirm: translate("Clôturer"),
     });
     if (!confirmed) return;
-    if (!(await ui.run(() => api("POST", `/api/agent/routes/${routeId}/close`), t("Tournée clôturée.")))) return;
+    if (!(await ui.run(() => apiRequest("POST", `/api/agent/routes/${routeId}/close`), translate("Tournée clôturée.")))) return;
     await summary.reload();
     onClosed();
   };
@@ -39,43 +45,43 @@ export function RouteSummary({ routeId, online, pending, closed, onClosed }: Rou
           <div className="stack">
             <div className="grid g2 keep2">
               <div className="tile">
-                <div className="label">{t("Facturé")}</div>
+                <div className="label">{translate("Facturé")}</div>
                 <div className="value">{formatMoney(data.money.invoiced)}</div>
               </div>
               <div className="tile">
-                <div className="label">{t("Encaissé confirmé")}</div>
+                <div className="label">{translate("Encaissé confirmé")}</div>
                 <div className="value">{formatMoney(data.money.confirmed)}</div>
               </div>
               <div className="tile">
-                <div className="label">{t("Reste à encaisser")}</div>
+                <div className="label">{translate("Reste à encaisser")}</div>
                 <div className="value">{formatMoney(data.money.invoiced - data.money.confirmed)}</div>
                 <div className="hint">
-                  {data.money.pending > 0 && t("{0} en attente · ", formatMoney(data.money.pending))}
-                  {data.money.toVerify > 0 && t("{0} à vérifier", formatMoney(data.money.toVerify))}
+                  {data.money.pending > 0 && translate("{0} en attente · ", formatMoney(data.money.pending))}
+                  {data.money.toVerify > 0 && translate("{0} à vérifier", formatMoney(data.money.toVerify))}
                 </div>
               </div>
               <div className="tile">
-                <div className="label">{t("Commandes")}</div>
+                <div className="label">{translate("Commandes")}</div>
                 <div className="value">
                   {data.orders.delivered + data.orders.partial}/{data.orders.total}
                 </div>
                 <div className="hint">
-                  {data.orders.partial} {t("partielle(s) ·")} {data.orders.refused} {t("non livrée(s) ·")} {data.orders.routeSales}{" "}
-                  {t("vente(s) sur place")}
+                  {data.orders.partial} {translate("partielle(s) ·")} {data.orders.refused} {translate("non livrée(s) ·")} {data.orders.routeSales}{" "}
+                  {translate("vente(s) sur place")}
                 </div>
               </div>
             </div>
             {data.byMethod.length > 0 && (
               <div className="card">
                 <header>
-                  <h2>{t("Encaissements par moyen")}</h2>
+                  <h2>{translate("Encaissements par moyen")}</h2>
                 </header>
                 <div className="body">
                   <ul className="plain">
                     {data.byMethod.map((row) => (
                       <li key={row.method} className="row spread">
                         <span>
-                          {PAYMENT_METHOD_LABELS[row.method]} · {row.count}
+                          {PAYMENT_CHANNEL[row.method]} · {row.count}
                         </span>
                         <strong>{formatMoney(row.amount_minor)}</strong>
                       </li>
@@ -86,17 +92,17 @@ export function RouteSummary({ routeId, online, pending, closed, onClosed }: Rou
             )}
             <div className="card">
               <header>
-                <h2>{t("Stock du véhicule")}</h2>
+                <h2>{translate("Stock du véhicule")}</h2>
               </header>
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th>{t("Produit")}</th>
-                      <th className="right">{t("Chargé")}</th>
-                      <th className="right">{t("Sorti")}</th>
-                      <th className="right">{t("Reste")}</th>
-                      <th className="right">{t("Retours")}</th>
+                      <th>{translate("Produit")}</th>
+                      <th className="right">{translate("Chargé")}</th>
+                      <th className="right">{translate("Sorti")}</th>
+                      <th className="right">{translate("Reste")}</th>
+                      <th className="right">{translate("Retours")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -115,18 +121,18 @@ export function RouteSummary({ routeId, online, pending, closed, onClosed }: Rou
             </div>
             {closed || data.route.status === "closed" ? (
               <div className="notice ok">
-                {t("Tournée clôturée")}
+                {translate("Tournée clôturée")}
                 {data.route.closed_at ? ` le ${formatDate(data.route.closed_at, true)}` : ""}.
               </div>
             ) : (
               <>
                 <button className="big" disabled={blocked} onClick={close}>
-                  {t("Clôturer la tournée")}
+                  {translate("Clôturer la tournée")}
                 </button>
                 {blocked && (
                   <div className="small muted">
-                    {pending > 0 ? t("Synchronisez d'abord les actions en attente. ") : ""}
-                    {data.orders.toDeliver > 0 ? t("{0} commande(s) restent à livrer ou à déclarer non livrées.", data.orders.toDeliver) : ""}
+                    {pending > 0 ? translate("Synchronisez d'abord les actions en attente. ") : ""}
+                    {data.orders.toDeliver > 0 ? translate("{0} commande(s) restent à livrer ou à déclarer non livrées.", data.orders.toDeliver) : ""}
                   </div>
                 )}
               </>

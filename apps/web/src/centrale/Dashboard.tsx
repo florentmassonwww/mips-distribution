@@ -1,21 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import {
-  AUDIT_ACTION_LABELS,
-  Card,
-  formatClockTime,
-  formatDate,
-  formatDay,
-  formatMoney,
-  PageHead,
-  PAYMENT_METHOD_LABELS,
-  QueryView,
-  ROUTE_STATUS,
-  StatusBadge,
-  Table,
-  Tile,
-  t,
-  useApi,
-} from "./legacy.ts";
+import { AUDIT_ACTION_LABELS } from "../field/audit-labels.ts";
+import { translate } from "../i18n/translate.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { formatDate, formatDayLong, formatMoney, formatTime } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { PAYMENT_CHANNEL, ROUTE_STATUS } from "../shared/labels.ts";
+import { Card, PageHeader, Tile } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
 import type { DashboardData } from "./types.ts";
 
 /** Polling interval of the head office dashboard (the subtitle tells the user). */
@@ -27,11 +19,11 @@ export function Dashboard() {
   const navigate = useNavigate();
   return (
     <>
-      <PageHead
-        title={t(`Tableau de bord`)}
+      <PageHeader
+        title={translate(`Tableau de bord`)}
         sub={
           dashboard.data
-            ? t(`{0} · actualisé à {1} (toutes les 5 s)`, formatDay(dashboard.data.day), formatClockTime(dashboard.at))
+            ? translate(`{0} · actualisé à {1} (toutes les 5 s)`, formatDayLong(dashboard.data.day), formatTime(dashboard.at))
             : undefined
         }
       />
@@ -40,52 +32,52 @@ export function Dashboard() {
           <div className="stack">
             <div className="grid g4">
               <Tile
-                label={t(`Ventes du jour`)}
+                label={translate(`Ventes du jour`)}
                 value={formatMoney(data.sales.invoiced)}
-                hint={t(`{0} facture(s) · {1} vente(s) sur place`, data.sales.invoices, data.sales.routeSales)}
+                hint={translate(`{0} facture(s) · {1} vente(s) sur place`, data.sales.invoices, data.sales.routeSales)}
               />
               <Tile
-                label={t(`Livraisons`)}
+                label={translate(`Livraisons`)}
                 value={`${data.deliveries.done}/${data.deliveries.planned}`}
-                hint={t(`{0} partielle(s) · {1} non livrée(s)`, data.deliveries.partial, data.deliveries.refused)}
+                hint={translate(`{0} partielle(s) · {1} non livrée(s)`, data.deliveries.partial, data.deliveries.refused)}
               />
               <Tile
-                label={t(`Encaissé confirmé (jour)`)}
+                label={translate(`Encaissé confirmé (jour)`)}
                 value={formatMoney(data.money.confirmed)}
-                hint={t(`dont réglé en banque : {0}`, formatMoney(data.money.settled))}
+                hint={translate(`dont réglé en banque : {0}`, formatMoney(data.money.settled))}
               />
               <Tile
-                label={t(`Reste à encaisser`)}
+                label={translate(`Reste à encaisser`)}
                 value={formatMoney(data.money.outstanding)}
-                hint={t(`toutes factures ouvertes`)}
+                hint={translate(`toutes factures ouvertes`)}
               />
             </div>
             <div className="grid g4">
-              <Tile label={t(`Paiements en attente`)} value={data.money.pending} kind={data.money.pending ? `info` : ``} />
-              <Tile label={t(`Paiements à vérifier`)} value={data.money.toVerify} kind={data.money.toVerify ? `warn` : ``} />
+              <Tile label={translate(`Paiements en attente`)} value={data.money.pending} kind={data.money.pending ? `info` : ``} />
+              <Tile label={translate(`Paiements à vérifier`)} value={data.money.toVerify} kind={data.money.toVerify ? `warn` : ``} />
               <Tile
-                label={t(`Incidents terrain ouverts`)}
+                label={translate(`Incidents terrain ouverts`)}
                 value={data.exceptions.ops}
                 kind={data.exceptions.ops ? `warn` : ``}
               />
               <Tile
-                label={t(`Exceptions finance ouvertes`)}
+                label={translate(`Exceptions finance ouvertes`)}
                 value={data.exceptions.finance}
                 kind={data.exceptions.finance ? `warn` : ``}
               />
             </div>
-            <Card title={t(`Tournées du jour`)} flush>
-              <Table
+            <Card title={translate(`Tournées du jour`)} flush>
+              <DataTable
                 rows={data.routes}
                 rowKey={(route) => route.id}
-                empty={t(`Aucune tournée aujourd'hui.`)}
+                empty={translate(`Aucune tournée aujourd'hui.`)}
                 onRow={(route) => navigate(`/centrale/tournees/${route.id}`)}
                 cols={[
-                  [t(`Tournée`), (route) => <strong>{route.name}</strong>],
-                  [t(`Agent`), (route) => route.agent ?? `—`],
-                  [t(`État`), (route) => <StatusBadge map={ROUTE_STATUS} value={route.status} />],
+                  [translate(`Tournée`), (route) => <strong>{route.name}</strong>],
+                  [translate(`Agent`), (route) => route.agent ?? `—`],
+                  [translate(`État`), (route) => <StatusBadge map={ROUTE_STATUS} value={route.status} />],
                   [
-                    t(`Commandes`),
+                    translate(`Commandes`),
                     (route) => (
                       <div style={{ minWidth: 110 }}>
                         {route.orders_done}/{route.orders_total}
@@ -99,27 +91,27 @@ export function Dashboard() {
                       </div>
                     ),
                   ],
-                  [t(`Facturé`), (route) => formatMoney(route.invoiced_minor), `right`],
-                  [t(`Encaissé confirmé`), (route) => formatMoney(route.paid_minor), `right`],
+                  [translate(`Facturé`), (route) => formatMoney(route.invoiced_minor), `right`],
+                  [translate(`Encaissé confirmé`), (route) => formatMoney(route.paid_minor), `right`],
                 ]}
               />
             </Card>
             <div className="grid g2">
-              <Card title={t(`Encaissements confirmés par moyen`)} flush>
-                <Table
+              <Card title={translate(`Encaissements confirmés par moyen`)} flush>
+                <DataTable
                   rows={data.byMethod}
                   rowKey={(row) => row.method}
-                  empty={t(`Aucun encaissement confirmé aujourd'hui.`)}
+                  empty={translate(`Aucun encaissement confirmé aujourd'hui.`)}
                   cols={[
-                    [t(`Moyen`), (row) => PAYMENT_METHOD_LABELS[row.method]],
-                    [t(`Nombre`), (row) => row.count, `right`],
-                    [t(`Montant`), (row) => formatMoney(row.amount_minor), `right`],
+                    [translate(`Moyen`), (row) => PAYMENT_CHANNEL[row.method]],
+                    [translate(`Nombre`), (row) => row.count, `right`],
+                    [translate(`Montant`), (row) => formatMoney(row.amount_minor), `right`],
                   ]}
                 />
               </Card>
-              <Card title={t(`Activité récente`)}>
+              <Card title={translate(`Activité récente`)}>
                 <ul className="plain small">
-                  {data.recent.length === 0 && <li className="muted">{t(`Aucune activité.`)}</li>}
+                  {data.recent.length === 0 && <li className="muted">{translate(`Aucune activité.`)}</li>}
                   {data.recent.map((entry, index) => (
                     <li key={index} className="row spread">
                       <span>
@@ -127,7 +119,7 @@ export function Dashboard() {
                         {` · `}
                         {entry.details.order ?? entry.details.invoice ?? entry.details.name ?? ``}
                         {entry.details.customer ? ` · ${entry.details.customer}` : ``}
-                        {entry.details.method ? ` · ${PAYMENT_METHOD_LABELS[entry.details.method]}` : ``}
+                        {entry.details.method ? ` · ${PAYMENT_CHANNEL[entry.details.method]}` : ``}
                         {entry.details.amountMinor ? ` · ${formatMoney(entry.details.amountMinor)}` : ``}
                       </span>
                       <span className="muted nowrap">

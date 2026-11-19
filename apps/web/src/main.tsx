@@ -5,7 +5,7 @@ import "./demo-reset.js";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter } from "react-router-dom";
-import { vv as UiProvider } from "./legacy/shared.js";
+import { FeedbackProvider } from "./shared/Feedback.tsx";
 import { AppRoutes } from "./shell/AppRoutes.tsx";
 
 const rootElement = document.getElementById("root");
@@ -14,9 +14,9 @@ if (!rootElement) throw new Error("#root is missing from index.html");
 createRoot(rootElement).render(
   <StrictMode>
     <HashRouter>
-      <UiProvider>
+      <FeedbackProvider>
         <AppRoutes />
-      </UiProvider>
+      </FeedbackProvider>
     </HashRouter>
   </StrictMode>,
 );

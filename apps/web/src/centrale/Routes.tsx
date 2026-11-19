@@ -1,21 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  apiRequest,
-  Badge,
-  Card,
-  formatDay,
-  formatMoney,
-  PageHead,
-  QueryView,
-  ROUTE_STATUS,
-  StatusBadge,
-  Table,
-  t,
-  useApi,
-  useFeedback,
-  useSession,
-} from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { Badge, StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDayLong, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { ROUTE_STATUS } from "../shared/labels.ts";
+import { Card, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import { RouteForm, type RouteDraft } from "./RouteForm.tsx";
 import type { ReferenceData, RouteSummary } from "./types.ts";
 
@@ -24,7 +19,7 @@ export function RouteList() {
   const feedback = useFeedback();
   const { session } = useSession();
   // Finance follows the routes but does not organise them.
-  const canEdit = session.user.role !== `finance`;
+  const canEdit = session.user!.role !== `finance`;
   const routes = useApi<RouteSummary[]>(`/api/centrale/routes`);
   const reference = useApi<ReferenceData>(`/api/centrale/reference`);
   const navigate = useNavigate();
@@ -44,7 +39,7 @@ export function RouteList() {
         agentId: draft.agentId || null,
       });
       navigate(`/centrale/tournees/${created.id}`);
-    }, t(`Tournée créée.`));
+    }, translate(`Tournée créée.`));
 
   // Ticking appends the outlet (its rank is its visiting order); unticking removes it.
   const toggleCustomer = (customerId: string) =>
@@ -57,9 +52,9 @@ export function RouteList() {
 
   return (
     <>
-      <PageHead title={t(`Tournées`)} sub={t(`Organisation, affectation des agents et chargement des véhicules.`)}>
-        {canEdit && <button onClick={() => setFormOpen(!formOpen)}>{t(formOpen ? `Fermer` : `Nouvelle tournée`)}</button>}
-      </PageHead>
+      <PageHeader title={translate(`Tournées`)} sub={translate(`Organisation, affectation des agents et chargement des véhicules.`)}>
+        {canEdit && <button onClick={() => setFormOpen(!formOpen)}>{translate(formOpen ? `Fermer` : `Nouvelle tournée`)}</button>}
+      </PageHeader>
       <div className="stack">
         {formOpen && (
           <QueryView q={reference}>
@@ -74,24 +69,24 @@ export function RouteList() {
             )}
           </QueryView>
         )}
-        <Card title={t(`Tournées`)} flush>
+        <Card title={translate(`Tournées`)} flush>
           <QueryView q={routes}>
             {(rows) => (
-              <Table
+              <DataTable
                 rows={rows}
                 rowKey={(route) => route.id}
-                empty={t(`Aucune tournée.`)}
+                empty={translate(`Aucune tournée.`)}
                 onRow={(route) => navigate(`/centrale/tournees/${route.id}`)}
                 cols={[
-                  [t(`Jour`), (route) => formatDay(route.day)],
-                  [t(`Tournée`), (route) => <strong>{route.name}</strong>],
-                  [t(`Agent`), (route) => route.agent ?? <Badge kind="warn">{t(`À affecter`)}</Badge>],
-                  [t(`Véhicule`), (route) => route.vehicle || `—`],
-                  [t(`État`), (route) => <StatusBadge map={ROUTE_STATUS} value={route.status} />],
-                  [t(`Arrêts`), (route) => route.stops, `right`],
-                  [t(`Commandes`), (route) => `${route.orders_done}/${route.orders_total}`, `right`],
-                  [t(`Facturé`), (route) => formatMoney(route.invoiced_minor), `right`],
-                  [t(`Encaissé confirmé`), (route) => formatMoney(route.paid_minor), `right`],
+                  [translate(`Jour`), (route) => formatDayLong(route.day)],
+                  [translate(`Tournée`), (route) => <strong>{route.name}</strong>],
+                  [translate(`Agent`), (route) => route.agent ?? <Badge kind="warn">{translate(`À affecter`)}</Badge>],
+                  [translate(`Véhicule`), (route) => route.vehicle || `—`],
+                  [translate(`État`), (route) => <StatusBadge map={ROUTE_STATUS} value={route.status} />],
+                  [translate(`Arrêts`), (route) => route.stops, `right`],
+                  [translate(`Commandes`), (route) => `${route.orders_done}/${route.orders_total}`, `right`],
+                  [translate(`Facturé`), (route) => formatMoney(route.invoiced_minor), `right`],
+                  [translate(`Encaissé confirmé`), (route) => formatMoney(route.paid_minor), `right`],
                 ]}
               />
             )}

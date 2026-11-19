@@ -1,22 +1,15 @@
 import { useState } from "react";
-import {
-  apiRequest,
-  Badge,
-  Card,
-  CsvExportLink,
-  formatDate,
-  formatMoney,
-  MATCH_STATUS,
-  PageHead,
-  PAYMENT_METHOD_LABELS,
-  QueryView,
-  StatusBadge,
-  Table,
-  t,
-  useApi,
-  useFeedback,
-  useSession,
-} from "../centrale/legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { Badge, StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { PAYMENT_CHANNEL, RECONCILIATION_STATUS } from "../shared/labels.ts";
+import { Card, CsvExportLink, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import { StatementImport } from "./StatementImport.tsx";
 import type { ReconciliationData } from "./types.ts";
 
@@ -53,7 +46,7 @@ export function Reconciliation() {
         { filename: filename || `releve.csv`, content },
       );
       feedback.toast(
-        t(
+        translate(
           `{0} ligne(s) rapprochée(s), {1} en exception, {2} déjà importée(s).`,
           counts.matched,
           counts.exceptions,
@@ -67,12 +60,12 @@ export function Reconciliation() {
 
   return (
     <>
-      <PageHead
-        title={t(`Rapprochement bancaire`)}
-        sub={t(`Import du relevé, rapprochement par référence et montant, contrôle des frais.`)}
+      <PageHeader
+        title={translate(`Rapprochement bancaire`)}
+        sub={translate(`Import du relevé, rapprochement par référence et montant, contrôle des frais.`)}
       >
         <CsvExportLink href={`/api/finance/reconciliation?format=csv`} />
-      </PageHead>
+      </PageHeader>
       <QueryView q={reconciliation}>
         {(data) => (
           <div className="stack">
@@ -84,32 +77,32 @@ export function Reconciliation() {
               onDemo={session.demoMode ? loadDemoStatement : undefined}
               onImport={importStatement}
             />
-            <Card title={t(`Confirmés par le prestataire, non réglés en banque ({0})`, data.unsettled.length)} flush>
-              <Table
+            <Card title={translate(`Confirmés par le prestataire, non réglés en banque ({0})`, data.unsettled.length)} flush>
+              <DataTable
                 rows={data.unsettled}
                 rowKey={(payment) => payment.id}
-                empty={t(`Tous les paiements confirmés sont réglés.`)}
+                empty={translate(`Tous les paiements confirmés sont réglés.`)}
                 cols={[
-                  [t(`Confirmé`), (payment) => formatDate(payment.confirmed_at, true)],
-                  [t(`Facture`), (payment) => payment.invoice],
-                  [t(`Moyen`), (payment) => PAYMENT_METHOD_LABELS[payment.method]],
-                  [t(`Montant`), (payment) => formatMoney(payment.amount_minor), `right`],
-                  [t(`Référence attendue sur le relevé`), (payment) => <span className="code">{payment.provider_ref}</span>],
+                  [translate(`Confirmé`), (payment) => formatDate(payment.confirmed_at, true)],
+                  [translate(`Facture`), (payment) => payment.invoice],
+                  [translate(`Moyen`), (payment) => PAYMENT_CHANNEL[payment.method]],
+                  [translate(`Montant`), (payment) => formatMoney(payment.amount_minor), `right`],
+                  [translate(`Référence attendue sur le relevé`), (payment) => <span className="code">{payment.provider_ref}</span>],
                 ]}
               />
             </Card>
-            <Card title={t(`Lignes de relevé`)} flush>
-              <Table
+            <Card title={translate(`Lignes de relevé`)} flush>
+              <DataTable
                 rows={data.lines}
                 rowKey={(line) => line.id}
-                empty={t(`Aucun relevé importé.`)}
+                empty={translate(`Aucun relevé importé.`)}
                 cols={[
-                  [t(`Date de valeur`), (line) => line.value_date],
-                  [t(`Référence`), (line) => <span className="code">{line.reference}</span>],
-                  [t(`Libellé`), (line) => line.label],
-                  [t(`Brut`), (line) => formatMoney(line.gross_minor), `right`],
+                  [translate(`Date de valeur`), (line) => line.value_date],
+                  [translate(`Référence`), (line) => <span className="code">{line.reference}</span>],
+                  [translate(`Libellé`), (line) => line.label],
+                  [translate(`Brut`), (line) => formatMoney(line.gross_minor), `right`],
                   [
-                    t(`Frais`),
+                    translate(`Frais`),
                     (line) => (
                       <>
                         {formatMoney(line.fee_minor)}
@@ -119,7 +112,7 @@ export function Reconciliation() {
                           line.fee_expected_minor !== line.fee_minor && (
                             <div>
                               <Badge kind="warn">
-                                {t(`attendu`)} {formatMoney(line.fee_expected_minor)}
+                                {translate(`attendu`)} {formatMoney(line.fee_expected_minor)}
                               </Badge>
                             </div>
                           )}
@@ -127,24 +120,24 @@ export function Reconciliation() {
                     ),
                     `right`,
                   ],
-                  [t(`Net crédité`), (line) => formatMoney(line.net_minor), `right`],
-                  [t(`Rapprochement`), (line) => <StatusBadge map={MATCH_STATUS} value={line.match_status} />],
-                  [t(`Facture`), (line) => line.invoice ?? `—`],
+                  [translate(`Net crédité`), (line) => formatMoney(line.net_minor), `right`],
+                  [translate(`Rapprochement`), (line) => <StatusBadge map={RECONCILIATION_STATUS} value={line.match_status} />],
+                  [translate(`Facture`), (line) => line.invoice ?? `—`],
                 ]}
               />
             </Card>
-            <Card title={t(`Relevés importés`)} flush>
-              <Table
+            <Card title={translate(`Relevés importés`)} flush>
+              <DataTable
                 rows={data.statements}
                 rowKey={(statement) => statement.id}
-                empty={t(`Aucun relevé importé.`)}
+                empty={translate(`Aucun relevé importé.`)}
                 cols={[
-                  [t(`Importé`), (statement) => formatDate(statement.imported_at, true)],
-                  [t(`Fichier`), (statement) => statement.filename],
-                  [t(`Par`), (statement) => statement.imported_by_name ?? `—`],
-                  [t(`Lignes`), (statement) => statement.line_count, `right`],
-                  [t(`Rapprochées`), (statement) => statement.matched_count, `right`],
-                  [t(`Déjà importées`), (statement) => statement.skipped_count, `right`],
+                  [translate(`Importé`), (statement) => formatDate(statement.imported_at, true)],
+                  [translate(`Fichier`), (statement) => statement.filename],
+                  [translate(`Par`), (statement) => statement.imported_by_name ?? `—`],
+                  [translate(`Lignes`), (statement) => statement.line_count, `right`],
+                  [translate(`Rapprochées`), (statement) => statement.matched_count, `right`],
+                  [translate(`Déjà importées`), (statement) => statement.skipped_count, `right`],
                 ]}
               />
             </Card>

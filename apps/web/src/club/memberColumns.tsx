@@ -1,31 +1,36 @@
 // Columns of a members table (members list and the dashboard's top debtors).
-import { formatDate, formatDays, formatMoney, MEMBER_STATUS, StatusBadge, t, type Column } from "./legacy.ts";
+import { formatOverdueDays } from "../admin/clubLabels.ts";
+import { translate } from "../i18n/translate.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import type { Column } from "../shared/DataTable.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { MEMBER_STATUS } from "../shared/labels.ts";
 import { ReminderLevelBadge } from "./parts.tsx";
 import type { MemberListItem } from "./types.ts";
 
 /** Built on each render so that the headers follow the current language. */
 export const memberColumns = (): Column<MemberListItem>[] => [
   [
-    t("Membre"),
+    translate("Membre"),
     (member) => (
       <>
         <strong>{member.name}</strong>
         <div className="small muted">
           {member.number}
           {" · "}
-          {member.plan ? t(member.plan) : "—"}
+          {member.plan ? translate(member.plan) : "—"}
         </div>
       </>
     ),
   ],
-  [t("État"), (member) => <StatusBadge map={MEMBER_STATUS} value={member.status} />],
+  [translate("État"), (member) => <StatusBadge map={MEMBER_STATUS} value={member.status} />],
   [
-    t("Solde dû"),
+    translate("Solde dû"),
     // A negative balance is a credit in the member's favour.
     (member) =>
       member.balance_minor < 0 ? (
         <span className="muted">
-          {t("avoir")} {formatMoney(-member.balance_minor)}
+          {translate("avoir")} {formatMoney(-member.balance_minor)}
         </span>
       ) : (
         formatMoney(member.balance_minor)
@@ -33,12 +38,12 @@ export const memberColumns = (): Column<MemberListItem>[] => [
     "right",
   ],
   [
-    t("En retard"),
+    translate("En retard"),
     (member) =>
       member.overdue_minor ? (
         <>
           <strong>{formatMoney(member.overdue_minor)}</strong>
-          <div className="small muted">{formatDays(member.overdue_days)}</div>
+          <div className="small muted">{formatOverdueDays(member.overdue_days)}</div>
         </>
       ) : (
         "—"
@@ -46,7 +51,7 @@ export const memberColumns = (): Column<MemberListItem>[] => [
     "right",
   ],
   [
-    t("Dernière relance"),
+    translate("Dernière relance"),
     (member) =>
       member.last_reminder_level ? (
         <>
@@ -57,5 +62,5 @@ export const memberColumns = (): Column<MemberListItem>[] => [
         "—"
       ),
   ],
-  [t("Référence de paiement"), (member) => <span className="code nb">{member.reference}</span>],
+  [translate("Référence de paiement"), (member) => <span className="code nb">{member.reference}</span>],
 ];

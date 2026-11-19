@@ -1,15 +1,17 @@
 // The driver's mobile screen (/terrain): the list of the agent's routes, or the route open.
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, useSession } from "./legacy-bridge.js";
-import { readCurrentRoute, writeCurrentRoute } from "./bundle-cache.ts";
+import { apiRequest } from "../shared/api.ts";
+import { readCurrentRoute, writeCurrentRoute } from "../shared/offline.ts";
+import { useSession } from "../shared/session.ts";
 import { RouteList } from "./RouteList.tsx";
 import { RouteScreen } from "./RouteScreen.tsx";
 
 export function FieldApp() {
   const { session, refresh } = useSession();
   const navigate = useNavigate();
-  const user = session.user;
+  // Rendered behind RequireRole: a user is signed in.
+  const user = session.user!;
   // The open route is remembered on the phone so a reload (or a restart offline) reopens it.
   const [routeId, setRouteId] = useState<string | null>(() => readCurrentRoute(user.id));
   const openRoute = useCallback(
@@ -22,7 +24,7 @@ export function FieldApp() {
   const leaveRoute = useCallback(() => openRoute(null), [openRoute]);
 
   const logout = async () => {
-    await api("POST", "/api/logout").catch(() => null);
+    await apiRequest("POST", "/api/logout").catch(() => null);
     await refresh();
     navigate("/");
   };

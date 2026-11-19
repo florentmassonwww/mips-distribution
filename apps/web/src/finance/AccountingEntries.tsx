@@ -1,31 +1,25 @@
-import {
-  apiRequest,
-  Card,
-  CsvExportLink,
-  ERP_STATUS,
-  formatDate,
-  formatMoney,
-  PageHead,
-  QueryView,
-  StatusBadge,
-  Table,
-  Tile,
-  t,
-  useApi,
-  useFeedback,
-} from "../centrale/legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { ERP_SYNC_STATUS } from "../shared/labels.ts";
+import { Card, CsvExportLink, PageHeader, Tile } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
 import type { AccountingEntriesData } from "./types.ts";
 
 const REFRESH_MS = 8e3;
 
 /** Entry kind → label (distribution and club entries: this screen serves both). */
 const ENTRY_KIND_LABELS: Record<string, string> = {
-  invoice: t(`Facture`),
-  payment: t(`Encaissement`),
-  settlement: t(`Règlement bancaire`),
-  refund: t(`Remboursement`),
-  member_charge: t(`Dû membre`),
-  member_payment: t(`Encaissement membre`),
+  invoice: translate(`Facture`),
+  payment: translate(`Encaissement`),
+  settlement: translate(`Règlement bancaire`),
+  refund: translate(`Remboursement`),
+  member_charge: translate(`Dû membre`),
+  member_payment: translate(`Encaissement membre`),
 };
 
 /** Entries sent to the accounting software (ERP); failed ones stay queued until retried. */
@@ -38,7 +32,7 @@ export function AccountingEntries() {
     feedback.run(async () => {
       const result = await apiRequest<{ synced: number; failed: number }>(`POST`, `/api/finance/erp/sync`, ids ? { ids } : {});
       feedback.toast(
-        t(`{0} écriture(s) synchronisée(s), {1} en erreur.`, result.synced, result.failed),
+        translate(`{0} écriture(s) synchronisée(s), {1} en erreur.`, result.synced, result.failed),
         result.failed ? `err` : `ok`,
       );
       await accounting.reload();
@@ -46,14 +40,14 @@ export function AccountingEntries() {
 
   return (
     <>
-      <PageHead
-        title={t(`Synchronisation ERP`)}
-        sub={t(
+      <PageHeader
+        title={translate(`Synchronisation ERP`)}
+        sub={translate(
           `Une écriture par facture, encaissement, règlement et remboursement. Les erreurs restent dans la file jusqu'à leur reprise.`,
         )}
       >
         <CsvExportLink href={`/api/finance/erp?format=csv`} />
-      </PageHead>
+      </PageHeader>
       <QueryView q={accounting}>
         {(data) => {
           const countWithStatus = (status: string) => data.entries.filter((entry) => entry.status === status).length;
@@ -61,50 +55,50 @@ export function AccountingEntries() {
             <div className="stack">
               {data.settings.simulateFailure && (
                 <div className="notice warn">
-                  {t(`Panne ERP simulée (Administration › Paramètres) : chaque envoi échoue tant qu'elle est active.`)}
+                  {translate(`Panne ERP simulée (Administration › Paramètres) : chaque envoi échoue tant qu'elle est active.`)}
                 </div>
               )}
               <div className="grid g4">
                 <Tile
-                  label={t(`Connecteur`)}
-                  value={t(data.settings.system)}
-                  hint={data.settings.autoSync ? t(`synchronisation automatique`) : t(`synchronisation manuelle`)}
+                  label={translate(`Connecteur`)}
+                  value={translate(data.settings.system)}
+                  hint={data.settings.autoSync ? translate(`synchronisation automatique`) : translate(`synchronisation manuelle`)}
                 />
-                <Tile label={t(`Synchronisées`)} value={countWithStatus(`synced`)} />
+                <Tile label={translate(`Synchronisées`)} value={countWithStatus(`synced`)} />
                 <Tile
-                  label={t(`En attente`)}
+                  label={translate(`En attente`)}
                   value={countWithStatus(`pending`)}
                   kind={countWithStatus(`pending`) ? `info` : ``}
                 />
-                <Tile label={t(`En erreur`)} value={countWithStatus(`failed`)} kind={countWithStatus(`failed`) ? `warn` : ``} />
+                <Tile label={translate(`En erreur`)} value={countWithStatus(`failed`)} kind={countWithStatus(`failed`) ? `warn` : ``} />
               </div>
               <div>
                 <button disabled={countWithStatus(`pending`) + countWithStatus(`failed`) === 0} onClick={() => sync()}>
-                  {t(`Synchroniser et reprendre les erreurs`)}
+                  {translate(`Synchroniser et reprendre les erreurs`)}
                 </button>
               </div>
-              <Card title={t(`Écritures`)} flush>
-                <Table
+              <Card title={translate(`Écritures`)} flush>
+                <DataTable
                   rows={data.entries}
                   rowKey={(entry) => entry.id}
-                  empty={t(`Aucune écriture.`)}
+                  empty={translate(`Aucune écriture.`)}
                   cols={[
-                    [t(`Créée`), (entry) => formatDate(entry.created_at, true)],
-                    [t(`Type`), (entry) => ENTRY_KIND_LABELS[entry.kind] ?? entry.kind],
-                    [t(`Libellé`), (entry) => entry.label],
-                    [t(`Montant`), (entry) => formatMoney(entry.amount_minor), `right`],
+                    [translate(`Créée`), (entry) => formatDate(entry.created_at, true)],
+                    [translate(`Type`), (entry) => ENTRY_KIND_LABELS[entry.kind] ?? entry.kind],
+                    [translate(`Libellé`), (entry) => entry.label],
+                    [translate(`Montant`), (entry) => formatMoney(entry.amount_minor), `right`],
                     [
-                      t(`État`),
+                      translate(`État`),
                       (entry) => (
                         <>
-                          <StatusBadge map={ERP_STATUS} value={entry.status} />
-                          {entry.last_error && <div className="small muted">{t(entry.last_error)}</div>}
+                          <StatusBadge map={ERP_SYNC_STATUS} value={entry.status} />
+                          {entry.last_error && <div className="small muted">{translate(entry.last_error)}</div>}
                         </>
                       ),
                     ],
-                    [t(`Tentatives`), (entry) => entry.attempts, `right`],
+                    [translate(`Tentatives`), (entry) => entry.attempts, `right`],
                     [
-                      t(`Référence ERP`),
+                      translate(`Référence ERP`),
                       (entry) => (entry.external_ref ? <span className="code">{entry.external_ref}</span> : `—`),
                     ],
                     [
@@ -112,7 +106,7 @@ export function AccountingEntries() {
                       (entry) =>
                         entry.status === `synced` ? null : (
                           <button className="sm secondary" onClick={() => sync([entry.id])}>
-                            {entry.status === `failed` ? t(`Reprendre`) : t(`Envoyer`)}
+                            {entry.status === `failed` ? translate(`Reprendre`) : translate(`Envoyer`)}
                           </button>
                         ),
                     ],

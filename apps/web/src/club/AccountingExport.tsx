@@ -2,19 +2,14 @@
 // import into the club's accounting software.
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Badge,
-  Card,
-  CsvLink,
-  formatMoney,
-  Loaded,
-  PageHead,
-  Table,
-  t,
-  Tile,
-  useApi,
-  useSession,
-} from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { Badge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { Card, CsvExportLink, PageHeader, Tile } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import type { AccountingData } from "./types.ts";
 
 /** At most this many entries are listed; the CSV export has them all. */
@@ -27,16 +22,16 @@ export function AccountingExport() {
   const accounting = useApi<AccountingData>(`/api/club/accounting?${query}`);
   return (
     <>
-      <PageHead
-        title={t("Export comptable")}
-        sub={t("Écritures de la période, équilibrées, à importer dans le logiciel comptable du club.")}
+      <PageHeader
+        title={translate("Export comptable")}
+        sub={translate("Écritures de la période, équilibrées, à importer dans le logiciel comptable du club.")}
       >
         <input
           type="date"
           value={range.from}
           max={range.to}
           onChange={(event) => setRange({ ...range, from: event.target.value })}
-          aria-label={t("Du")}
+          aria-label={translate("Du")}
           style={{ width: "auto" }}
         />
         <input
@@ -45,55 +40,55 @@ export function AccountingExport() {
           min={range.from}
           max={session.today}
           onChange={(event) => setRange({ ...range, to: event.target.value })}
-          aria-label={t("Au")}
+          aria-label={translate("Au")}
           style={{ width: "auto" }}
         />
-        <CsvLink href={`/api/club/accounting?format=csv&${query}`} />
-      </PageHead>
+        <CsvExportLink href={`/api/club/accounting?format=csv&${query}`} />
+      </PageHeader>
       <div className="stack">
         <div className="notice warn">
-          {t(
+          {translate(
             "Le gabarit de colonnes, le plan comptable et les journaux sont des valeurs de démonstration. L'import automatique dans le logiciel comptable dépend de l'édition utilisée, de ses outils d'import et de la validation par la comptabilité du club : il est à évaluer, rien n'est garanti à ce stade.",
           )}
         </div>
-        <Loaded q={accounting}>
+        <QueryView q={accounting}>
           {(data) => (
             <>
               <div className="grid g3">
-                <Tile label={t("Total débit")} value={formatMoney(data.totals.debit)} />
-                <Tile label={t("Total crédit")} value={formatMoney(data.totals.credit)} />
+                <Tile label={translate("Total débit")} value={formatMoney(data.totals.debit)} />
+                <Tile label={translate("Total crédit")} value={formatMoney(data.totals.credit)} />
                 <Tile
-                  label={t("Équilibre")}
+                  label={translate("Équilibre")}
                   value={
-                    data.totals.balanced ? <Badge kind="ok">{t("Équilibré")}</Badge> : <Badge kind="err">{t("Déséquilibré")}</Badge>
+                    data.totals.balanced ? <Badge kind="ok">{translate("Équilibré")}</Badge> : <Badge kind="err">{translate("Déséquilibré")}</Badge>
                   }
-                  hint={t("{0} ligne(s)", data.lines.length)}
+                  hint={translate("{0} ligne(s)", data.lines.length)}
                 />
               </div>
               <Card
-                title={t("Écritures")}
-                actions={<Link to="/club/erp">{t("File de synchronisation comptable")}</Link>}
+                title={translate("Écritures")}
+                actions={<Link to="/club/erp">{translate("File de synchronisation comptable")}</Link>}
                 flush
               >
-                <Table
+                <DataTable
                   rows={data.lines.slice(0, MAX_LINES)}
                   rowKey={(line) => `${line.piece}${line.account}${line.debit}${line.credit}${line.date}${line.label}`}
-                  empty={t("Aucune écriture sur la période.")}
+                  empty={translate("Aucune écriture sur la période.")}
                   cols={[
-                    [t("Date"), (line) => line.date],
-                    [t("Journal"), (line) => line.journal],
-                    [t("Compte"), (line) => <span className="code nb">{line.account}</span>],
-                    [t("Compte tiers"), (line) => line.aux || "—"],
-                    [t("Pièce"), (line) => <span className="small">{line.piece}</span>],
-                    [t("Libellé"), (line) => <span className="small">{line.label}</span>],
-                    [t("Débit"), (line) => (line.debit ? formatMoney(line.debit) : ""), "right"],
-                    [t("Crédit"), (line) => (line.credit ? formatMoney(line.credit) : ""), "right"],
+                    [translate("Date"), (line) => line.date],
+                    [translate("Journal"), (line) => line.journal],
+                    [translate("Compte"), (line) => <span className="code nb">{line.account}</span>],
+                    [translate("Compte tiers"), (line) => line.aux || "—"],
+                    [translate("Pièce"), (line) => <span className="small">{line.piece}</span>],
+                    [translate("Libellé"), (line) => <span className="small">{line.label}</span>],
+                    [translate("Débit"), (line) => (line.debit ? formatMoney(line.debit) : ""), "right"],
+                    [translate("Crédit"), (line) => (line.credit ? formatMoney(line.credit) : ""), "right"],
                   ]}
                 />
               </Card>
             </>
           )}
-        </Loaded>
+        </QueryView>
       </div>
     </>
   );

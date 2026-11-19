@@ -2,27 +2,18 @@
 // consumption charge) and the member's dues, statement, payments, reminders and gate passages.
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  ACCOUNTING_ROLES,
-  api,
-  formatDate,
-  formatDays,
-  formatMoney,
-  GATE_DECISION,
-  gateReason,
-  Loaded,
-  newIdempotencyKey,
-  OUTLET_LABELS,
-  PageHead,
-  parseMoney,
-  PAYMENT_STATUS,
-  StatusBadge,
-  t,
-  Tile,
-  useApi,
-  useRole,
-  useUi,
-} from "./legacy.ts";
+import { describeGateDecision, formatOverdueDays } from "../admin/clubLabels.ts";
+import { newIdempotencyKey } from "../admin/idempotency.ts";
+import { FINANCE_ROLES, useCurrentRole } from "../admin/roles.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatDate, formatMoney, parseMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { ACCESS_DECISION, CLUB_OUTLET, PAYMENT_STATUS } from "../shared/labels.ts";
+import { PageHeader, Tile } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
 import { MemberActions, type ChargeDraft } from "./MemberActions.tsx";
 import { MemberTabs, type MemberTab } from "./MemberTabs.tsx";
 import { billingSuffix } from "./parts.tsx";
@@ -30,8 +21,8 @@ import type { DuesData, MemberCharge, MemberDetailData, SentStatement } from "./
 
 export function MemberDetail() {
   const { id } = useParams();
-  const ui = useUi();
-  const role = useRole();
+  const ui = useFeedback();
+  const role = useCurrentRole();
   const detail = useApi<MemberDetailData>(`/api/club/members/${id}`);
   const dues = useApi<DuesData>("/api/club/dues");
   const [tab, setTab] = useState<MemberTab>("dues");
@@ -40,135 +31,135 @@ export function MemberDetail() {
 
   const update = (patch: { status?: string; planId?: string | null }, success: string) =>
     ui.run(async () => {
-      await api("PATCH", `/api/club/members/${id}`, patch);
+      await apiRequest("PATCH", `/api/club/members/${id}`, patch);
       await detail.reload();
     }, success);
 
   // A consumption without a label is labelled with its outlet.
   const addCharge = () =>
     ui.run(async () => {
-      await api("POST", `/api/club/members/${id}/charges`, {
+      await apiRequest("POST", `/api/club/members/${id}/charges`, {
         kind: "consumption",
         outlet: charge.outlet,
-        label: charge.label.trim() || OUTLET_LABELS[charge.outlet],
+        label: charge.label.trim() || CLUB_OUTLET[charge.outlet],
         amountMinor: parseMoney(charge.amount),
       });
       setCharge({ ...charge, label: "", amount: "" });
       await detail.reload();
-    }, t("Consommation imputée au compte."));
+    }, translate("Consommation imputée au compte."));
 
   // Cash handed to the office: amount first, then the receipt number, in two dialogs.
   const recordCash = async () => {
     const amount = await ui.ask({
       kind: "money",
-      title: t("Espèces remises au bureau"),
-      text: t("L'encaissement est confirmé immédiatement et tracé à votre nom."),
-      label: t("Montant reçu (Rs)"),
-      confirm: t("Continuer"),
+      title: translate("Espèces remises au bureau"),
+      text: translate("L'encaissement est confirmé immédiatement et tracé à votre nom."),
+      label: translate("Montant reçu (Rs)"),
+      confirm: translate("Continuer"),
     });
     if (!amount) return;
     const note = await ui.ask({
-      title: t("Reçu remis"),
-      label: t("Numéro du reçu ou remarque"),
-      confirm: t("Enregistrer"),
+      title: translate("Reçu remis"),
+      label: translate("Numéro du reçu ou remarque"),
+      confirm: translate("Enregistrer"),
     });
     if (note) {
       await ui.run(async () => {
-        await api("POST", `/api/club/members/${id}/cash`, {
+        await apiRequest("POST", `/api/club/members/${id}/cash`, {
           amountMinor: Number(amount),
           note,
           idempotencyKey: newIdempotencyKey(),
         });
         await detail.reload();
-      }, t("Encaissement enregistré."));
+      }, translate("Encaissement enregistré."));
     }
   };
 
   const cancelCharge = async (target: MemberCharge) => {
     const reason = await ui.ask({
-      title: t("Annuler {0}", target.number),
-      text: t("Une écriture inverse est transmise à la comptabilité ; rien n'est effacé."),
-      label: t("Motif"),
-      confirm: t("Annuler le dû"),
+      title: translate("Annuler {0}", target.number),
+      text: translate("Une écriture inverse est transmise à la comptabilité ; rien n'est effacé."),
+      label: translate("Motif"),
+      confirm: translate("Annuler le dû"),
       danger: true,
     });
     if (reason) {
       await ui.run(async () => {
-        await api("POST", `/api/club/charges/${target.id}/cancel`, { reason });
+        await apiRequest("POST", `/api/club/charges/${target.id}/cancel`, { reason });
         await detail.reload();
-      }, t("Dû annulé."));
+      }, translate("Dû annulé."));
     }
   };
 
   const queryProvider = (paymentId: string) =>
     ui.run(async () => {
-      const payment = await api<{ status: string }>("POST", `/api/club/payments/${paymentId}/check`);
-      ui.toast(t("Réponse du prestataire appliquée : {0}.", PAYMENT_STATUS[payment.status]?.[0] ?? payment.status));
+      const payment = await apiRequest<{ status: string }>("POST", `/api/club/payments/${paymentId}/check`);
+      ui.toast(translate("Réponse du prestataire appliquée : {0}.", PAYMENT_STATUS[payment.status]?.[0] ?? payment.status));
       await detail.reload();
     });
 
   const sendStatement = () =>
     ui.run(async () => {
-      setSentStatement(await api<SentStatement>("POST", `/api/club/members/${id}/statement`));
+      setSentStatement(await apiRequest<SentStatement>("POST", `/api/club/members/${id}/statement`));
       await detail.reload();
     });
 
   return (
-    <Loaded q={detail}>
+    <QueryView q={detail}>
       {(data) => {
         const member = data.member;
         return (
           <>
-            <PageHead
+            <PageHeader
               title={member.name}
               sub={
                 <>
-                  {t("Membre")} {member.number}
+                  {translate("Membre")} {member.number}
                   {" · "}
                   {member.plan
-                    ? `${t(member.plan.name)} (${formatMoney(member.plan.fee_minor)}${billingSuffix(member.plan.billing)})`
-                    : t("sans catégorie")}
+                    ? `${translate(member.plan.name)} (${formatMoney(member.plan.fee_minor)}${billingSuffix(member.plan.billing)})`
+                    : translate("sans catégorie")}
                   {" · "}
-                  {t("depuis le")} {formatDate(member.joined_at)}
+                  {translate("depuis le")} {formatDate(member.joined_at)}
                 </>
               }
             >
-              <Link to="/club/membres">{t("← Tous les membres")}</Link>
-            </PageHead>
+              <Link to="/club/membres">{translate("← Tous les membres")}</Link>
+            </PageHeader>
             <div className="stack">
               <div className="grid g4">
                 <Tile
-                  label={t("Solde dû")}
+                  label={translate("Solde dû")}
                   value={formatMoney(data.account.dueMinor)}
                   hint={
                     data.account.creditMinor
-                      ? t("avoir : {0}", formatMoney(data.account.creditMinor))
-                      : t("facturé {0} · payé {1}", formatMoney(data.account.chargedMinor), formatMoney(data.account.paidMinor))
+                      ? translate("avoir : {0}", formatMoney(data.account.creditMinor))
+                      : translate("facturé {0} · payé {1}", formatMoney(data.account.chargedMinor), formatMoney(data.account.paidMinor))
                   }
                 />
                 <Tile
-                  label={t("Dont en retard")}
+                  label={translate("Dont en retard")}
                   value={formatMoney(data.account.overdueMinor)}
                   kind={data.account.overdueMinor ? "warn" : ""}
                   hint={
                     data.account.overdueMinor
-                      ? t("plus ancien : {0}", formatDays(data.account.overdueDays))
-                      : t("rien en retard")
+                      ? translate("plus ancien : {0}", formatOverdueDays(data.account.overdueDays))
+                      : translate("rien en retard")
                   }
                 />
                 <Tile
-                  label={t("À la barrière")}
-                  value={<StatusBadge map={GATE_DECISION} value={data.gate.decision} />}
-                  hint={gateReason(data.gate)}
+                  label={translate("À la barrière")}
+                  value={<StatusBadge map={ACCESS_DECISION} value={data.gate.decision} />}
+                  hint={describeGateDecision(data.gate)}
                 />
                 <Tile
-                  label={t("Référence de paiement")}
+                  label={translate("Référence de paiement")}
                   value={
                     <span className="code nb" style={{ fontSize: "1rem" }}>
                       {member.reference}
                     </span>
                   }
-                  hint={t("badge {0} · à indiquer sur tout virement", member.badge)}
+                  hint={translate("badge {0} · à indiquer sur tout virement", member.badge)}
                 />
               </div>
               <MemberActions
@@ -188,7 +179,7 @@ export function MemberDetail() {
                 data={data}
                 tab={tab}
                 onTab={setTab}
-                canCancel={ACCOUNTING_ROLES.includes(role)}
+                canCancel={FINANCE_ROLES.includes(role)}
                 onCancelCharge={cancelCharge}
                 onQueryProvider={queryProvider}
               />
@@ -196,6 +187,6 @@ export function MemberDetail() {
           </>
         );
       }}
-    </Loaded>
+    </QueryView>
   );
 }

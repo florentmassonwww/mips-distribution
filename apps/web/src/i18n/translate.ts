@@ -1,7 +1,7 @@
 import { currentLanguage } from "./language.ts";
 import { translations } from "./translations.ts";
 
-export type TranslationArg = string | number;
+export type TranslationArg = string | number | null | undefined;
 
 /**
  * Translates a French text for the current language and fills its "{0}", "{1}"… placeholders.

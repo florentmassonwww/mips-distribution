@@ -1,22 +1,17 @@
 // Dues (/club/cotisations): membership plans, billed periods with their collection rate, and the
 // dues run of a period (accounting).
 import { useState } from "react";
-import {
-  ACCOUNTING_ROLES,
-  api,
-  Card,
-  Field,
-  formatDate,
-  formatMoney,
-  Loaded,
-  PageHead,
-  Table,
-  t,
-  useApi,
-  useRole,
-  useSession,
-  useUi,
-} from "./legacy.ts";
+import { FINANCE_ROLES, useCurrentRole } from "../admin/roles.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { Field } from "../shared/Form.tsx";
+import { formatDate, formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { Card, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import type { DuesData, DuesPeriod } from "./types.ts";
 
 /** A year (annual plans) or a year and month (monthly plans). */
@@ -26,8 +21,8 @@ const collectionRate = (period: DuesPeriod): number =>
   Math.round((period.collected_minor / Math.max(1, period.amount_minor)) * 100);
 
 export function Dues() {
-  const ui = useUi();
-  const role = useRole();
+  const ui = useFeedback();
+  const role = useCurrentRole();
   const { session } = useSession();
   const dues = useApi<DuesData>("/api/club/dues");
   const [period, setPeriod] = useState(session.today.slice(0, 4));
@@ -35,20 +30,20 @@ export function Dues() {
   const runDues = async () => {
     const confirmed = await ui.ask({
       kind: "confirm",
-      title: t("Facturer la période {0} ?", period),
+      title: translate("Facturer la période {0} ?", period),
       text:
         period.length === 4
-          ? t("Adhésions annuelles : une cotisation par membre actif. Un membre déjà facturé pour cette période est ignoré.")
-          : t("Adhésions mensuelles : une cotisation par membre actif. Un membre déjà facturé pour cette période est ignoré."),
-      confirm: t("Facturer"),
+          ? translate("Adhésions annuelles : une cotisation par membre actif. Un membre déjà facturé pour cette période est ignoré.")
+          : translate("Adhésions mensuelles : une cotisation par membre actif. Un membre déjà facturé pour cette période est ignoré."),
+      confirm: translate("Facturer"),
     });
     if (confirmed) {
       await ui.run(async () => {
-        const result = await api<{ created: number; skipped: number; amountMinor: number }>("POST", "/api/club/dues/run", {
+        const result = await apiRequest<{ created: number; skipped: number; amountMinor: number }>("POST", "/api/club/dues/run", {
           period,
         });
         ui.toast(
-          t(
+          translate(
             "{0} cotisation(s) facturée(s) pour {1}, {2} déjà facturée(s).",
             result.created,
             formatMoney(result.amountMinor),
@@ -62,17 +57,17 @@ export function Dues() {
 
   return (
     <>
-      <PageHead
-        title={t("Cotisations")}
-        sub={t("Catégories d'adhésion et facturation récurrente, annuelle ou mensuelle.")}
+      <PageHeader
+        title={translate("Cotisations")}
+        sub={translate("Catégories d'adhésion et facturation récurrente, annuelle ou mensuelle.")}
       />
-      <Loaded q={dues}>
+      <QueryView q={dues}>
         {(data) => (
           <div className="stack">
-            {ACCOUNTING_ROLES.includes(role) && (
-              <Card title={t("Facturer une période")}>
+            {FINANCE_ROLES.includes(role) && (
+              <Card title={translate("Facturer une période")}>
                 <div className="row">
-                  <Field label={t("Période (AAAA ou AAAA-MM)")}>
+                  <Field label={translate("Période (AAAA ou AAAA-MM)")}>
                     <input
                       type="text"
                       value={period}
@@ -81,51 +76,51 @@ export function Dues() {
                     />
                   </Field>
                   <button className="secondary sm" onClick={() => setPeriod(session.today.slice(0, 4))}>
-                    {t("Année en cours")}
+                    {translate("Année en cours")}
                   </button>
                   <button className="secondary sm" onClick={() => setPeriod(session.today.slice(0, 7))}>
-                    {t("Mois en cours")}
+                    {translate("Mois en cours")}
                   </button>
                   <button disabled={!PERIOD_PATTERN.test(period)} onClick={runDues}>
-                    {t("Facturer")}
+                    {translate("Facturer")}
                   </button>
                 </div>
               </Card>
             )}
-            <Card title={t("Catégories d'adhésion")} flush>
-              <Table
+            <Card title={translate("Catégories d'adhésion")} flush>
+              <DataTable
                 rows={data.plans}
                 rowKey={(plan) => plan.id}
-                empty={t("Aucune catégorie.")}
+                empty={translate("Aucune catégorie.")}
                 cols={[
                   [
-                    t("Catégorie"),
+                    translate("Catégorie"),
                     (plan) => (
                       <>
-                        <strong>{t(plan.name)}</strong>
+                        <strong>{translate(plan.name)}</strong>
                         <div className="small muted">{plan.code}</div>
                       </>
                     ),
                   ],
-                  [t("Rythme"), (plan) => (plan.billing === "monthly" ? t("Mensuel") : t("Annuel"))],
-                  [t("Cotisation"), (plan) => formatMoney(plan.fee_minor), "right"],
-                  [t("Membres actifs"), (plan) => plan.members, "right"],
+                  [translate("Rythme"), (plan) => (plan.billing === "monthly" ? translate("Mensuel") : translate("Annuel"))],
+                  [translate("Cotisation"), (plan) => formatMoney(plan.fee_minor), "right"],
+                  [translate("Membres actifs"), (plan) => plan.members, "right"],
                 ]}
               />
             </Card>
-            <Card title={t("Périodes facturées")} flush>
-              <Table
+            <Card title={translate("Périodes facturées")} flush>
+              <DataTable
                 rows={data.periods}
                 rowKey={(billed) => billed.period}
-                empty={t("Aucune cotisation facturée.")}
+                empty={translate("Aucune cotisation facturée.")}
                 cols={[
-                  [t("Période"), (billed) => <strong>{billed.period}</strong>],
-                  [t("Facturée le"), (billed) => formatDate(billed.billed_at)],
-                  [t("Cotisations"), (billed) => billed.count, "right"],
-                  [t("Montant"), (billed) => formatMoney(billed.amount_minor), "right"],
-                  [t("Encaissé"), (billed) => formatMoney(billed.collected_minor), "right"],
+                  [translate("Période"), (billed) => <strong>{billed.period}</strong>],
+                  [translate("Facturée le"), (billed) => formatDate(billed.billed_at)],
+                  [translate("Cotisations"), (billed) => billed.count, "right"],
+                  [translate("Montant"), (billed) => formatMoney(billed.amount_minor), "right"],
+                  [translate("Encaissé"), (billed) => formatMoney(billed.collected_minor), "right"],
                   [
-                    t("Taux de recouvrement"),
+                    translate("Taux de recouvrement"),
                     (billed) => (
                       <div style={{ minWidth: 120 }}>
                         <div className="bar">
@@ -140,7 +135,7 @@ export function Dues() {
             </Card>
           </div>
         )}
-      </Loaded>
+      </QueryView>
     </>
   );
 }

@@ -1,12 +1,15 @@
 // One stop: the shop's orders to deliver, its invoices to collect, and a new on-the-spot sale.
-import { Badge, formatMoney, INVOICE_STATUS, ORDER_STATUS, StatusBadge, t } from "./legacy-bridge.js";
+import { translate } from "../i18n/translate.ts";
+import { Badge, StatusBadge } from "../shared/Badge.tsx";
+import { formatMoney } from "../shared/format.ts";
+import { INVOICE_STATUS, ORDER_STATUS } from "../shared/labels.ts";
 import { BackButton } from "./BackButton.tsx";
 import { amountDue, findCustomer } from "./route-helpers.ts";
 import type { FieldView } from "./RouteScreen.tsx";
-import type { Invoice, Order, RouteWork } from "./types.ts";
+import type { BundleInvoice, BundleOrder, LocalRouteView } from "../shared/offline.ts";
 
 interface StopScreenProps {
-  work: RouteWork;
+  work: LocalRouteView;
   customerId: string;
   online: boolean;
   closed: boolean;
@@ -21,7 +24,7 @@ export function StopScreen({ work, customerId, online, closed, go }: StopScreenP
 
   return (
     <div className="stack">
-      <BackButton onClick={() => go({ name: "home" })}>{t("Tournée")}</BackButton>
+      <BackButton onClick={() => go({ name: "home" })}>{translate("Tournée")}</BackButton>
       <div>
         <h1>{customer?.name}</h1>
         <div className="muted">
@@ -29,22 +32,22 @@ export function StopScreen({ work, customerId, online, closed, go }: StopScreenP
         </div>
         {customer?.price_list_id && (
           <div style={{ marginTop: 6 }}>
-            <Badge kind="info">{t("Tarif grands comptes")}</Badge>
+            <Badge kind="info">{translate("Tarif grands comptes")}</Badge>
           </div>
         )}
       </div>
-      <h2>{t("Commandes")}</h2>
-      {orders.length === 0 && <div className="empty">{t("Aucune commande pour ce commerce.")}</div>}
+      <h2>{translate("Commandes")}</h2>
+      {orders.length === 0 && <div className="empty">{translate("Aucune commande pour ce commerce.")}</div>}
       {orders.map((order) => (
         <OrderCard key={order.id} work={work} order={order} productNames={productNames} closed={closed} go={go} />
       ))}
-      {invoices.length > 0 && <h2>{t("Factures et encaissements")}</h2>}
+      {invoices.length > 0 && <h2>{translate("Factures et encaissements")}</h2>}
       {invoices.map((invoice) => (
         <InvoiceCard key={invoice.id} invoice={invoice} online={online} go={go} />
       ))}
       {!closed && (
         <button className="big secondary" onClick={() => go({ name: "sale", customerId })}>
-          {t("Nouvelle vente sur place")}
+          {translate("Nouvelle vente sur place")}
         </button>
       )}
     </div>
@@ -52,8 +55,8 @@ export function StopScreen({ work, customerId, online, closed, go }: StopScreenP
 }
 
 interface OrderCardProps {
-  work: RouteWork;
-  order: Order;
+  work: LocalRouteView;
+  order: BundleOrder;
   productNames: Map<string, string>;
   closed: boolean;
   go: (view: FieldView) => void;
@@ -68,7 +71,7 @@ function OrderCard({ work, order, productNames, closed, go }: OrderCardProps) {
       <div className="body stack">
         <div className="row spread">
           <strong>{order.number}</strong>
-          {pendingSync ? <Badge kind="warn">{t("À synchroniser")}</Badge> : <StatusBadge map={ORDER_STATUS} value={order.status} />}
+          {pendingSync ? <Badge kind="warn">{translate("À synchroniser")}</Badge> : <StatusBadge map={ORDER_STATUS} value={order.status} />}
         </div>
         {order.note && <div className="notice">{order.note}</div>}
         <ul className="plain small">
@@ -85,12 +88,12 @@ function OrderCard({ work, order, productNames, closed, go }: OrderCardProps) {
         {order.status === "loaded" && !pendingSync && (
           <>
             <div className="row spread">
-              <span className="muted">{t("Total commandé")}</span>
+              <span className="muted">{translate("Total commandé")}</span>
               <strong>{formatMoney(orderedTotal)}</strong>
             </div>
             {!closed && (
               <button className="big" onClick={() => go({ name: "deliver", orderId: order.id })}>
-                {t("Livrer cette commande")}
+                {translate("Livrer cette commande")}
               </button>
             )}
           </>
@@ -100,7 +103,7 @@ function OrderCard({ work, order, productNames, closed, go }: OrderCardProps) {
   );
 }
 
-function InvoiceCard({ invoice, online, go }: { invoice: Invoice; online: boolean; go: (view: FieldView) => void }) {
+function InvoiceCard({ invoice, online, go }: { invoice: BundleInvoice; online: boolean; go: (view: FieldView) => void }) {
   const due = amountDue(invoice);
   return (
     <div className="card">
@@ -110,12 +113,12 @@ function InvoiceCard({ invoice, online, go }: { invoice: Invoice; online: boolea
           <StatusBadge map={INVOICE_STATUS} value={invoice.status} />
         </div>
         <div className="row spread">
-          <span className="muted">{t("Montant")}</span>
+          <span className="muted">{translate("Montant")}</span>
           <strong>{formatMoney(invoice.amount_minor)}</strong>
         </div>
         {due > 0 && due !== invoice.amount_minor && (
           <div className="row spread">
-            <span className="muted">{t("Reste dû")}</span>
+            <span className="muted">{translate("Reste dû")}</span>
             <strong>{formatMoney(due)}</strong>
           </div>
         )}
@@ -123,16 +126,16 @@ function InvoiceCard({ invoice, online, go }: { invoice: Invoice; online: boolea
         <div className="row">
           {due > 0 && (
             <button className="grow" disabled={!online} onClick={() => go({ name: "pay", invoiceId: invoice.id })}>
-              {invoice.status === "pending" || invoice.status === "to_verify" ? t("Suivre le paiement") : t("Encaisser")}
+              {invoice.status === "pending" || invoice.status === "to_verify" ? translate("Suivre le paiement") : translate("Encaisser")}
             </button>
           )}
           <button className="secondary grow" disabled={!online} onClick={() => go({ name: "receipt", invoiceId: invoice.id })}>
-            {t("Reçu")}
+            {translate("Reçu")}
           </button>
         </div>
         {!online && due > 0 && (
           <div className="small muted">
-            {t("Encaissement électronique indisponible hors ligne : la facture reste « non payée » jusqu'au retour du réseau.")}
+            {translate("Encaissement électronique indisponible hors ligne : la facture reste « non payée » jusqu'au retour du réseau.")}
           </div>
         )}
       </div>

@@ -1,20 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  apiRequest,
-  Card,
-  formatMoney,
-  INVOICE_STATUS,
-  ORDER_STATUS,
-  PageHead,
-  QueryView,
-  StatusBadge,
-  Table,
-  t,
-  useApi,
-  useFeedback,
-  useSession,
-} from "./legacy.ts";
+import { translate } from "../i18n/translate.ts";
+import { apiRequest } from "../shared/api.ts";
+import { StatusBadge } from "../shared/Badge.tsx";
+import { DataTable } from "../shared/DataTable.tsx";
+import { useFeedback } from "../shared/Feedback.tsx";
+import { formatMoney } from "../shared/format.ts";
+import { useApi } from "../shared/hooks.ts";
+import { INVOICE_STATUS, ORDER_STATUS } from "../shared/labels.ts";
+import { Card, PageHeader } from "../shared/Layout.tsx";
+import { QueryView } from "../shared/QueryView.tsx";
+import { useSession } from "../shared/session.ts";
 import { EMPTY_ORDER_DRAFT, OrderForm, type OrderDraft } from "./OrderForm.tsx";
 import type { OrderSummary, ReferenceData, RouteSummary } from "./types.ts";
 
@@ -25,7 +21,7 @@ export function Orders() {
   const feedback = useFeedback();
   const { session } = useSession();
   // Finance follows the orders but does not act on them.
-  const canEdit = session.user.role !== `finance`;
+  const canEdit = session.user!.role !== `finance`;
   const [statusFilter, setStatusFilter] = useState(``);
   const orders = useApi<OrderSummary[]>(`/api/centrale/orders${statusFilter ? `?status=${statusFilter}` : ``}`);
   const reference = useApi<ReferenceData>(`/api/centrale/reference`);
@@ -52,7 +48,7 @@ export function Orders() {
         note: draft.note,
         lines,
       });
-      feedback.toast(t(`Commande {0} créée.`, created.number));
+      feedback.toast(translate(`Commande {0} créée.`, created.number));
       setFormOpen(false);
       setDraft(EMPTY_ORDER_DRAFT);
       await reloadAll();
@@ -74,31 +70,31 @@ export function Orders() {
   const cancelOrder = async (order: OrderSummary) => {
     const confirmed = await feedback.ask({
       kind: `confirm`,
-      title: t(`Annuler {0} ?`, order.number),
+      title: translate(`Annuler {0} ?`, order.number),
       danger: true,
-      confirm: t(`Annuler la commande`),
+      confirm: translate(`Annuler la commande`),
     });
-    if (confirmed) await act(order, `status`, { status: `cancelled` }, t(`Commande annulée.`));
+    if (confirmed) await act(order, `status`, { status: `cancelled` }, translate(`Commande annulée.`));
   };
 
   return (
     <>
-      <PageHead title={t(`Commandes`)} sub={t(`Création, préparation et affectation aux tournées.`)}>
+      <PageHeader title={translate(`Commandes`)} sub={translate(`Création, préparation et affectation aux tournées.`)}>
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
-          aria-label={t(`Filtrer par état`)}
+          aria-label={translate(`Filtrer par état`)}
           style={{ width: `auto` }}
         >
-          <option value="">{t(`Tous les états`)}</option>
+          <option value="">{translate(`Tous les états`)}</option>
           {Object.entries(ORDER_STATUS).map(([status, [label]]) => (
             <option key={status} value={status}>
               {label}
             </option>
           ))}
         </select>
-        {canEdit && <button onClick={() => setFormOpen(!formOpen)}>{t(formOpen ? `Fermer` : `Nouvelle commande`)}</button>}
-      </PageHead>
+        {canEdit && <button onClick={() => setFormOpen(!formOpen)}>{translate(formOpen ? `Fermer` : `Nouvelle commande`)}</button>}
+      </PageHeader>
       <div className="stack">
         {formOpen && (
           <QueryView q={reference}>
@@ -113,19 +109,19 @@ export function Orders() {
             )}
           </QueryView>
         )}
-        <Card title={t(`Commandes`)} flush>
+        <Card title={translate(`Commandes`)} flush>
           <QueryView q={orders}>
             {(rows) => (
-              <Table
+              <DataTable
                 rows={rows}
                 rowKey={(order) => order.id}
-                empty={t(`Aucune commande.`)}
+                empty={translate(`Aucune commande.`)}
                 onRow={(order) => navigate(`/centrale/commandes/${order.id}`)}
                 cols={[
                   [`N°`, (order) => <strong>{order.number}</strong>],
-                  [t(`Type`), (order) => (order.kind === `route_sale` ? t(`Vente sur place`) : t(`Commande`))],
+                  [translate(`Type`), (order) => (order.kind === `route_sale` ? translate(`Vente sur place`) : translate(`Commande`))],
                   [
-                    t(`Commerce`),
+                    translate(`Commerce`),
                     (order) => (
                       <>
                         {order.customer}
@@ -133,9 +129,9 @@ export function Orders() {
                       </>
                     ),
                   ],
-                  [t(`État`), (order) => <StatusBadge map={ORDER_STATUS} value={order.status} />],
+                  [translate(`État`), (order) => <StatusBadge map={ORDER_STATUS} value={order.status} />],
                   [
-                    t(`Tournée`),
+                    translate(`Tournée`),
                     (order) =>
                       isEditable(order) ? (
                         <select
@@ -143,11 +139,11 @@ export function Orders() {
                           // The row opens the order: keep clicks on the control from reaching it.
                           onClick={(event) => event.stopPropagation()}
                           onChange={(event) =>
-                            act(order, `assign`, { routeId: event.target.value || null }, t(`Affectation enregistrée.`))
+                            act(order, `assign`, { routeId: event.target.value || null }, translate(`Affectation enregistrée.`))
                           }
-                          aria-label={t(`Tournée de {0}`, order.number)}
+                          aria-label={translate(`Tournée de {0}`, order.number)}
                         >
-                          <option value="">{t(`Non affectée`)}</option>
+                          <option value="">{translate(`Non affectée`)}</option>
                           {plannedRoutes.map((route) => (
                             <option key={route.id} value={route.id}>
                               {route.name}
@@ -158,14 +154,14 @@ export function Orders() {
                         (order.route ?? `—`)
                       ),
                   ],
-                  [t(`Commandé`), (order) => formatMoney(order.ordered_minor), `right`],
+                  [translate(`Commandé`), (order) => formatMoney(order.ordered_minor), `right`],
                   [
-                    t(`Facture`),
+                    translate(`Facture`),
                     (order) =>
                       order.invoice_number ? (
                         <>
                           {formatMoney(order.invoice_minor)}{" "}
-                          <StatusBadge map={INVOICE_STATUS} value={order.invoice_status} />
+                          <StatusBadge map={INVOICE_STATUS} value={order.invoice_status!} />
                         </>
                       ) : (
                         `—`
@@ -179,21 +175,21 @@ export function Orders() {
                           {order.status === `confirmed` && (
                             <button
                               className="sm"
-                              onClick={() => act(order, `status`, { status: `prepared` }, t(`{0} préparée.`, order.number))}
+                              onClick={() => act(order, `status`, { status: `prepared` }, translate(`{0} préparée.`, order.number))}
                             >
-                              {t(`Marquer préparée`)}
+                              {translate(`Marquer préparée`)}
                             </button>
                           )}
                           {order.status === `prepared` && (
                             <button
                               className="sm secondary"
-                              onClick={() => act(order, `status`, { status: `confirmed` }, t(`Préparation annulée.`))}
+                              onClick={() => act(order, `status`, { status: `confirmed` }, translate(`Préparation annulée.`))}
                             >
-                              {t(`Annuler la préparation`)}
+                              {translate(`Annuler la préparation`)}
                             </button>
                           )}
                           <button className="sm danger" onClick={() => cancelOrder(order)}>
-                            {t(`Annuler`)}
+                            {translate(`Annuler`)}
                           </button>
                         </div>
                       ) : null,
