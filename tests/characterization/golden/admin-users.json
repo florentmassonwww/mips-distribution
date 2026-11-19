@@ -1,0 +1,3347 @@
+{
+  "scenario": "admin-users",
+  "description": "Company admin creates users, changes a role, deactivates a user (who can no longer log in); own access and duplicate email refused.",
+  "transcript": [
+    {
+      "step": "login u_bd_admin",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "GET /api/admin/users",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "u_bd_admin",
+          "name": "Anjali R. (démo)",
+          "email": "admin@bd.exemple.invalid",
+          "role": "company_admin",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "u_bd_centrale",
+          "name": "Kevin L. (démo)",
+          "email": "centrale@bd.exemple.invalid",
+          "role": "dispatcher",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "u_bd_finance",
+          "name": "Sophie M. (démo)",
+          "email": "finance@bd.exemple.invalid",
+          "role": "finance",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "u_bd_agent1",
+          "name": "Ravi D. (démo)",
+          "email": "agent1@bd.exemple.invalid",
+          "role": "agent",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "u_bd_agent2",
+          "name": "Nadia P. (démo)",
+          "email": "agent2@bd.exemple.invalid",
+          "role": "agent",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "step": "create driver",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/admin/users",
+        "body": {
+          "name": "Livreur Test (démo)",
+          "email": "Livreur.Test@Exemple.invalid",
+          "role": "agent"
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<usr#1>"
+      }
+    },
+    {
+      "step": "duplicate email",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/admin/users",
+        "body": {
+          "name": "Doublon (démo)",
+          "email": "livreur.test@exemple.invalid",
+          "role": "finance"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "email_taken",
+          "message": "Cette adresse est déjà utilisée."
+        }
+      }
+    },
+    {
+      "step": "cannot create a platform admin",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/admin/users",
+        "body": {
+          "name": "Plateforme",
+          "email": "p@exemple.invalid",
+          "role": "platform_admin"
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : role Invalid option: expected one of \"company_admin\"|\"dispatcher\"|\"finance\"|\"agent\""
+        }
+      }
+    },
+    {
+      "step": "change role",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/admin/users/<usr#1>",
+        "body": {
+          "role": "dispatcher"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "deactivate",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/admin/users/<usr#1>",
+        "body": {
+          "active": false
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "change own access",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/admin/users/u_bd_admin",
+        "body": {
+          "role": "agent"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "self_change",
+          "message": "Vous ne pouvez pas modifier votre propre accès."
+        }
+      }
+    },
+    {
+      "step": "users after changes",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "u_bd_admin",
+          "name": "Anjali R. (démo)",
+          "email": "admin@bd.exemple.invalid",
+          "role": "company_admin",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "u_bd_centrale",
+          "name": "Kevin L. (démo)",
+          "email": "centrale@bd.exemple.invalid",
+          "role": "dispatcher",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "u_bd_finance",
+          "name": "Sophie M. (démo)",
+          "email": "finance@bd.exemple.invalid",
+          "role": "finance",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "u_bd_agent1",
+          "name": "Ravi D. (démo)",
+          "email": "agent1@bd.exemple.invalid",
+          "role": "agent",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "u_bd_agent2",
+          "name": "Nadia P. (démo)",
+          "email": "agent2@bd.exemple.invalid",
+          "role": "agent",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:00.000Z"
+        },
+        {
+          "id": "<usr#1>",
+          "name": "Livreur Test (démo)",
+          "email": "livreur.test@exemple.invalid",
+          "role": "dispatcher",
+          "active": 0,
+          "created_at": "2026-10-17T04:00:02.000Z"
+        }
+      ]
+    },
+    {
+      "step": "deactivated user cannot log in",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "<usr#1>"
+        }
+      },
+      "status": 404,
+      "response": {
+        "error": {
+          "code": "not_found",
+          "message": "Utilisateur introuvable."
+        }
+      }
+    },
+    {
+      "step": "GET /api/admin/audit",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/audit"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<aud#1>",
+          "at": "2026-10-17T04:00:06.000Z",
+          "action": "user.updated",
+          "entity": "user",
+          "entity_id": "<usr#1>",
+          "actor_role": "company_admin",
+          "actor": "Anjali R. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Livreur Test (démo)",
+            "active": false
+          }
+        },
+        {
+          "id": "<aud#2>",
+          "at": "2026-10-17T04:00:05.000Z",
+          "action": "user.updated",
+          "entity": "user",
+          "entity_id": "<usr#1>",
+          "actor_role": "company_admin",
+          "actor": "Anjali R. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Livreur Test (démo)",
+            "role": "dispatcher"
+          }
+        },
+        {
+          "id": "<aud#3>",
+          "at": "2026-10-17T04:00:02.000Z",
+          "action": "user.created",
+          "entity": "user",
+          "entity_id": "<usr#1>",
+          "actor_role": "company_admin",
+          "actor": "Anjali R. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Livreur Test (démo)",
+            "role": "agent"
+          }
+        },
+        {
+          "id": "<aud#4>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#1>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000029",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#5>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#2>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000028",
+            "routeId": "<rte#1>"
+          }
+        },
+        {
+          "id": "<aud#6>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#2>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000028",
+            "lines": 3
+          }
+        },
+        {
+          "id": "<aud#7>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#3>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000027",
+            "routeId": "<rte#1>"
+          }
+        },
+        {
+          "id": "<aud#8>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#3>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000027",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#9>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "route.created",
+          "entity": "route",
+          "entity_id": "<rte#1>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Centre - Curepipe",
+            "day": "2026-10-17"
+          }
+        },
+        {
+          "id": "<aud#10>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "route.loaded",
+          "entity": "route",
+          "entity_id": "<rte#2>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Nord - Grand-Baie",
+            "products": 8
+          }
+        },
+        {
+          "id": "<aud#11>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#4>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000026"
+          }
+        },
+        {
+          "id": "<aud#12>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#5>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000025"
+          }
+        },
+        {
+          "id": "<aud#13>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#6>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000024"
+          }
+        },
+        {
+          "id": "<aud#14>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#4>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000026",
+            "routeId": "<rte#2>"
+          }
+        },
+        {
+          "id": "<aud#15>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#4>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000026",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#16>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#5>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000025",
+            "routeId": "<rte#2>"
+          }
+        },
+        {
+          "id": "<aud#17>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#5>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000025",
+            "lines": 3
+          }
+        },
+        {
+          "id": "<aud#18>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#6>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000024",
+            "routeId": "<rte#2>"
+          }
+        },
+        {
+          "id": "<aud#19>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#6>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000024",
+            "lines": 3
+          }
+        },
+        {
+          "id": "<aud#20>",
+          "at": "2026-10-17T04:00:00.000Z",
+          "action": "route.created",
+          "entity": "route",
+          "entity_id": "<rte#2>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Nord - Grand-Baie",
+            "day": "2026-10-17"
+          }
+        },
+        {
+          "id": "<aud#21>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "statement.imported",
+          "entity": "bank_statement",
+          "entity_id": "<stm#1>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "filename": "releve-demo-2026-10-16.csv",
+            "lines": 1,
+            "matched": 1,
+            "exceptions": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "id": "<aud#22>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#1>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000021",
+            "method": "juice",
+            "amountMinor": 1520000,
+            "feeMinor": 13680,
+            "providerRef": "<ref-JCE#1>",
+            "valueDate": "2026-10-16"
+          }
+        },
+        {
+          "id": "<aud#23>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "route.closed",
+          "entity": "route",
+          "entity_id": "<rte#3>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Sud - Mahébourg",
+            "invoicedMinor": 2885000,
+            "confirmedMinor": 2885000
+          }
+        },
+        {
+          "id": "<aud#24>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#2>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000023",
+            "method": "paystation",
+            "amountMinor": 624000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#25>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#2>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000023",
+            "method": "paystation",
+            "amountMinor": 624000
+          }
+        },
+        {
+          "id": "<aud#26>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#7>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000023",
+            "customer": "Snack Soleil (démo)",
+            "amountMinor": 624000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#27>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#3>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000022",
+            "method": "card_tpe",
+            "amountMinor": 741000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#28>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#3>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000022",
+            "method": "card_tpe",
+            "amountMinor": 741000
+          }
+        },
+        {
+          "id": "<aud#29>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "delivery.partial",
+          "entity": "order",
+          "entity_id": "<ord#8>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000022",
+            "customer": "Boutique Bambou (démo)",
+            "amountMinor": 741000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#30>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#1>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000021",
+            "method": "juice",
+            "amountMinor": 1520000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#31>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#1>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000021",
+            "method": "juice",
+            "amountMinor": 1520000
+          }
+        },
+        {
+          "id": "<aud#32>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#9>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000021",
+            "customer": "Hôtel Baie Corail (démo)",
+            "amountMinor": 1520000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#33>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "route.started",
+          "entity": "route",
+          "entity_id": "<rte#3>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Sud - Mahébourg"
+          }
+        },
+        {
+          "id": "<aud#34>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "route.loaded",
+          "entity": "route",
+          "entity_id": "<rte#3>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Sud - Mahébourg",
+            "products": 5
+          }
+        },
+        {
+          "id": "<aud#35>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#8>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000022"
+          }
+        },
+        {
+          "id": "<aud#36>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#9>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000021"
+          }
+        },
+        {
+          "id": "<aud#37>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#8>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000022",
+            "routeId": "<rte#3>"
+          }
+        },
+        {
+          "id": "<aud#38>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#8>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000022",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#39>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#9>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000021",
+            "routeId": "<rte#3>"
+          }
+        },
+        {
+          "id": "<aud#40>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#9>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000021",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#41>",
+          "at": "2026-10-16T04:00:00.000Z",
+          "action": "route.created",
+          "entity": "route",
+          "entity_id": "<rte#3>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Sud - Mahébourg",
+            "day": "2026-10-16"
+          }
+        },
+        {
+          "id": "<aud#42>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "day.closed",
+          "entity": "daily_close",
+          "entity_id": "2026-10-15",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "day": "2026-10-15",
+            "invoicedMinor": 3702650,
+            "toVerify": 0,
+            "openExceptions": 0
+          }
+        },
+        {
+          "id": "<aud#43>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "statement.imported",
+          "entity": "bank_statement",
+          "entity_id": "<stm#2>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "filename": "releve-demo-2026-10-15.csv",
+            "lines": 4,
+            "matched": 4,
+            "exceptions": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "id": "<aud#44>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#4>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000018",
+            "method": "link",
+            "amountMinor": 732450,
+            "feeMinor": 10987,
+            "providerRef": "<ref-LNK#1>",
+            "valueDate": "2026-10-15"
+          }
+        },
+        {
+          "id": "<aud#45>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#5>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000019",
+            "method": "paystation",
+            "amountMinor": 1801200,
+            "feeMinor": 18012,
+            "providerRef": "<ref-PS#1>",
+            "valueDate": "2026-10-15"
+          }
+        },
+        {
+          "id": "<aud#46>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#6>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000020",
+            "method": "card_tpe",
+            "amountMinor": 285000,
+            "feeMinor": 4988,
+            "providerRef": "<ref-TPE#1>",
+            "valueDate": "2026-10-15"
+          }
+        },
+        {
+          "id": "<aud#47>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#7>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000017",
+            "method": "juice",
+            "amountMinor": 884000,
+            "feeMinor": 7956,
+            "providerRef": "<ref-JCE#2>",
+            "valueDate": "2026-10-15"
+          }
+        },
+        {
+          "id": "<aud#48>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "route.closed",
+          "entity": "route",
+          "entity_id": "<rte#4>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "invoicedMinor": 3702650,
+            "confirmedMinor": 3702650
+          }
+        },
+        {
+          "id": "<aud#49>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#6>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000020",
+            "method": "card_tpe",
+            "amountMinor": 285000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#50>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#6>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000020",
+            "method": "card_tpe",
+            "amountMinor": 285000
+          }
+        },
+        {
+          "id": "<aud#51>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#5>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000019",
+            "method": "paystation",
+            "amountMinor": 1801200,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#52>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#5>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000019",
+            "method": "paystation",
+            "amountMinor": 1801200
+          }
+        },
+        {
+          "id": "<aud#53>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#4>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000018",
+            "method": "link",
+            "amountMinor": 732450,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#54>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#4>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000018",
+            "method": "link",
+            "amountMinor": 732450
+          }
+        },
+        {
+          "id": "<aud#55>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#7>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000017",
+            "method": "juice",
+            "amountMinor": 884000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#56>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#7>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000017",
+            "method": "juice",
+            "amountMinor": 884000
+          }
+        },
+        {
+          "id": "<aud#57>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.failed",
+          "entity": "payment",
+          "entity_id": "<pay#8>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "method": "card_tpe",
+            "amountMinor": 884000,
+            "reason": "Refusé par l'émetteur (simulation)"
+          }
+        },
+        {
+          "id": "<aud#58>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#8>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000017",
+            "method": "card_tpe",
+            "amountMinor": 884000
+          }
+        },
+        {
+          "id": "<aud#59>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#10>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000020",
+            "customer": "Snack Soleil (démo)",
+            "amountMinor": 285000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#60>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#11>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000019",
+            "customer": "Hôtel Baie Corail (démo)",
+            "amountMinor": 1801200,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#61>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#12>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000018",
+            "customer": "Supermarché Plaza (démo)",
+            "amountMinor": 732450,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#62>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#13>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000017",
+            "customer": "Tabagie Centrale (démo)",
+            "amountMinor": 884000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#63>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "route.started",
+          "entity": "route",
+          "entity_id": "<rte#4>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq"
+          }
+        },
+        {
+          "id": "<aud#64>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "route.loaded",
+          "entity": "route",
+          "entity_id": "<rte#4>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "products": 7
+          }
+        },
+        {
+          "id": "<aud#65>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#11>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000019"
+          }
+        },
+        {
+          "id": "<aud#66>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#12>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000018"
+          }
+        },
+        {
+          "id": "<aud#67>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#13>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000017"
+          }
+        },
+        {
+          "id": "<aud#68>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#11>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000019",
+            "routeId": "<rte#4>"
+          }
+        },
+        {
+          "id": "<aud#69>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#11>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000019",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#70>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#12>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000018",
+            "routeId": "<rte#4>"
+          }
+        },
+        {
+          "id": "<aud#71>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#12>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000018",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#72>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#13>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000017",
+            "routeId": "<rte#4>"
+          }
+        },
+        {
+          "id": "<aud#73>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#13>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000017",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#74>",
+          "at": "2026-10-15T04:00:00.000Z",
+          "action": "route.created",
+          "entity": "route",
+          "entity_id": "<rte#4>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "day": "2026-10-15"
+          }
+        },
+        {
+          "id": "<aud#75>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "day.closed",
+          "entity": "daily_close",
+          "entity_id": "2026-10-14",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "day": "2026-10-14",
+            "invoicedMinor": 4009600,
+            "toVerify": 0,
+            "openExceptions": 0
+          }
+        },
+        {
+          "id": "<aud#76>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "exception.approved",
+          "entity": "exception",
+          "entity_id": "<exc#1>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "type": "delivery_partial",
+            "message": "Livraison partielle de CMD-000014 chez Boutique Bambou (démo) : Casier endommagé au déchargement",
+            "note": "Avoir émis au commerce (démonstration)"
+          }
+        },
+        {
+          "id": "<aud#77>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "statement.imported",
+          "entity": "bank_statement",
+          "entity_id": "<stm#3>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "filename": "releve-demo-2026-10-14.csv",
+            "lines": 4,
+            "matched": 4,
+            "exceptions": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "id": "<aud#78>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#9>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000016",
+            "method": "juice",
+            "amountMinor": 307800,
+            "feeMinor": 2770,
+            "providerRef": "<ref-JCE#3>",
+            "valueDate": "2026-10-14"
+          }
+        },
+        {
+          "id": "<aud#79>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#10>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000013",
+            "method": "link",
+            "amountMinor": 535800,
+            "feeMinor": 8037,
+            "providerRef": "<ref-LNK#2>",
+            "valueDate": "2026-10-14"
+          }
+        },
+        {
+          "id": "<aud#80>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#11>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000014",
+            "method": "paystation",
+            "amountMinor": 1474000,
+            "feeMinor": 14740,
+            "providerRef": "<ref-PS#2>",
+            "valueDate": "2026-10-14"
+          }
+        },
+        {
+          "id": "<aud#81>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#12>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000015",
+            "method": "card_tpe",
+            "amountMinor": 1692000,
+            "feeMinor": 29610,
+            "providerRef": "<ref-TPE#2>",
+            "valueDate": "2026-10-14"
+          }
+        },
+        {
+          "id": "<aud#82>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "route.closed",
+          "entity": "route",
+          "entity_id": "<rte#5>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Ouest - Tamarin",
+            "invoicedMinor": 4009600,
+            "confirmedMinor": 4009600
+          }
+        },
+        {
+          "id": "<aud#83>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#9>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000016",
+            "method": "juice",
+            "amountMinor": 307800,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#84>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#9>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000016",
+            "method": "juice",
+            "amountMinor": 307800
+          }
+        },
+        {
+          "id": "<aud#85>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#12>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000015",
+            "method": "card_tpe",
+            "amountMinor": 1692000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#86>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#12>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000015",
+            "method": "card_tpe",
+            "amountMinor": 1692000
+          }
+        },
+        {
+          "id": "<aud#87>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#11>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000014",
+            "method": "paystation",
+            "amountMinor": 1474000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#88>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#11>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000014",
+            "method": "paystation",
+            "amountMinor": 1474000
+          }
+        },
+        {
+          "id": "<aud#89>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#10>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000013",
+            "method": "link",
+            "amountMinor": 535800,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#90>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#10>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000013",
+            "method": "link",
+            "amountMinor": 535800
+          }
+        },
+        {
+          "id": "<aud#91>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#14>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000016",
+            "customer": "Supérette Belle Vue (démo)",
+            "amountMinor": 307800,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#92>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#15>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000015",
+            "customer": "Snack Soleil (démo)",
+            "amountMinor": 1692000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#93>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "delivery.partial",
+          "entity": "order",
+          "entity_id": "<ord#16>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000014",
+            "customer": "Boutique Bambou (démo)",
+            "amountMinor": 1474000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#94>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#17>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000013",
+            "customer": "Hôtel Baie Corail (démo)",
+            "amountMinor": 535800,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#95>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "route.started",
+          "entity": "route",
+          "entity_id": "<rte#5>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Ouest - Tamarin"
+          }
+        },
+        {
+          "id": "<aud#96>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "route.loaded",
+          "entity": "route",
+          "entity_id": "<rte#5>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Ouest - Tamarin",
+            "products": 7
+          }
+        },
+        {
+          "id": "<aud#97>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#15>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000015"
+          }
+        },
+        {
+          "id": "<aud#98>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#16>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000014"
+          }
+        },
+        {
+          "id": "<aud#99>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#17>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000013"
+          }
+        },
+        {
+          "id": "<aud#100>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#15>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000015",
+            "routeId": "<rte#5>"
+          }
+        },
+        {
+          "id": "<aud#101>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#15>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000015",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#102>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#16>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000014",
+            "routeId": "<rte#5>"
+          }
+        },
+        {
+          "id": "<aud#103>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#16>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000014",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#104>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#17>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000013",
+            "routeId": "<rte#5>"
+          }
+        },
+        {
+          "id": "<aud#105>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#17>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000013",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#106>",
+          "at": "2026-10-14T04:00:00.000Z",
+          "action": "route.created",
+          "entity": "route",
+          "entity_id": "<rte#5>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Ouest - Tamarin",
+            "day": "2026-10-14"
+          }
+        },
+        {
+          "id": "<aud#107>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "day.closed",
+          "entity": "daily_close",
+          "entity_id": "2026-10-13",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "day": "2026-10-13",
+            "invoicedMinor": 3651900,
+            "toVerify": 0,
+            "openExceptions": 0
+          }
+        },
+        {
+          "id": "<aud#108>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "statement.imported",
+          "entity": "bank_statement",
+          "entity_id": "<stm#4>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "filename": "releve-demo-2026-10-13.csv",
+            "lines": 4,
+            "matched": 4,
+            "exceptions": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "id": "<aud#109>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#13>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000009",
+            "method": "paystation",
+            "amountMinor": 1104000,
+            "feeMinor": 11040,
+            "providerRef": "<ref-PS#3>",
+            "valueDate": "2026-10-13"
+          }
+        },
+        {
+          "id": "<aud#110>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#14>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000010",
+            "method": "card_tpe",
+            "amountMinor": 1347000,
+            "feeMinor": 23573,
+            "providerRef": "<ref-TPE#3>",
+            "valueDate": "2026-10-13"
+          }
+        },
+        {
+          "id": "<aud#111>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#15>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000012",
+            "method": "link",
+            "amountMinor": 363000,
+            "feeMinor": 5445,
+            "providerRef": "<ref-LNK#3>",
+            "valueDate": "2026-10-13"
+          }
+        },
+        {
+          "id": "<aud#112>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#16>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000011",
+            "method": "juice",
+            "amountMinor": 837900,
+            "feeMinor": 7541,
+            "providerRef": "<ref-JCE#4>",
+            "valueDate": "2026-10-13"
+          }
+        },
+        {
+          "id": "<aud#113>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "route.closed",
+          "entity": "route",
+          "entity_id": "<rte#6>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "invoicedMinor": 3651900,
+            "confirmedMinor": 3651900
+          }
+        },
+        {
+          "id": "<aud#114>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#15>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000012",
+            "method": "link",
+            "amountMinor": 363000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#115>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#15>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000012",
+            "method": "link",
+            "amountMinor": 363000
+          }
+        },
+        {
+          "id": "<aud#116>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#16>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000011",
+            "method": "juice",
+            "amountMinor": 837900,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#117>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#16>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000011",
+            "method": "juice",
+            "amountMinor": 837900
+          }
+        },
+        {
+          "id": "<aud#118>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#14>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000010",
+            "method": "card_tpe",
+            "amountMinor": 1347000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#119>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#14>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000010",
+            "method": "card_tpe",
+            "amountMinor": 1347000
+          }
+        },
+        {
+          "id": "<aud#120>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#13>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000009",
+            "method": "paystation",
+            "amountMinor": 1104000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#121>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#13>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000009",
+            "method": "paystation",
+            "amountMinor": 1104000
+          }
+        },
+        {
+          "id": "<aud#122>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.failed",
+          "entity": "payment",
+          "entity_id": "<pay#17>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "method": "card_tpe",
+            "amountMinor": 1104000,
+            "reason": "Refusé par l'émetteur (simulation)"
+          }
+        },
+        {
+          "id": "<aud#123>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#17>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000009",
+            "method": "card_tpe",
+            "amountMinor": 1104000
+          }
+        },
+        {
+          "id": "<aud#124>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#18>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000012",
+            "customer": "Restaurant Le Flamboyant (démo)",
+            "amountMinor": 363000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#125>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#19>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000011",
+            "customer": "Supérette Belle Vue (démo)",
+            "amountMinor": 837900,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#126>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#20>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000010",
+            "customer": "Boutique Ti Lakaz (démo)",
+            "amountMinor": 1347000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#127>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#21>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000009",
+            "customer": "Snack Soleil (démo)",
+            "amountMinor": 1104000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#128>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "route.started",
+          "entity": "route",
+          "entity_id": "<rte#6>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq"
+          }
+        },
+        {
+          "id": "<aud#129>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "route.loaded",
+          "entity": "route",
+          "entity_id": "<rte#6>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "products": 7
+          }
+        },
+        {
+          "id": "<aud#130>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#19>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000011"
+          }
+        },
+        {
+          "id": "<aud#131>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#20>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000010"
+          }
+        },
+        {
+          "id": "<aud#132>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#21>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000009"
+          }
+        },
+        {
+          "id": "<aud#133>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#19>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000011",
+            "routeId": "<rte#6>"
+          }
+        },
+        {
+          "id": "<aud#134>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#19>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000011",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#135>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#20>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000010",
+            "routeId": "<rte#6>"
+          }
+        },
+        {
+          "id": "<aud#136>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#20>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000010",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#137>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#21>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000009",
+            "routeId": "<rte#6>"
+          }
+        },
+        {
+          "id": "<aud#138>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#21>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000009",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#139>",
+          "at": "2026-10-13T04:00:00.000Z",
+          "action": "route.created",
+          "entity": "route",
+          "entity_id": "<rte#6>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "day": "2026-10-13"
+          }
+        },
+        {
+          "id": "<aud#140>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "day.closed",
+          "entity": "daily_close",
+          "entity_id": "2026-10-12",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "day": "2026-10-12",
+            "invoicedMinor": 3778800,
+            "toVerify": 0,
+            "openExceptions": 0
+          }
+        },
+        {
+          "id": "<aud#141>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "statement.imported",
+          "entity": "bank_statement",
+          "entity_id": "<stm#5>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "filename": "releve-demo-2026-10-12.csv",
+            "lines": 4,
+            "matched": 4,
+            "exceptions": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "id": "<aud#142>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#18>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000006",
+            "method": "juice",
+            "amountMinor": 765000,
+            "feeMinor": 6885,
+            "providerRef": "<ref-JCE#5>",
+            "valueDate": "2026-10-12"
+          }
+        },
+        {
+          "id": "<aud#143>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#19>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000007",
+            "method": "link",
+            "amountMinor": 1680000,
+            "feeMinor": 25200,
+            "providerRef": "<ref-LNK#4>",
+            "valueDate": "2026-10-12"
+          }
+        },
+        {
+          "id": "<aud#144>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#20>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000008",
+            "method": "paystation",
+            "amountMinor": 381900,
+            "feeMinor": 3819,
+            "providerRef": "<ref-PS#4>",
+            "valueDate": "2026-10-12"
+          }
+        },
+        {
+          "id": "<aud#145>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#21>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000005",
+            "method": "card_tpe",
+            "amountMinor": 951900,
+            "feeMinor": 16658,
+            "providerRef": "<ref-TPE#4>",
+            "valueDate": "2026-10-12"
+          }
+        },
+        {
+          "id": "<aud#146>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "route.closed",
+          "entity": "route",
+          "entity_id": "<rte#7>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Ouest - Tamarin",
+            "invoicedMinor": 3778800,
+            "confirmedMinor": 3778800
+          }
+        },
+        {
+          "id": "<aud#147>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#20>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000008",
+            "method": "paystation",
+            "amountMinor": 381900,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#148>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#20>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000008",
+            "method": "paystation",
+            "amountMinor": 381900
+          }
+        },
+        {
+          "id": "<aud#149>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#19>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000007",
+            "method": "link",
+            "amountMinor": 1680000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#150>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#19>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000007",
+            "method": "link",
+            "amountMinor": 1680000
+          }
+        },
+        {
+          "id": "<aud#151>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#18>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000006",
+            "method": "juice",
+            "amountMinor": 765000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#152>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#18>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000006",
+            "method": "juice",
+            "amountMinor": 765000
+          }
+        },
+        {
+          "id": "<aud#153>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#21>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000005",
+            "method": "card_tpe",
+            "amountMinor": 951900,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#154>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#21>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000005",
+            "method": "card_tpe",
+            "amountMinor": 951900
+          }
+        },
+        {
+          "id": "<aud#155>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#22>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000008",
+            "customer": "Supermarché Plaza (démo)",
+            "amountMinor": 381900,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#156>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#23>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000007",
+            "customer": "Restaurant Le Flamboyant (démo)",
+            "amountMinor": 1680000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#157>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#24>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000006",
+            "customer": "Snack Lagon Bleu (démo)",
+            "amountMinor": 765000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#158>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#25>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000005",
+            "customer": "Supérette Belle Vue (démo)",
+            "amountMinor": 951900,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#159>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "route.started",
+          "entity": "route",
+          "entity_id": "<rte#7>",
+          "actor_role": "agent",
+          "actor": "Ravi D. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Ouest - Tamarin"
+          }
+        },
+        {
+          "id": "<aud#160>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "route.loaded",
+          "entity": "route",
+          "entity_id": "<rte#7>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Ouest - Tamarin",
+            "products": 7
+          }
+        },
+        {
+          "id": "<aud#161>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#23>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000007"
+          }
+        },
+        {
+          "id": "<aud#162>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#24>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000006"
+          }
+        },
+        {
+          "id": "<aud#163>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#25>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000005"
+          }
+        },
+        {
+          "id": "<aud#164>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#23>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000007",
+            "routeId": "<rte#7>"
+          }
+        },
+        {
+          "id": "<aud#165>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#23>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000007",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#166>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#24>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000006",
+            "routeId": "<rte#7>"
+          }
+        },
+        {
+          "id": "<aud#167>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#24>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000006",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#168>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#25>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000005",
+            "routeId": "<rte#7>"
+          }
+        },
+        {
+          "id": "<aud#169>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#25>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000005",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#170>",
+          "at": "2026-10-12T04:00:00.000Z",
+          "action": "route.created",
+          "entity": "route",
+          "entity_id": "<rte#7>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Ouest - Tamarin",
+            "day": "2026-10-12"
+          }
+        },
+        {
+          "id": "<aud#171>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "day.closed",
+          "entity": "daily_close",
+          "entity_id": "2026-10-11",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "day": "2026-10-11",
+            "invoicedMinor": 3744500,
+            "toVerify": 0,
+            "openExceptions": 0
+          }
+        },
+        {
+          "id": "<aud#172>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "exception.approved",
+          "entity": "exception",
+          "entity_id": "<exc#2>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "type": "delivery_partial",
+            "message": "Livraison partielle de CMD-000002 chez Tabagie Centrale (démo) : Casier endommagé au déchargement",
+            "note": "Avoir émis au commerce (démonstration)"
+          }
+        },
+        {
+          "id": "<aud#173>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "statement.imported",
+          "entity": "bank_statement",
+          "entity_id": "<stm#6>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "filename": "releve-demo-2026-10-11.csv",
+            "lines": 4,
+            "matched": 4,
+            "exceptions": 0,
+            "skipped": 0
+          }
+        },
+        {
+          "id": "<aud#174>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#22>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000001",
+            "method": "juice",
+            "amountMinor": 648000,
+            "feeMinor": 5832,
+            "providerRef": "<ref-JCE#6>",
+            "valueDate": "2026-10-11"
+          }
+        },
+        {
+          "id": "<aud#175>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#23>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000004",
+            "method": "card_tpe",
+            "amountMinor": 441000,
+            "feeMinor": 7718,
+            "providerRef": "<ref-TPE#5>",
+            "valueDate": "2026-10-11"
+          }
+        },
+        {
+          "id": "<aud#176>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#24>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000003",
+            "method": "paystation",
+            "amountMinor": 1263500,
+            "feeMinor": 12635,
+            "providerRef": "<ref-PS#5>",
+            "valueDate": "2026-10-11"
+          }
+        },
+        {
+          "id": "<aud#177>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.settled",
+          "entity": "payment",
+          "entity_id": "<pay#25>",
+          "actor_role": "finance",
+          "actor": "Sophie M. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000002",
+            "method": "link",
+            "amountMinor": 1392000,
+            "feeMinor": 20880,
+            "providerRef": "<ref-LNK#5>",
+            "valueDate": "2026-10-11"
+          }
+        },
+        {
+          "id": "<aud#178>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "route.closed",
+          "entity": "route",
+          "entity_id": "<rte#8>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "invoicedMinor": 3744500,
+            "confirmedMinor": 3744500
+          }
+        },
+        {
+          "id": "<aud#179>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#23>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000004",
+            "method": "card_tpe",
+            "amountMinor": 441000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#180>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#23>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000004",
+            "method": "card_tpe",
+            "amountMinor": 441000
+          }
+        },
+        {
+          "id": "<aud#181>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#24>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000003",
+            "method": "paystation",
+            "amountMinor": 1263500,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#182>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#24>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000003",
+            "method": "paystation",
+            "amountMinor": 1263500
+          }
+        },
+        {
+          "id": "<aud#183>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#25>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000002",
+            "method": "link",
+            "amountMinor": 1392000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#184>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#25>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000002",
+            "method": "link",
+            "amountMinor": 1392000
+          }
+        },
+        {
+          "id": "<aud#185>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.confirmed",
+          "entity": "payment",
+          "entity_id": "<pay#22>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000001",
+            "method": "juice",
+            "amountMinor": 648000,
+            "via": "notification"
+          }
+        },
+        {
+          "id": "<aud#186>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#22>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000001",
+            "method": "juice",
+            "amountMinor": 648000
+          }
+        },
+        {
+          "id": "<aud#187>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.failed",
+          "entity": "payment",
+          "entity_id": "<pay#26>",
+          "actor_role": "system",
+          "actor": "system",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "method": "card_tpe",
+            "amountMinor": 648000,
+            "reason": "Refusé par l'émetteur (simulation)"
+          }
+        },
+        {
+          "id": "<aud#188>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "payment.initiated",
+          "entity": "payment",
+          "entity_id": "<pay#26>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "invoice": "FAC-000001",
+            "method": "card_tpe",
+            "amountMinor": 648000
+          }
+        },
+        {
+          "id": "<aud#189>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#26>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000004",
+            "customer": "Boutique Bambou (démo)",
+            "amountMinor": 441000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#190>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#27>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000003",
+            "customer": "Supermarché Plaza (démo)",
+            "amountMinor": 1263500,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#191>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "delivery.partial",
+          "entity": "order",
+          "entity_id": "<ord#28>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000002",
+            "customer": "Tabagie Centrale (démo)",
+            "amountMinor": 1392000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#192>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "delivery.full",
+          "entity": "order",
+          "entity_id": "<ord#29>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "order": "CMD-000001",
+            "customer": "Restaurant Le Flamboyant (démo)",
+            "amountMinor": 648000,
+            "offline": false
+          }
+        },
+        {
+          "id": "<aud#193>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "route.started",
+          "entity": "route",
+          "entity_id": "<rte#8>",
+          "actor_role": "agent",
+          "actor": "Nadia P. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq"
+          }
+        },
+        {
+          "id": "<aud#194>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "route.loaded",
+          "entity": "route",
+          "entity_id": "<rte#8>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "products": 6
+          }
+        },
+        {
+          "id": "<aud#195>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#27>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000003"
+          }
+        },
+        {
+          "id": "<aud#196>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#28>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000002"
+          }
+        },
+        {
+          "id": "<aud#197>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.prepared",
+          "entity": "order",
+          "entity_id": "<ord#29>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000001"
+          }
+        },
+        {
+          "id": "<aud#198>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#27>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000003",
+            "routeId": "<rte#8>"
+          }
+        },
+        {
+          "id": "<aud#199>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#27>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000003",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#200>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#28>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000002",
+            "routeId": "<rte#8>"
+          }
+        },
+        {
+          "id": "<aud#201>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#28>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000002",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#202>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.assigned",
+          "entity": "order",
+          "entity_id": "<ord#29>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000001",
+            "routeId": "<rte#8>"
+          }
+        },
+        {
+          "id": "<aud#203>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "order.created",
+          "entity": "order",
+          "entity_id": "<ord#29>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "number": "CMD-000001",
+            "lines": 2
+          }
+        },
+        {
+          "id": "<aud#204>",
+          "at": "2026-10-11T04:00:00.000Z",
+          "action": "route.created",
+          "entity": "route",
+          "entity_id": "<rte#8>",
+          "actor_role": "dispatcher",
+          "actor": "Kevin L. (démo)",
+          "company": "Boissons Démo Ltée",
+          "details": {
+            "name": "Est - Flacq",
+            "day": "2026-10-11"
+          }
+        }
+      ]
+    },
+    {
+      "step": "audit CSV",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/audit?format=csv"
+      },
+      "status": 200,
+      "type": "text/csv",
+      "response": "Date (UTC),Entreprise,Acteur,Rôle,Action,Objet,Identifiant,Détails\r\n2026-10-17T04:00:06.000Z,Boissons Démo Ltée,Anjali R. (démo),company_admin,user.updated,user,<usr#1>,\"{\"\"name\"\":\"\"Livreur Test (démo)\"\",\"\"active\"\":false}\"\r\n2026-10-17T04:00:05.000Z,Boissons Démo Ltée,Anjali R. (démo),company_admin,user.updated,user,<usr#1>,\"{\"\"name\"\":\"\"Livreur Test (démo)\"\",\"\"role\"\":\"\"dispatcher\"\"}\"\r\n2026-10-17T04:00:02.000Z,Boissons Démo Ltée,Anjali R. (démo),company_admin,user.created,user,<usr#1>,\"{\"\"name\"\":\"\"Livreur Test (démo)\"\",\"\"role\"\":\"\"agent\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#1>,\"{\"\"number\"\":\"\"CMD-000029\"\",\"\"lines\"\":2}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#2>,\"{\"\"number\"\":\"\"CMD-000028\"\",\"\"routeId\"\":\"\"<rte#1>\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#2>,\"{\"\"number\"\":\"\"CMD-000028\"\",\"\"lines\"\":3}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#3>,\"{\"\"number\"\":\"\"CMD-000027\"\",\"\"routeId\"\":\"\"<rte#1>\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#3>,\"{\"\"number\"\":\"\"CMD-000027\"\",\"\"lines\"\":2}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.created,route,<rte#1>,\"{\"\"name\"\":\"\"Centre - Curepipe\"\",\"\"day\"\":\"\"2026-10-17\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.loaded,route,<rte#2>,\"{\"\"name\"\":\"\"Nord - Grand-Baie\"\",\"\"products\"\":8}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#4>,\"{\"\"number\"\":\"\"CMD-000026\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#5>,\"{\"\"number\"\":\"\"CMD-000025\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#6>,\"{\"\"number\"\":\"\"CMD-000024\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#4>,\"{\"\"number\"\":\"\"CMD-000026\"\",\"\"routeId\"\":\"\"<rte#2>\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#4>,\"{\"\"number\"\":\"\"CMD-000026\"\",\"\"lines\"\":2}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#5>,\"{\"\"number\"\":\"\"CMD-000025\"\",\"\"routeId\"\":\"\"<rte#2>\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#5>,\"{\"\"number\"\":\"\"CMD-000025\"\",\"\"lines\"\":3}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#6>,\"{\"\"number\"\":\"\"CMD-000024\"\",\"\"routeId\"\":\"\"<rte#2>\"\"}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#6>,\"{\"\"number\"\":\"\"CMD-000024\"\",\"\"lines\"\":3}\"\r\n2026-10-17T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.created,route,<rte#2>,\"{\"\"name\"\":\"\"Nord - Grand-Baie\"\",\"\"day\"\":\"\"2026-10-17\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,statement.imported,bank_statement,<stm#1>,\"{\"\"filename\"\":\"\"releve-demo-2026-10-16.csv\"\",\"\"lines\"\":1,\"\"matched\"\":1,\"\"exceptions\"\":0,\"\"skipped\"\":0}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#1>,\"{\"\"invoice\"\":\"\"FAC-000021\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":1520000,\"\"feeMinor\"\":13680,\"\"providerRef\"\":\"\"<ref-JCE#1>\"\",\"\"valueDate\"\":\"\"2026-10-16\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,route.closed,route,<rte#3>,\"{\"\"name\"\":\"\"Sud - Mahébourg\"\",\"\"invoicedMinor\"\":2885000,\"\"confirmedMinor\"\":2885000}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#2>,\"{\"\"invoice\"\":\"\"FAC-000023\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":624000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#2>,\"{\"\"invoice\"\":\"\"FAC-000023\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":624000}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#7>,\"{\"\"order\"\":\"\"CMD-000023\"\",\"\"customer\"\":\"\"Snack Soleil (démo)\"\",\"\"amountMinor\"\":624000,\"\"offline\"\":false}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#3>,\"{\"\"invoice\"\":\"\"FAC-000022\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":741000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#3>,\"{\"\"invoice\"\":\"\"FAC-000022\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":741000}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.partial,order,<ord#8>,\"{\"\"order\"\":\"\"CMD-000022\"\",\"\"customer\"\":\"\"Boutique Bambou (démo)\"\",\"\"amountMinor\"\":741000,\"\"offline\"\":false}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#1>,\"{\"\"invoice\"\":\"\"FAC-000021\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":1520000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#1>,\"{\"\"invoice\"\":\"\"FAC-000021\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":1520000}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#9>,\"{\"\"order\"\":\"\"CMD-000021\"\",\"\"customer\"\":\"\"Hôtel Baie Corail (démo)\"\",\"\"amountMinor\"\":1520000,\"\"offline\"\":false}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,route.started,route,<rte#3>,\"{\"\"name\"\":\"\"Sud - Mahébourg\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.loaded,route,<rte#3>,\"{\"\"name\"\":\"\"Sud - Mahébourg\"\",\"\"products\"\":5}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#8>,\"{\"\"number\"\":\"\"CMD-000022\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#9>,\"{\"\"number\"\":\"\"CMD-000021\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#8>,\"{\"\"number\"\":\"\"CMD-000022\"\",\"\"routeId\"\":\"\"<rte#3>\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#8>,\"{\"\"number\"\":\"\"CMD-000022\"\",\"\"lines\"\":2}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#9>,\"{\"\"number\"\":\"\"CMD-000021\"\",\"\"routeId\"\":\"\"<rte#3>\"\"}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#9>,\"{\"\"number\"\":\"\"CMD-000021\"\",\"\"lines\"\":2}\"\r\n2026-10-16T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.created,route,<rte#3>,\"{\"\"name\"\":\"\"Sud - Mahébourg\"\",\"\"day\"\":\"\"2026-10-16\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,day.closed,daily_close,2026-10-15,\"{\"\"day\"\":\"\"2026-10-15\"\",\"\"invoicedMinor\"\":3702650,\"\"toVerify\"\":0,\"\"openExceptions\"\":0}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,statement.imported,bank_statement,<stm#2>,\"{\"\"filename\"\":\"\"releve-demo-2026-10-15.csv\"\",\"\"lines\"\":4,\"\"matched\"\":4,\"\"exceptions\"\":0,\"\"skipped\"\":0}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#4>,\"{\"\"invoice\"\":\"\"FAC-000018\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":732450,\"\"feeMinor\"\":10987,\"\"providerRef\"\":\"\"<ref-LNK#1>\"\",\"\"valueDate\"\":\"\"2026-10-15\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#5>,\"{\"\"invoice\"\":\"\"FAC-000019\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1801200,\"\"feeMinor\"\":18012,\"\"providerRef\"\":\"\"<ref-PS#1>\"\",\"\"valueDate\"\":\"\"2026-10-15\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#6>,\"{\"\"invoice\"\":\"\"FAC-000020\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":285000,\"\"feeMinor\"\":4988,\"\"providerRef\"\":\"\"<ref-TPE#1>\"\",\"\"valueDate\"\":\"\"2026-10-15\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#7>,\"{\"\"invoice\"\":\"\"FAC-000017\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":884000,\"\"feeMinor\"\":7956,\"\"providerRef\"\":\"\"<ref-JCE#2>\"\",\"\"valueDate\"\":\"\"2026-10-15\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,route.closed,route,<rte#4>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"invoicedMinor\"\":3702650,\"\"confirmedMinor\"\":3702650}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#6>,\"{\"\"invoice\"\":\"\"FAC-000020\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":285000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#6>,\"{\"\"invoice\"\":\"\"FAC-000020\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":285000}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#5>,\"{\"\"invoice\"\":\"\"FAC-000019\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1801200,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#5>,\"{\"\"invoice\"\":\"\"FAC-000019\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1801200}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#4>,\"{\"\"invoice\"\":\"\"FAC-000018\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":732450,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#4>,\"{\"\"invoice\"\":\"\"FAC-000018\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":732450}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#7>,\"{\"\"invoice\"\":\"\"FAC-000017\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":884000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#7>,\"{\"\"invoice\"\":\"\"FAC-000017\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":884000}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.failed,payment,<pay#8>,\"{\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":884000,\"\"reason\"\":\"\"Refusé par l'émetteur (simulation)\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#8>,\"{\"\"invoice\"\":\"\"FAC-000017\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":884000}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#10>,\"{\"\"order\"\":\"\"CMD-000020\"\",\"\"customer\"\":\"\"Snack Soleil (démo)\"\",\"\"amountMinor\"\":285000,\"\"offline\"\":false}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#11>,\"{\"\"order\"\":\"\"CMD-000019\"\",\"\"customer\"\":\"\"Hôtel Baie Corail (démo)\"\",\"\"amountMinor\"\":1801200,\"\"offline\"\":false}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#12>,\"{\"\"order\"\":\"\"CMD-000018\"\",\"\"customer\"\":\"\"Supermarché Plaza (démo)\"\",\"\"amountMinor\"\":732450,\"\"offline\"\":false}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#13>,\"{\"\"order\"\":\"\"CMD-000017\"\",\"\"customer\"\":\"\"Tabagie Centrale (démo)\"\",\"\"amountMinor\"\":884000,\"\"offline\"\":false}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,route.started,route,<rte#4>,\"{\"\"name\"\":\"\"Est - Flacq\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.loaded,route,<rte#4>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"products\"\":7}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#11>,\"{\"\"number\"\":\"\"CMD-000019\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#12>,\"{\"\"number\"\":\"\"CMD-000018\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#13>,\"{\"\"number\"\":\"\"CMD-000017\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#11>,\"{\"\"number\"\":\"\"CMD-000019\"\",\"\"routeId\"\":\"\"<rte#4>\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#11>,\"{\"\"number\"\":\"\"CMD-000019\"\",\"\"lines\"\":2}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#12>,\"{\"\"number\"\":\"\"CMD-000018\"\",\"\"routeId\"\":\"\"<rte#4>\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#12>,\"{\"\"number\"\":\"\"CMD-000018\"\",\"\"lines\"\":2}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#13>,\"{\"\"number\"\":\"\"CMD-000017\"\",\"\"routeId\"\":\"\"<rte#4>\"\"}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#13>,\"{\"\"number\"\":\"\"CMD-000017\"\",\"\"lines\"\":2}\"\r\n2026-10-15T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.created,route,<rte#4>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"day\"\":\"\"2026-10-15\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,day.closed,daily_close,2026-10-14,\"{\"\"day\"\":\"\"2026-10-14\"\",\"\"invoicedMinor\"\":4009600,\"\"toVerify\"\":0,\"\"openExceptions\"\":0}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,exception.approved,exception,<exc#1>,\"{\"\"type\"\":\"\"delivery_partial\"\",\"\"message\"\":\"\"Livraison partielle de CMD-000014 chez Boutique Bambou (démo) : Casier endommagé au déchargement\"\",\"\"note\"\":\"\"Avoir émis au commerce (démonstration)\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,statement.imported,bank_statement,<stm#3>,\"{\"\"filename\"\":\"\"releve-demo-2026-10-14.csv\"\",\"\"lines\"\":4,\"\"matched\"\":4,\"\"exceptions\"\":0,\"\"skipped\"\":0}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#9>,\"{\"\"invoice\"\":\"\"FAC-000016\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":307800,\"\"feeMinor\"\":2770,\"\"providerRef\"\":\"\"<ref-JCE#3>\"\",\"\"valueDate\"\":\"\"2026-10-14\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#10>,\"{\"\"invoice\"\":\"\"FAC-000013\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":535800,\"\"feeMinor\"\":8037,\"\"providerRef\"\":\"\"<ref-LNK#2>\"\",\"\"valueDate\"\":\"\"2026-10-14\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#11>,\"{\"\"invoice\"\":\"\"FAC-000014\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1474000,\"\"feeMinor\"\":14740,\"\"providerRef\"\":\"\"<ref-PS#2>\"\",\"\"valueDate\"\":\"\"2026-10-14\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#12>,\"{\"\"invoice\"\":\"\"FAC-000015\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":1692000,\"\"feeMinor\"\":29610,\"\"providerRef\"\":\"\"<ref-TPE#2>\"\",\"\"valueDate\"\":\"\"2026-10-14\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,route.closed,route,<rte#5>,\"{\"\"name\"\":\"\"Ouest - Tamarin\"\",\"\"invoicedMinor\"\":4009600,\"\"confirmedMinor\"\":4009600}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#9>,\"{\"\"invoice\"\":\"\"FAC-000016\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":307800,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#9>,\"{\"\"invoice\"\":\"\"FAC-000016\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":307800}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#12>,\"{\"\"invoice\"\":\"\"FAC-000015\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":1692000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#12>,\"{\"\"invoice\"\":\"\"FAC-000015\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":1692000}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#11>,\"{\"\"invoice\"\":\"\"FAC-000014\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1474000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#11>,\"{\"\"invoice\"\":\"\"FAC-000014\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1474000}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#10>,\"{\"\"invoice\"\":\"\"FAC-000013\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":535800,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#10>,\"{\"\"invoice\"\":\"\"FAC-000013\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":535800}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#14>,\"{\"\"order\"\":\"\"CMD-000016\"\",\"\"customer\"\":\"\"Supérette Belle Vue (démo)\"\",\"\"amountMinor\"\":307800,\"\"offline\"\":false}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#15>,\"{\"\"order\"\":\"\"CMD-000015\"\",\"\"customer\"\":\"\"Snack Soleil (démo)\"\",\"\"amountMinor\"\":1692000,\"\"offline\"\":false}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.partial,order,<ord#16>,\"{\"\"order\"\":\"\"CMD-000014\"\",\"\"customer\"\":\"\"Boutique Bambou (démo)\"\",\"\"amountMinor\"\":1474000,\"\"offline\"\":false}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#17>,\"{\"\"order\"\":\"\"CMD-000013\"\",\"\"customer\"\":\"\"Hôtel Baie Corail (démo)\"\",\"\"amountMinor\"\":535800,\"\"offline\"\":false}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,route.started,route,<rte#5>,\"{\"\"name\"\":\"\"Ouest - Tamarin\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.loaded,route,<rte#5>,\"{\"\"name\"\":\"\"Ouest - Tamarin\"\",\"\"products\"\":7}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#15>,\"{\"\"number\"\":\"\"CMD-000015\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#16>,\"{\"\"number\"\":\"\"CMD-000014\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#17>,\"{\"\"number\"\":\"\"CMD-000013\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#15>,\"{\"\"number\"\":\"\"CMD-000015\"\",\"\"routeId\"\":\"\"<rte#5>\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#15>,\"{\"\"number\"\":\"\"CMD-000015\"\",\"\"lines\"\":2}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#16>,\"{\"\"number\"\":\"\"CMD-000014\"\",\"\"routeId\"\":\"\"<rte#5>\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#16>,\"{\"\"number\"\":\"\"CMD-000014\"\",\"\"lines\"\":2}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#17>,\"{\"\"number\"\":\"\"CMD-000013\"\",\"\"routeId\"\":\"\"<rte#5>\"\"}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#17>,\"{\"\"number\"\":\"\"CMD-000013\"\",\"\"lines\"\":2}\"\r\n2026-10-14T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.created,route,<rte#5>,\"{\"\"name\"\":\"\"Ouest - Tamarin\"\",\"\"day\"\":\"\"2026-10-14\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,day.closed,daily_close,2026-10-13,\"{\"\"day\"\":\"\"2026-10-13\"\",\"\"invoicedMinor\"\":3651900,\"\"toVerify\"\":0,\"\"openExceptions\"\":0}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,statement.imported,bank_statement,<stm#4>,\"{\"\"filename\"\":\"\"releve-demo-2026-10-13.csv\"\",\"\"lines\"\":4,\"\"matched\"\":4,\"\"exceptions\"\":0,\"\"skipped\"\":0}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#13>,\"{\"\"invoice\"\":\"\"FAC-000009\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1104000,\"\"feeMinor\"\":11040,\"\"providerRef\"\":\"\"<ref-PS#3>\"\",\"\"valueDate\"\":\"\"2026-10-13\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#14>,\"{\"\"invoice\"\":\"\"FAC-000010\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":1347000,\"\"feeMinor\"\":23573,\"\"providerRef\"\":\"\"<ref-TPE#3>\"\",\"\"valueDate\"\":\"\"2026-10-13\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#15>,\"{\"\"invoice\"\":\"\"FAC-000012\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":363000,\"\"feeMinor\"\":5445,\"\"providerRef\"\":\"\"<ref-LNK#3>\"\",\"\"valueDate\"\":\"\"2026-10-13\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#16>,\"{\"\"invoice\"\":\"\"FAC-000011\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":837900,\"\"feeMinor\"\":7541,\"\"providerRef\"\":\"\"<ref-JCE#4>\"\",\"\"valueDate\"\":\"\"2026-10-13\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,route.closed,route,<rte#6>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"invoicedMinor\"\":3651900,\"\"confirmedMinor\"\":3651900}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#15>,\"{\"\"invoice\"\":\"\"FAC-000012\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":363000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#15>,\"{\"\"invoice\"\":\"\"FAC-000012\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":363000}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#16>,\"{\"\"invoice\"\":\"\"FAC-000011\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":837900,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#16>,\"{\"\"invoice\"\":\"\"FAC-000011\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":837900}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#14>,\"{\"\"invoice\"\":\"\"FAC-000010\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":1347000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#14>,\"{\"\"invoice\"\":\"\"FAC-000010\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":1347000}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#13>,\"{\"\"invoice\"\":\"\"FAC-000009\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1104000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#13>,\"{\"\"invoice\"\":\"\"FAC-000009\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1104000}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.failed,payment,<pay#17>,\"{\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":1104000,\"\"reason\"\":\"\"Refusé par l'émetteur (simulation)\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#17>,\"{\"\"invoice\"\":\"\"FAC-000009\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":1104000}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#18>,\"{\"\"order\"\":\"\"CMD-000012\"\",\"\"customer\"\":\"\"Restaurant Le Flamboyant (démo)\"\",\"\"amountMinor\"\":363000,\"\"offline\"\":false}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#19>,\"{\"\"order\"\":\"\"CMD-000011\"\",\"\"customer\"\":\"\"Supérette Belle Vue (démo)\"\",\"\"amountMinor\"\":837900,\"\"offline\"\":false}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#20>,\"{\"\"order\"\":\"\"CMD-000010\"\",\"\"customer\"\":\"\"Boutique Ti Lakaz (démo)\"\",\"\"amountMinor\"\":1347000,\"\"offline\"\":false}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#21>,\"{\"\"order\"\":\"\"CMD-000009\"\",\"\"customer\"\":\"\"Snack Soleil (démo)\"\",\"\"amountMinor\"\":1104000,\"\"offline\"\":false}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,route.started,route,<rte#6>,\"{\"\"name\"\":\"\"Est - Flacq\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.loaded,route,<rte#6>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"products\"\":7}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#19>,\"{\"\"number\"\":\"\"CMD-000011\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#20>,\"{\"\"number\"\":\"\"CMD-000010\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#21>,\"{\"\"number\"\":\"\"CMD-000009\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#19>,\"{\"\"number\"\":\"\"CMD-000011\"\",\"\"routeId\"\":\"\"<rte#6>\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#19>,\"{\"\"number\"\":\"\"CMD-000011\"\",\"\"lines\"\":2}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#20>,\"{\"\"number\"\":\"\"CMD-000010\"\",\"\"routeId\"\":\"\"<rte#6>\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#20>,\"{\"\"number\"\":\"\"CMD-000010\"\",\"\"lines\"\":2}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#21>,\"{\"\"number\"\":\"\"CMD-000009\"\",\"\"routeId\"\":\"\"<rte#6>\"\"}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#21>,\"{\"\"number\"\":\"\"CMD-000009\"\",\"\"lines\"\":2}\"\r\n2026-10-13T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.created,route,<rte#6>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"day\"\":\"\"2026-10-13\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,day.closed,daily_close,2026-10-12,\"{\"\"day\"\":\"\"2026-10-12\"\",\"\"invoicedMinor\"\":3778800,\"\"toVerify\"\":0,\"\"openExceptions\"\":0}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,statement.imported,bank_statement,<stm#5>,\"{\"\"filename\"\":\"\"releve-demo-2026-10-12.csv\"\",\"\"lines\"\":4,\"\"matched\"\":4,\"\"exceptions\"\":0,\"\"skipped\"\":0}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#18>,\"{\"\"invoice\"\":\"\"FAC-000006\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":765000,\"\"feeMinor\"\":6885,\"\"providerRef\"\":\"\"<ref-JCE#5>\"\",\"\"valueDate\"\":\"\"2026-10-12\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#19>,\"{\"\"invoice\"\":\"\"FAC-000007\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":1680000,\"\"feeMinor\"\":25200,\"\"providerRef\"\":\"\"<ref-LNK#4>\"\",\"\"valueDate\"\":\"\"2026-10-12\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#20>,\"{\"\"invoice\"\":\"\"FAC-000008\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":381900,\"\"feeMinor\"\":3819,\"\"providerRef\"\":\"\"<ref-PS#4>\"\",\"\"valueDate\"\":\"\"2026-10-12\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#21>,\"{\"\"invoice\"\":\"\"FAC-000005\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":951900,\"\"feeMinor\"\":16658,\"\"providerRef\"\":\"\"<ref-TPE#4>\"\",\"\"valueDate\"\":\"\"2026-10-12\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,route.closed,route,<rte#7>,\"{\"\"name\"\":\"\"Ouest - Tamarin\"\",\"\"invoicedMinor\"\":3778800,\"\"confirmedMinor\"\":3778800}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#20>,\"{\"\"invoice\"\":\"\"FAC-000008\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":381900,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#20>,\"{\"\"invoice\"\":\"\"FAC-000008\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":381900}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#19>,\"{\"\"invoice\"\":\"\"FAC-000007\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":1680000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#19>,\"{\"\"invoice\"\":\"\"FAC-000007\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":1680000}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#18>,\"{\"\"invoice\"\":\"\"FAC-000006\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":765000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#18>,\"{\"\"invoice\"\":\"\"FAC-000006\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":765000}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#21>,\"{\"\"invoice\"\":\"\"FAC-000005\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":951900,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,payment.initiated,payment,<pay#21>,\"{\"\"invoice\"\":\"\"FAC-000005\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":951900}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#22>,\"{\"\"order\"\":\"\"CMD-000008\"\",\"\"customer\"\":\"\"Supermarché Plaza (démo)\"\",\"\"amountMinor\"\":381900,\"\"offline\"\":false}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#23>,\"{\"\"order\"\":\"\"CMD-000007\"\",\"\"customer\"\":\"\"Restaurant Le Flamboyant (démo)\"\",\"\"amountMinor\"\":1680000,\"\"offline\"\":false}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#24>,\"{\"\"order\"\":\"\"CMD-000006\"\",\"\"customer\"\":\"\"Snack Lagon Bleu (démo)\"\",\"\"amountMinor\"\":765000,\"\"offline\"\":false}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,delivery.full,order,<ord#25>,\"{\"\"order\"\":\"\"CMD-000005\"\",\"\"customer\"\":\"\"Supérette Belle Vue (démo)\"\",\"\"amountMinor\"\":951900,\"\"offline\"\":false}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Ravi D. (démo),agent,route.started,route,<rte#7>,\"{\"\"name\"\":\"\"Ouest - Tamarin\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.loaded,route,<rte#7>,\"{\"\"name\"\":\"\"Ouest - Tamarin\"\",\"\"products\"\":7}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#23>,\"{\"\"number\"\":\"\"CMD-000007\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#24>,\"{\"\"number\"\":\"\"CMD-000006\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#25>,\"{\"\"number\"\":\"\"CMD-000005\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#23>,\"{\"\"number\"\":\"\"CMD-000007\"\",\"\"routeId\"\":\"\"<rte#7>\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#23>,\"{\"\"number\"\":\"\"CMD-000007\"\",\"\"lines\"\":2}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#24>,\"{\"\"number\"\":\"\"CMD-000006\"\",\"\"routeId\"\":\"\"<rte#7>\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#24>,\"{\"\"number\"\":\"\"CMD-000006\"\",\"\"lines\"\":2}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#25>,\"{\"\"number\"\":\"\"CMD-000005\"\",\"\"routeId\"\":\"\"<rte#7>\"\"}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#25>,\"{\"\"number\"\":\"\"CMD-000005\"\",\"\"lines\"\":2}\"\r\n2026-10-12T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.created,route,<rte#7>,\"{\"\"name\"\":\"\"Ouest - Tamarin\"\",\"\"day\"\":\"\"2026-10-12\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,day.closed,daily_close,2026-10-11,\"{\"\"day\"\":\"\"2026-10-11\"\",\"\"invoicedMinor\"\":3744500,\"\"toVerify\"\":0,\"\"openExceptions\"\":0}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,exception.approved,exception,<exc#2>,\"{\"\"type\"\":\"\"delivery_partial\"\",\"\"message\"\":\"\"Livraison partielle de CMD-000002 chez Tabagie Centrale (démo) : Casier endommagé au déchargement\"\",\"\"note\"\":\"\"Avoir émis au commerce (démonstration)\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,statement.imported,bank_statement,<stm#6>,\"{\"\"filename\"\":\"\"releve-demo-2026-10-11.csv\"\",\"\"lines\"\":4,\"\"matched\"\":4,\"\"exceptions\"\":0,\"\"skipped\"\":0}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#22>,\"{\"\"invoice\"\":\"\"FAC-000001\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":648000,\"\"feeMinor\"\":5832,\"\"providerRef\"\":\"\"<ref-JCE#6>\"\",\"\"valueDate\"\":\"\"2026-10-11\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#23>,\"{\"\"invoice\"\":\"\"FAC-000004\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":441000,\"\"feeMinor\"\":7718,\"\"providerRef\"\":\"\"<ref-TPE#5>\"\",\"\"valueDate\"\":\"\"2026-10-11\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#24>,\"{\"\"invoice\"\":\"\"FAC-000003\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1263500,\"\"feeMinor\"\":12635,\"\"providerRef\"\":\"\"<ref-PS#5>\"\",\"\"valueDate\"\":\"\"2026-10-11\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Sophie M. (démo),finance,payment.settled,payment,<pay#25>,\"{\"\"invoice\"\":\"\"FAC-000002\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":1392000,\"\"feeMinor\"\":20880,\"\"providerRef\"\":\"\"<ref-LNK#5>\"\",\"\"valueDate\"\":\"\"2026-10-11\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,route.closed,route,<rte#8>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"invoicedMinor\"\":3744500,\"\"confirmedMinor\"\":3744500}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#23>,\"{\"\"invoice\"\":\"\"FAC-000004\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":441000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#23>,\"{\"\"invoice\"\":\"\"FAC-000004\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":441000}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#24>,\"{\"\"invoice\"\":\"\"FAC-000003\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1263500,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#24>,\"{\"\"invoice\"\":\"\"FAC-000003\"\",\"\"method\"\":\"\"paystation\"\",\"\"amountMinor\"\":1263500}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#25>,\"{\"\"invoice\"\":\"\"FAC-000002\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":1392000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#25>,\"{\"\"invoice\"\":\"\"FAC-000002\"\",\"\"method\"\":\"\"link\"\",\"\"amountMinor\"\":1392000}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.confirmed,payment,<pay#22>,\"{\"\"invoice\"\":\"\"FAC-000001\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":648000,\"\"via\"\":\"\"notification\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#22>,\"{\"\"invoice\"\":\"\"FAC-000001\"\",\"\"method\"\":\"\"juice\"\",\"\"amountMinor\"\":648000}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,system,system,payment.failed,payment,<pay#26>,\"{\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":648000,\"\"reason\"\":\"\"Refusé par l'émetteur (simulation)\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,payment.initiated,payment,<pay#26>,\"{\"\"invoice\"\":\"\"FAC-000001\"\",\"\"method\"\":\"\"card_tpe\"\",\"\"amountMinor\"\":648000}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#26>,\"{\"\"order\"\":\"\"CMD-000004\"\",\"\"customer\"\":\"\"Boutique Bambou (démo)\"\",\"\"amountMinor\"\":441000,\"\"offline\"\":false}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#27>,\"{\"\"order\"\":\"\"CMD-000003\"\",\"\"customer\"\":\"\"Supermarché Plaza (démo)\"\",\"\"amountMinor\"\":1263500,\"\"offline\"\":false}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.partial,order,<ord#28>,\"{\"\"order\"\":\"\"CMD-000002\"\",\"\"customer\"\":\"\"Tabagie Centrale (démo)\"\",\"\"amountMinor\"\":1392000,\"\"offline\"\":false}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,delivery.full,order,<ord#29>,\"{\"\"order\"\":\"\"CMD-000001\"\",\"\"customer\"\":\"\"Restaurant Le Flamboyant (démo)\"\",\"\"amountMinor\"\":648000,\"\"offline\"\":false}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Nadia P. (démo),agent,route.started,route,<rte#8>,\"{\"\"name\"\":\"\"Est - Flacq\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.loaded,route,<rte#8>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"products\"\":6}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#27>,\"{\"\"number\"\":\"\"CMD-000003\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#28>,\"{\"\"number\"\":\"\"CMD-000002\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.prepared,order,<ord#29>,\"{\"\"number\"\":\"\"CMD-000001\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#27>,\"{\"\"number\"\":\"\"CMD-000003\"\",\"\"routeId\"\":\"\"<rte#8>\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#27>,\"{\"\"number\"\":\"\"CMD-000003\"\",\"\"lines\"\":2}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#28>,\"{\"\"number\"\":\"\"CMD-000002\"\",\"\"routeId\"\":\"\"<rte#8>\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#28>,\"{\"\"number\"\":\"\"CMD-000002\"\",\"\"lines\"\":2}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.assigned,order,<ord#29>,\"{\"\"number\"\":\"\"CMD-000001\"\",\"\"routeId\"\":\"\"<rte#8>\"\"}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,order.created,order,<ord#29>,\"{\"\"number\"\":\"\"CMD-000001\"\",\"\"lines\"\":2}\"\r\n2026-10-11T04:00:00.000Z,Boissons Démo Ltée,Kevin L. (démo),dispatcher,route.created,route,<rte#8>,\"{\"\"name\"\":\"\"Est - Flacq\"\",\"\"day\"\":\"\"2026-10-11\"\"}\"\r\n"
+    }
+  ]
+}

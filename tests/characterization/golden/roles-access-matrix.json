@@ -1,0 +1,1221 @@
+{
+  "scenario": "roles-access-matrix",
+  "description": "Each role of each company hits the same set of endpoints: allowed, 403 forbidden or 403 wrong vertical.",
+  "transcript": [
+    {
+      "step": "login u_platform",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_platform"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_platform /api/agent/routes",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/centrale/dashboard",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/centrale/stock",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/exceptions",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/exceptions?domain=finance",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/finance/journal",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/finance/close",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/admin/users",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/admin/settings",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/platform/companies",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/connectors",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_platform /api/club/dashboard",
+      "as": "u_platform",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_bd_admin",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_bd_admin /api/agent/routes",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/centrale/dashboard",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/centrale/stock",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/exceptions",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/exceptions?domain=finance",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/finance/journal",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/finance/close",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/admin/users",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/admin/settings",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/platform/companies",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/connectors",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_admin /api/club/dashboard",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_bd_centrale",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_centrale"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_bd_centrale /api/agent/routes",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/centrale/dashboard",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/centrale/stock",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/exceptions",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/exceptions?domain=finance",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/finance/journal",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/finance/close",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/admin/users",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/admin/settings",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/platform/companies",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/connectors",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_centrale /api/club/dashboard",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_bd_finance",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_finance"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_bd_finance /api/agent/routes",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/centrale/dashboard",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/centrale/stock",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/exceptions",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/exceptions?domain=finance",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/finance/journal",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/finance/close",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/admin/users",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/admin/settings",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/platform/companies",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/connectors",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_finance /api/club/dashboard",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_bd_agent1",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_bd_agent1 /api/agent/routes",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/centrale/dashboard",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/centrale/stock",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/exceptions",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/exceptions?domain=finance",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/finance/journal",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/finance/close",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/admin/users",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/admin/settings",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/platform/companies",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/connectors",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_bd_agent1 /api/club/dashboard",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_cs_admin",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_cs_admin /api/agent/routes",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/centrale/dashboard",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/centrale/stock",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/exceptions",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/exceptions?domain=finance",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/finance/journal",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/finance/close",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/admin/users",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/admin/settings",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/platform/companies",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/connectors",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_admin /api/club/dashboard",
+      "as": "u_cs_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_cs_secretariat",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_secretariat"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_cs_secretariat /api/agent/routes",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/centrale/dashboard",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/centrale/stock",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/exceptions",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/exceptions?domain=finance",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/finance/journal",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/finance/close",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/admin/users",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/admin/settings",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/platform/companies",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/connectors",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_secretariat /api/club/dashboard",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_cs_compta",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_compta"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_cs_compta /api/agent/routes",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/centrale/dashboard",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/centrale/stock",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/exceptions",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/exceptions?domain=finance",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/finance/journal",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/finance/close",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/admin/users",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/admin/settings",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/platform/companies",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/connectors",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_compta /api/club/dashboard",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "login u_cs_accueil",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_accueil"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "u_cs_accueil /api/agent/routes",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/centrale/dashboard",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/centrale/stock",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/exceptions",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/exceptions?domain=finance",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/finance/journal",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/journal"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/finance/close",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/close"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/admin/users",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/admin/settings",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/settings"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/platform/companies",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/platform/companies"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/connectors",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/connectors"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "u_cs_accueil /api/club/dashboard",
+      "as": "u_cs_accueil",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dashboard"
+      },
+      "status": 403,
+      "response": "<not recorded>"
+    }
+  ]
+}

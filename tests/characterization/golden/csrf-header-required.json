@@ -1,0 +1,100 @@
+{
+  "scenario": "csrf-header-required",
+  "description": "A state-changing request without the X-Requested-With header is refused (403 csrf); webhooks are exempt.",
+  "transcript": [
+    {
+      "step": "login without CSRF header",
+      "as": null,
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "csrf",
+          "message": "Requête refusée."
+        }
+      }
+    },
+    {
+      "step": "login u_bd_agent1",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "sync without CSRF header",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": []
+        }
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "csrf",
+          "message": "Requête refusée."
+        }
+      }
+    },
+    {
+      "step": "sync with CSRF header",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": []
+        }
+      },
+      "status": 200,
+      "response": {
+        "results": []
+      }
+    },
+    {
+      "step": "logout",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/logout",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "session after logout",
+      "as": null,
+      "request": {
+        "method": "GET",
+        "path": "/api/session"
+      },
+      "status": 200,
+      "response": {
+        "demoMode": true,
+        "version": "0.1.0",
+        "today": "2026-10-17",
+        "user": null
+      }
+    }
+  ]
+}

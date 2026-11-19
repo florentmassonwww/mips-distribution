@@ -1,0 +1,3196 @@
+{
+  "scenario": "agent-route-close",
+  "description": "Closing the route: summary of delivered, refused, collected; remaining stock returned to the warehouse; closed route is read-only.",
+  "transcript": [
+    {
+      "step": "login u_bd_agent1",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "agent routes",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<rte#1>",
+          "company_id": "co_bd",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 07 (démo)",
+          "status": "loaded",
+          "started_at": null,
+          "closed_at": null,
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 0,
+          "invoiced_minor": 0,
+          "paid_minor": 0
+        },
+        {
+          "id": "<rte#2>",
+          "company_id": "co_bd",
+          "name": "Sud - Mahébourg",
+          "day": "2026-10-16",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 12 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-16T04:00:00.000Z",
+          "closed_at": "2026-10-16T04:00:00.000Z",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 3,
+          "orders_total": 2,
+          "orders_done": 2,
+          "invoiced_minor": 2885000,
+          "paid_minor": 2885000
+        },
+        {
+          "id": "<rte#3>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-14",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-14T04:00:00.000Z",
+          "closed_at": "2026-10-14T04:00:00.000Z",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 4009600,
+          "paid_minor": 4009600
+        },
+        {
+          "id": "<rte#4>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-12",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-12T04:00:00.000Z",
+          "closed_at": "2026-10-12T04:00:00.000Z",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 3778800,
+          "paid_minor": 3778800
+        }
+      ]
+    },
+    {
+      "step": "start route",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/routes/<rte#1>/start",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "route bundle",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/bundle"
+      },
+      "status": 200,
+      "response": {
+        "generatedAt": "2026-10-17T04:00:03.000Z",
+        "route": {
+          "id": "<rte#1>",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "vehicle": "Camion 07 (démo)",
+          "status": "in_progress"
+        },
+        "stops": [
+          {
+            "customer_id": "c_bd_tilakaz",
+            "seq": 1,
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "address": "Route Royale, Grand-Baie",
+            "zone": "Nord",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_bellevue",
+            "seq": 2,
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "zone": "Nord",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "customer_id": "c_bd_lagon",
+            "seq": 3,
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "address": "Front de mer, Trou-aux-Biches",
+            "zone": "Nord",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_flamboyant",
+            "seq": 4,
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "address": "Rue du Marché, Triolet",
+            "zone": "Nord",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          }
+        ],
+        "orders": [
+          {
+            "id": "<ord#1>",
+            "number": "CMD-000024",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_tilakaz",
+            "note": "Livrer avant 11 h",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#1>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#2>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 10,
+                "qty_delivered": 0,
+                "unit_price_minor": 39000
+              },
+              {
+                "id": "<ol#3>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_eau-150",
+                "qty_ordered": 12,
+                "qty_delivered": 0,
+                "unit_price_minor": 15000
+              }
+            ]
+          },
+          {
+            "id": "<ord#2>",
+            "number": "CMD-000025",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_bellevue",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#4>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 24,
+                "qty_delivered": 0,
+                "unit_price_minor": 37050
+              },
+              {
+                "id": "<ol#5>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_cit-33",
+                "qty_ordered": 8,
+                "qty_delivered": 0,
+                "unit_price_minor": 49400
+              },
+              {
+                "id": "<ol#6>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_jus-100",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 74100
+              }
+            ]
+          },
+          {
+            "id": "<ord#3>",
+            "number": "CMD-000026",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_lagon",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#7>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 4,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#8>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_eag-50",
+                "qty_ordered": 5,
+                "qty_delivered": 0,
+                "unit_price_minor": 26000
+              }
+            ]
+          }
+        ],
+        "invoices": [],
+        "products": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000
+          }
+        ],
+        "priceLists": {
+          "pl_bd_gc": {
+            "p_bd_bie-33": 109250,
+            "p_bd_cit-33": 49400,
+            "p_bd_col-150": 37050,
+            "p_bd_eag-50": 24700,
+            "p_bd_eau-150": 14250,
+            "p_bd_ene-25": 125400,
+            "p_bd_jus-100": 74100,
+            "p_bd_mal-33": 65550
+          }
+        },
+        "stock": {
+          "p_bd_bie-33": 20,
+          "p_bd_cit-33": 8,
+          "p_bd_col-150": 64,
+          "p_bd_eag-50": 5,
+          "p_bd_eau-150": 52,
+          "p_bd_ene-25": 4,
+          "p_bd_jus-100": 6,
+          "p_bd_mal-33": 8
+        },
+        "customers": [
+          {
+            "id": "c_bd_bambou",
+            "name": "Boutique Bambou (démo)",
+            "code": "C008",
+            "zone": "Sud",
+            "address": "Rue des Tulipes, Rose-Belle",
+            "phone": "+230 5000 1007",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_tilakaz",
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "zone": "Nord",
+            "address": "Route Royale, Grand-Baie",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_corail",
+            "name": "Hôtel Baie Corail (démo)",
+            "code": "C007",
+            "zone": "Sud",
+            "address": "Route côtière, Mahébourg",
+            "phone": "+230 5000 1006",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_flamboyant",
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "zone": "Nord",
+            "address": "Rue du Marché, Triolet",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_lagon",
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "zone": "Nord",
+            "address": "Front de mer, Trou-aux-Biches",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_soleil",
+            "name": "Snack Soleil (démo)",
+            "code": "C009",
+            "zone": "Sud",
+            "address": "Place du Marché, Mahébourg",
+            "phone": "+230 5000 1008",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_plaza",
+            "name": "Supermarché Plaza (démo)",
+            "code": "C006",
+            "zone": "Centre",
+            "address": "Route Saint-Jean, Quatre-Bornes",
+            "phone": "+230 5000 1005",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_bellevue",
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "zone": "Nord",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_central",
+            "name": "Tabagie Centrale (démo)",
+            "code": "C005",
+            "zone": "Centre",
+            "address": "Rue Châteauneuf, Curepipe",
+            "phone": "+230 5000 1004",
+            "price_list_id": null
+          }
+        ],
+        "methods": [
+          {
+            "method": "paystation",
+            "label": "PayStation"
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)"
+          },
+          {
+            "method": "juice",
+            "label": "Juice"
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien"
+          }
+        ]
+      }
+    },
+    {
+      "step": "deliver one order",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": [
+            {
+              "id": "act-close-00001",
+              "type": "deliver",
+              "payload": {
+                "orderId": "<ord#1>",
+                "lines": [
+                  {
+                    "lineId": "<ol#1>",
+                    "qtyDelivered": 6
+                  },
+                  {
+                    "lineId": "<ol#2>",
+                    "qtyDelivered": 10
+                  },
+                  {
+                    "lineId": "<ol#3>",
+                    "qtyDelivered": 12
+                  }
+                ],
+                "returns": [],
+                "reason": "",
+                "pod": {
+                  "name": "Réceptionnaire (démo)",
+                  "note": ""
+                },
+                "at": "2026-10-17T04:30:00.000Z"
+              }
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "results": [
+          {
+            "id": "act-close-00001",
+            "status": "applied",
+            "result": {
+              "orderId": "<ord#1>",
+              "orderNumber": "CMD-000024",
+              "outcome": "full",
+              "invoiceId": "<inv#1>",
+              "invoiceNumber": "FAC-000024",
+              "amountMinor": 1260000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "step": "login u_bd_centrale",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_centrale"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "warehouse before close",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 200,
+      "response": {
+        "warehouse": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000,
+            "qty": 333,
+            "on_vehicles": 14,
+            "reserved": 20
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000,
+            "qty": 455,
+            "on_vehicles": 54,
+            "reserved": 6
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000,
+            "qty": 159,
+            "on_vehicles": 8,
+            "reserved": 0
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000,
+            "qty": 74,
+            "on_vehicles": 4,
+            "reserved": 6
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000,
+            "qty": 260,
+            "on_vehicles": 5,
+            "reserved": 20
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000,
+            "qty": 756,
+            "on_vehicles": 40,
+            "reserved": 60
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000,
+            "qty": 222,
+            "on_vehicles": 6,
+            "reserved": 15
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000,
+            "qty": 307,
+            "on_vehicles": 8,
+            "reserved": 0
+          }
+        ],
+        "movements": [
+          {
+            "id": "<mv#1>",
+            "at": "2026-10-17T04:00:04.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000024",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#2>",
+            "at": "2026-10-17T04:00:04.000Z",
+            "type": "delivery",
+            "qty": -10,
+            "ref": "CMD-000024",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#3>",
+            "at": "2026-10-17T04:00:04.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000024",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#4>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -4,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#5>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -8,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#6>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#7>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -52,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#8>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -5,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#9>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -64,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#10>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -8,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#11>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -20,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#12>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#13>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "unload",
+            "qty": 13,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#14>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "sale",
+            "qty": -4,
+            "ref": "CMD-000023",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#15>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "sale",
+            "qty": -8,
+            "ref": "CMD-000023",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#16>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000022",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#17>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -11,
+            "ref": "CMD-000022",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#18>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -30,
+            "ref": "CMD-000021",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#19>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -10,
+            "ref": "CMD-000021",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#20>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -10,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#21>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -30,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#22>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -32,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#23>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#24>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -10,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#25>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#26>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "unload",
+            "qty": 7,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#27>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000020",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#28>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "sale",
+            "qty": -5,
+            "ref": "CMD-000020",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#29>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000019",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#30>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000019",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#31>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -9,
+            "ref": "CMD-000018",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#32>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -10,
+            "ref": "CMD-000018",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#33>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000017",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#34>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -8,
+            "ref": "CMD-000017",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#35>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#36>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -9,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#37>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#38>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#39>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -22,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#40>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#41>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -8,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#42>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#43>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "unload",
+            "qty": 1,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#44>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#45>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000016",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#46>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000016",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#47>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000015",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#48>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -4,
+            "ref": "CMD-000015",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#49>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -9,
+            "ref": "CMD-000014",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#50>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -11,
+            "ref": "CMD-000014",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#51>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000013",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#52>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -10,
+            "ref": "CMD-000013",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#53>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#54>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#55>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -4,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#56>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -9,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#57>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -22,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#58>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#59>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#60>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#61>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "unload",
+            "qty": 5,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#62>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000012",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#63>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "sale",
+            "qty": -7,
+            "ref": "CMD-000012",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#64>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000011",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#65>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000011",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#66>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -9,
+            "ref": "CMD-000010",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#67>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -4,
+            "ref": "CMD-000010",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#68>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000009",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#69>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000009",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#70>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#71>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#72>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -4,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#73>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#74>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#75>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -24,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#76>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -9,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#77>",
+            "at": "2026-10-12T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#78>",
+            "at": "2026-10-12T04:00:00.000Z",
+            "type": "unload",
+            "qty": 4,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#79>",
+            "at": "2026-10-12T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000008",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#80>",
+            "at": "2026-10-12T04:00:00.000Z",
+            "type": "sale",
+            "qty": -8,
+            "ref": "CMD-000008",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          }
+        ]
+      }
+    },
+    {
+      "step": "login u_bd_agent1",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "close refused while orders are open",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/routes/<rte#1>/close",
+        "body": {}
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "orders_open",
+          "message": "Commandes non traitées : CMD-000025, CMD-000026. Livrez-les ou déclarez-les non livrées."
+        }
+      }
+    },
+    {
+      "step": "summary before close",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/summary"
+      },
+      "status": 200,
+      "response": {
+        "route": {
+          "id": "<rte#1>",
+          "company_id": "co_bd",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 07 (démo)",
+          "status": "in_progress",
+          "started_at": "2026-10-17T04:00:02.000Z",
+          "closed_at": null,
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "agent": "Ravi D. (démo)"
+        },
+        "orders": {
+          "total": 3,
+          "toDeliver": 2,
+          "delivered": 1,
+          "partial": 0,
+          "refused": 0,
+          "routeSales": 0
+        },
+        "money": {
+          "invoiced": 1260000,
+          "confirmed": 0,
+          "pending": 0,
+          "toVerify": 0,
+          "settled": 0
+        },
+        "byMethod": [],
+        "stock": [
+          {
+            "product_id": "p_bd_bie-33",
+            "name": "Bière blonde 33 cl",
+            "sku": "BIE-33",
+            "unit": "casier de 24",
+            "loaded_qty": 20,
+            "qty": 14,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_col-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "sku": "COL-150",
+            "unit": "pack de 6",
+            "loaded_qty": 64,
+            "qty": 54,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_mal-33",
+            "name": "Boisson maltée 33 cl",
+            "sku": "MAL-33",
+            "unit": "casier de 24",
+            "loaded_qty": 8,
+            "qty": 8,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_ene-25",
+            "name": "Boisson énergisante 25 cl",
+            "sku": "ENE-25",
+            "unit": "pack de 24",
+            "loaded_qty": 4,
+            "qty": 4,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_eag-50",
+            "name": "Eau gazeuse 50 cl",
+            "sku": "EAG-50",
+            "unit": "pack de 12",
+            "loaded_qty": 5,
+            "qty": 5,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_eau-150",
+            "name": "Eau plate 1,5 L",
+            "sku": "EAU-150",
+            "unit": "pack de 6",
+            "loaded_qty": 52,
+            "qty": 40,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_jus-100",
+            "name": "Jus de fruits 1 L",
+            "sku": "JUS-100",
+            "unit": "carton de 12",
+            "loaded_qty": 6,
+            "qty": 6,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_cit-33",
+            "name": "Soda citron 33 cl",
+            "sku": "CIT-33",
+            "unit": "casier de 24",
+            "loaded_qty": 8,
+            "qty": 8,
+            "returned_qty": 0
+          }
+        ]
+      }
+    },
+    {
+      "step": "deliver one more, declare the last one not delivered",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": [
+            {
+              "id": "act-close-00002",
+              "type": "deliver",
+              "payload": {
+                "orderId": "<ord#2>",
+                "lines": [
+                  {
+                    "lineId": "<ol#4>",
+                    "qtyDelivered": 24
+                  },
+                  {
+                    "lineId": "<ol#5>",
+                    "qtyDelivered": 8
+                  },
+                  {
+                    "lineId": "<ol#6>",
+                    "qtyDelivered": 6
+                  }
+                ],
+                "returns": [],
+                "reason": "",
+                "pod": {
+                  "name": "Réceptionnaire (démo)",
+                  "note": ""
+                },
+                "at": "2026-10-17T04:30:00.000Z"
+              }
+            },
+            {
+              "id": "act-close-00003",
+              "type": "deliver",
+              "payload": {
+                "orderId": "<ord#3>",
+                "lines": [
+                  {
+                    "lineId": "<ol#7>",
+                    "qtyDelivered": 0
+                  },
+                  {
+                    "lineId": "<ol#8>",
+                    "qtyDelivered": 0
+                  }
+                ],
+                "returns": [],
+                "reason": "Client absent (démo)",
+                "pod": {
+                  "name": "",
+                  "note": ""
+                },
+                "at": "2026-10-17T04:30:00.000Z"
+              }
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "results": [
+          {
+            "id": "act-close-00002",
+            "status": "applied",
+            "result": {
+              "orderId": "<ord#2>",
+              "orderNumber": "CMD-000025",
+              "outcome": "full",
+              "invoiceId": "<inv#2>",
+              "invoiceNumber": "FAC-000025",
+              "amountMinor": 1729000
+            }
+          },
+          {
+            "id": "act-close-00003",
+            "status": "applied",
+            "result": {
+              "orderId": "<ord#3>",
+              "orderNumber": "CMD-000026",
+              "outcome": "refused",
+              "invoiceId": null,
+              "invoiceNumber": null,
+              "amountMinor": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "step": "close route",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/routes/<rte#1>/close",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "route": {
+          "id": "<rte#1>",
+          "company_id": "co_bd",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 07 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-17T04:00:02.000Z",
+          "closed_at": "2026-10-17T04:00:11.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "agent": "Ravi D. (démo)"
+        },
+        "orders": {
+          "total": 3,
+          "toDeliver": 0,
+          "delivered": 2,
+          "partial": 0,
+          "refused": 1,
+          "routeSales": 0
+        },
+        "money": {
+          "invoiced": 2989000,
+          "confirmed": 0,
+          "pending": 0,
+          "toVerify": 0,
+          "settled": 0
+        },
+        "byMethod": [],
+        "stock": [
+          {
+            "product_id": "p_bd_bie-33",
+            "name": "Bière blonde 33 cl",
+            "sku": "BIE-33",
+            "unit": "casier de 24",
+            "loaded_qty": 20,
+            "qty": 14,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_col-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "sku": "COL-150",
+            "unit": "pack de 6",
+            "loaded_qty": 64,
+            "qty": 30,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_mal-33",
+            "name": "Boisson maltée 33 cl",
+            "sku": "MAL-33",
+            "unit": "casier de 24",
+            "loaded_qty": 8,
+            "qty": 8,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_ene-25",
+            "name": "Boisson énergisante 25 cl",
+            "sku": "ENE-25",
+            "unit": "pack de 24",
+            "loaded_qty": 4,
+            "qty": 4,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_eag-50",
+            "name": "Eau gazeuse 50 cl",
+            "sku": "EAG-50",
+            "unit": "pack de 12",
+            "loaded_qty": 5,
+            "qty": 5,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_eau-150",
+            "name": "Eau plate 1,5 L",
+            "sku": "EAU-150",
+            "unit": "pack de 6",
+            "loaded_qty": 52,
+            "qty": 40,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_jus-100",
+            "name": "Jus de fruits 1 L",
+            "sku": "JUS-100",
+            "unit": "carton de 12",
+            "loaded_qty": 6,
+            "qty": 0,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_cit-33",
+            "name": "Soda citron 33 cl",
+            "sku": "CIT-33",
+            "unit": "casier de 24",
+            "loaded_qty": 8,
+            "qty": 0,
+            "returned_qty": 0
+          }
+        ]
+      }
+    },
+    {
+      "step": "sync after close",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": [
+            {
+              "id": "act-close-00004",
+              "type": "deliver",
+              "payload": {
+                "orderId": "<ord#1>",
+                "lines": [
+                  {
+                    "lineId": "<ol#1>",
+                    "qtyDelivered": 6
+                  },
+                  {
+                    "lineId": "<ol#2>",
+                    "qtyDelivered": 10
+                  },
+                  {
+                    "lineId": "<ol#3>",
+                    "qtyDelivered": 12
+                  }
+                ],
+                "returns": [],
+                "reason": "",
+                "pod": {
+                  "name": "Réceptionnaire (démo)",
+                  "note": ""
+                },
+                "at": "2026-10-17T04:30:00.000Z"
+              }
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "results": [
+          {
+            "id": "act-close-00004",
+            "status": "rejected",
+            "code": "route_not_started",
+            "message": "La tournée n'est pas en cours."
+          }
+        ]
+      }
+    },
+    {
+      "step": "close twice",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/routes/<rte#1>/close",
+        "body": {}
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "bad_status",
+          "message": "Seule une tournée en cours peut être clôturée."
+        }
+      }
+    },
+    {
+      "step": "login u_bd_centrale",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_centrale"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "warehouse after close",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/stock"
+      },
+      "status": 200,
+      "response": {
+        "warehouse": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000,
+            "qty": 347,
+            "on_vehicles": 0,
+            "reserved": 20
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000,
+            "qty": 485,
+            "on_vehicles": 0,
+            "reserved": 6
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000,
+            "qty": 167,
+            "on_vehicles": 0,
+            "reserved": 0
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000,
+            "qty": 78,
+            "on_vehicles": 0,
+            "reserved": 6
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000,
+            "qty": 265,
+            "on_vehicles": 0,
+            "reserved": 20
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000,
+            "qty": 796,
+            "on_vehicles": 0,
+            "reserved": 60
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000,
+            "qty": 222,
+            "on_vehicles": 0,
+            "reserved": 15
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000,
+            "qty": 307,
+            "on_vehicles": 0,
+            "reserved": 0
+          }
+        ],
+        "movements": [
+          {
+            "id": "<mv#81>",
+            "at": "2026-10-17T04:00:11.000Z",
+            "type": "unload",
+            "qty": 8,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#82>",
+            "at": "2026-10-17T04:00:11.000Z",
+            "type": "unload",
+            "qty": 4,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#83>",
+            "at": "2026-10-17T04:00:11.000Z",
+            "type": "unload",
+            "qty": 40,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#84>",
+            "at": "2026-10-17T04:00:11.000Z",
+            "type": "unload",
+            "qty": 5,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#85>",
+            "at": "2026-10-17T04:00:11.000Z",
+            "type": "unload",
+            "qty": 30,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#86>",
+            "at": "2026-10-17T04:00:11.000Z",
+            "type": "unload",
+            "qty": 14,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#87>",
+            "at": "2026-10-17T04:00:10.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000025",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#88>",
+            "at": "2026-10-17T04:00:10.000Z",
+            "type": "delivery",
+            "qty": -8,
+            "ref": "CMD-000025",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#89>",
+            "at": "2026-10-17T04:00:10.000Z",
+            "type": "delivery",
+            "qty": -24,
+            "ref": "CMD-000025",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#1>",
+            "at": "2026-10-17T04:00:04.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000024",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#2>",
+            "at": "2026-10-17T04:00:04.000Z",
+            "type": "delivery",
+            "qty": -10,
+            "ref": "CMD-000024",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#3>",
+            "at": "2026-10-17T04:00:04.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000024",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#4>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -4,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#5>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -8,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#6>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#7>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -52,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#8>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -5,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#9>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -64,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#10>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -8,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#11>",
+            "at": "2026-10-17T04:00:00.000Z",
+            "type": "load",
+            "qty": -20,
+            "ref": "Nord - Grand-Baie",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Nord - Grand-Baie"
+          },
+          {
+            "id": "<mv#12>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#13>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "unload",
+            "qty": 13,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#14>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "sale",
+            "qty": -4,
+            "ref": "CMD-000023",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#15>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "sale",
+            "qty": -8,
+            "ref": "CMD-000023",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#16>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000022",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#17>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -11,
+            "ref": "CMD-000022",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#18>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -30,
+            "ref": "CMD-000021",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#19>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -10,
+            "ref": "CMD-000021",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#20>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -10,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#21>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -30,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#22>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -32,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#23>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#24>",
+            "at": "2026-10-16T04:00:00.000Z",
+            "type": "load",
+            "qty": -10,
+            "ref": "Sud - Mahébourg",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Sud - Mahébourg"
+          },
+          {
+            "id": "<mv#25>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#26>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "unload",
+            "qty": 7,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#27>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000020",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#28>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "sale",
+            "qty": -5,
+            "ref": "CMD-000020",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#29>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000019",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#30>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000019",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#31>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -9,
+            "ref": "CMD-000018",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#32>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -10,
+            "ref": "CMD-000018",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#33>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000017",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#34>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -8,
+            "ref": "CMD-000017",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#35>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#36>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -9,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#37>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#38>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#39>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -22,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#40>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#41>",
+            "at": "2026-10-15T04:00:00.000Z",
+            "type": "load",
+            "qty": -8,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Soda citron 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#42>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#43>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "unload",
+            "qty": 1,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#44>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#45>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000016",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#46>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000016",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#47>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000015",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#48>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -4,
+            "ref": "CMD-000015",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#49>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -9,
+            "ref": "CMD-000014",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#50>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -11,
+            "ref": "CMD-000014",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#51>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000013",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#52>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -10,
+            "ref": "CMD-000013",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Ravi D. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#53>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#54>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#55>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -4,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#56>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -9,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#57>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -22,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#58>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#59>",
+            "at": "2026-10-14T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Ouest - Tamarin",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Ouest - Tamarin"
+          },
+          {
+            "id": "<mv#60>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "unload",
+            "qty": 6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#61>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "unload",
+            "qty": 5,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#62>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "sale",
+            "qty": -6,
+            "ref": "CMD-000012",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#63>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "sale",
+            "qty": -7,
+            "ref": "CMD-000012",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#64>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000011",
+            "note": "",
+            "product": "Boisson gazeuse cola 1,5 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#65>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000011",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#66>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -9,
+            "ref": "CMD-000010",
+            "note": "",
+            "product": "Bière blonde 33 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#67>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -4,
+            "ref": "CMD-000010",
+            "note": "",
+            "product": "Jus de fruits 1 L",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#68>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -6,
+            "ref": "CMD-000009",
+            "note": "",
+            "product": "Boisson énergisante 25 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#69>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "delivery",
+            "qty": -12,
+            "ref": "CMD-000009",
+            "note": "",
+            "product": "Eau gazeuse 50 cl",
+            "actor": "Nadia P. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#70>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -12,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Eau plate 1,5 L",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          },
+          {
+            "id": "<mv#71>",
+            "at": "2026-10-13T04:00:00.000Z",
+            "type": "load",
+            "qty": -6,
+            "ref": "Est - Flacq",
+            "note": "",
+            "product": "Boisson maltée 33 cl",
+            "actor": "Kevin L. (démo)",
+            "route": "Est - Flacq"
+          }
+        ]
+      }
+    },
+    {
+      "step": "ops exceptions after close",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<exc#1>",
+          "company_id": "co_bd",
+          "domain": "ops",
+          "type": "delivery_refused",
+          "status": "open",
+          "entity": "order",
+          "entity_id": "<ord#3>",
+          "message": "CMD-000026 non livrée chez Snack Lagon Bleu (démo) : Client absent (démo)",
+          "created_at": "2026-10-17T04:00:10.000Z",
+          "resolution": null,
+          "resolution_note": null,
+          "resolved_by": null,
+          "resolved_at": null,
+          "resolved_by_name": null,
+          "details": {
+            "order": "CMD-000026",
+            "customer": "Snack Lagon Bleu (démo)",
+            "reason": "Client absent (démo)"
+          }
+        },
+        {
+          "id": "<exc#2>",
+          "company_id": "co_bd",
+          "domain": "ops",
+          "type": "delivery_partial",
+          "status": "open",
+          "entity": "order",
+          "entity_id": "<ord#4>",
+          "message": "Livraison partielle de CMD-000022 chez Boutique Bambou (démo) : Casier endommagé au déchargement",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "resolution": null,
+          "resolution_note": null,
+          "resolved_by": null,
+          "resolved_at": null,
+          "resolved_by_name": null,
+          "details": {
+            "order": "CMD-000022",
+            "customer": "Boutique Bambou (démo)",
+            "reason": "Casier endommagé au déchargement"
+          }
+        }
+      ]
+    },
+    {
+      "step": "dispatcher cannot use the agent API",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "forbidden",
+          "message": "Accès non autorisé."
+        }
+      }
+    },
+    {
+      "step": "login u_bd_agent1",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "route list after close",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<rte#1>",
+          "company_id": "co_bd",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 07 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-17T04:00:02.000Z",
+          "closed_at": "2026-10-17T04:00:11.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 2989000,
+          "paid_minor": 0
+        },
+        {
+          "id": "<rte#2>",
+          "company_id": "co_bd",
+          "name": "Sud - Mahébourg",
+          "day": "2026-10-16",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 12 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-16T04:00:00.000Z",
+          "closed_at": "2026-10-16T04:00:00.000Z",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 3,
+          "orders_total": 2,
+          "orders_done": 2,
+          "invoiced_minor": 2885000,
+          "paid_minor": 2885000
+        },
+        {
+          "id": "<rte#3>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-14",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-14T04:00:00.000Z",
+          "closed_at": "2026-10-14T04:00:00.000Z",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 4009600,
+          "paid_minor": 4009600
+        },
+        {
+          "id": "<rte#4>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-12",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-12T04:00:00.000Z",
+          "closed_at": "2026-10-12T04:00:00.000Z",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 3778800,
+          "paid_minor": 3778800
+        }
+      ]
+    },
+    {
+      "step": "summary after close",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/summary"
+      },
+      "status": 200,
+      "response": {
+        "route": {
+          "id": "<rte#1>",
+          "company_id": "co_bd",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 07 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-17T04:00:02.000Z",
+          "closed_at": "2026-10-17T04:00:11.000Z",
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "agent": "Ravi D. (démo)"
+        },
+        "orders": {
+          "total": 3,
+          "toDeliver": 0,
+          "delivered": 2,
+          "partial": 0,
+          "refused": 1,
+          "routeSales": 0
+        },
+        "money": {
+          "invoiced": 2989000,
+          "confirmed": 0,
+          "pending": 0,
+          "toVerify": 0,
+          "settled": 0
+        },
+        "byMethod": [],
+        "stock": [
+          {
+            "product_id": "p_bd_bie-33",
+            "name": "Bière blonde 33 cl",
+            "sku": "BIE-33",
+            "unit": "casier de 24",
+            "loaded_qty": 20,
+            "qty": 14,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_col-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "sku": "COL-150",
+            "unit": "pack de 6",
+            "loaded_qty": 64,
+            "qty": 30,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_mal-33",
+            "name": "Boisson maltée 33 cl",
+            "sku": "MAL-33",
+            "unit": "casier de 24",
+            "loaded_qty": 8,
+            "qty": 8,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_ene-25",
+            "name": "Boisson énergisante 25 cl",
+            "sku": "ENE-25",
+            "unit": "pack de 24",
+            "loaded_qty": 4,
+            "qty": 4,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_eag-50",
+            "name": "Eau gazeuse 50 cl",
+            "sku": "EAG-50",
+            "unit": "pack de 12",
+            "loaded_qty": 5,
+            "qty": 5,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_eau-150",
+            "name": "Eau plate 1,5 L",
+            "sku": "EAU-150",
+            "unit": "pack de 6",
+            "loaded_qty": 52,
+            "qty": 40,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_jus-100",
+            "name": "Jus de fruits 1 L",
+            "sku": "JUS-100",
+            "unit": "carton de 12",
+            "loaded_qty": 6,
+            "qty": 0,
+            "returned_qty": 0
+          },
+          {
+            "product_id": "p_bd_cit-33",
+            "name": "Soda citron 33 cl",
+            "sku": "CIT-33",
+            "unit": "casier de 24",
+            "loaded_qty": 8,
+            "qty": 0,
+            "returned_qty": 0
+          }
+        ]
+      }
+    }
+  ]
+}

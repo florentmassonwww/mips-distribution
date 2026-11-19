@@ -1,0 +1,26 @@
+﻿MIPS Distribution 0.1.0 (avec MIPS ClubOS) : démonstration hors ligne
+================================================================
+
+FRANÇAIS
+- Double-cliquer sur index.html. La démonstration s'ouvre dans le navigateur
+  (Microsoft Edge ou Google Chrome), sans Internet, sans serveur et sans installation.
+- Choisir un profil sur la page d'accueil : Boissons Démo Ltée (distribution),
+  Grossiste Démo Océan (seconde entreprise), Club Sportif Démo (club de sport),
+  ou la plateforme.
+- Toutes les données sont fictives. Tous les paiements, la banque, l'ERP et la
+  barrière sont simulés : aucun paiement réel n'a lieu.
+- Les données restent dans ce navigateur, sur ce poste. Le bouton « Réinitialiser »
+  du bandeau recharge les données de départ.
+- Garder les fichiers ensemble dans ce dossier (index.html, app.js, style.css).
+
+ENGLISH
+- Double-click index.html. The demo opens in the browser (Microsoft Edge or
+  Google Chrome), with no internet, no server and nothing to install.
+- Pick a profile on the home page: Boissons Démo Ltée (distribution),
+  Grossiste Démo Océan (second company), Club Sportif Démo (sports club),
+  or the platform.
+- All data is fictitious. Payments, bank, ERP and gate are all simulated:
+  no real payment takes place.
+- Data stays in this browser, on this computer. The "Reset" button in the banner
+  reloads the initial data.
+- Keep the files together in this folder (index.html, app.js, style.css).

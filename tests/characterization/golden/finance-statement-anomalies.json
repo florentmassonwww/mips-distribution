@@ -1,0 +1,1605 @@
+{
+  "scenario": "finance-statement-anomalies",
+  "description": "Statement with anomalies: unmatched lines and amount mismatches create finance exceptions, resolved with a note.",
+  "transcript": [
+    {
+      "step": "login u_bd_agent1",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_agent1"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "agent routes",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<rte#1>",
+          "company_id": "co_bd",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 07 (démo)",
+          "status": "loaded",
+          "started_at": null,
+          "closed_at": null,
+          "created_at": "2026-10-17T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 0,
+          "invoiced_minor": 0,
+          "paid_minor": 0
+        },
+        {
+          "id": "<rte#2>",
+          "company_id": "co_bd",
+          "name": "Sud - Mahébourg",
+          "day": "2026-10-16",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 12 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-16T04:00:00.000Z",
+          "closed_at": "2026-10-16T04:00:00.000Z",
+          "created_at": "2026-10-16T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 3,
+          "orders_total": 2,
+          "orders_done": 2,
+          "invoiced_minor": 2885000,
+          "paid_minor": 2885000
+        },
+        {
+          "id": "<rte#3>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-14",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-14T04:00:00.000Z",
+          "closed_at": "2026-10-14T04:00:00.000Z",
+          "created_at": "2026-10-14T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 4009600,
+          "paid_minor": 4009600
+        },
+        {
+          "id": "<rte#4>",
+          "company_id": "co_bd",
+          "name": "Ouest - Tamarin",
+          "day": "2026-10-12",
+          "agent_id": "u_bd_agent1",
+          "vehicle": "Camion 09 (démo)",
+          "status": "closed",
+          "started_at": "2026-10-12T04:00:00.000Z",
+          "closed_at": "2026-10-12T04:00:00.000Z",
+          "created_at": "2026-10-12T04:00:00.000Z",
+          "agent": "Ravi D. (démo)",
+          "stops": 4,
+          "orders_total": 3,
+          "orders_done": 3,
+          "invoiced_minor": 3778800,
+          "paid_minor": 3778800
+        }
+      ]
+    },
+    {
+      "step": "start route",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/routes/<rte#1>/start",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "route bundle",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/bundle"
+      },
+      "status": 200,
+      "response": {
+        "generatedAt": "2026-10-17T04:00:03.000Z",
+        "route": {
+          "id": "<rte#1>",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "vehicle": "Camion 07 (démo)",
+          "status": "in_progress"
+        },
+        "stops": [
+          {
+            "customer_id": "c_bd_tilakaz",
+            "seq": 1,
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "address": "Route Royale, Grand-Baie",
+            "zone": "Nord",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_bellevue",
+            "seq": 2,
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "zone": "Nord",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "customer_id": "c_bd_lagon",
+            "seq": 3,
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "address": "Front de mer, Trou-aux-Biches",
+            "zone": "Nord",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_flamboyant",
+            "seq": 4,
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "address": "Rue du Marché, Triolet",
+            "zone": "Nord",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          }
+        ],
+        "orders": [
+          {
+            "id": "<ord#1>",
+            "number": "CMD-000024",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_tilakaz",
+            "note": "Livrer avant 11 h",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#1>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#2>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 10,
+                "qty_delivered": 0,
+                "unit_price_minor": 39000
+              },
+              {
+                "id": "<ol#3>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_eau-150",
+                "qty_ordered": 12,
+                "qty_delivered": 0,
+                "unit_price_minor": 15000
+              }
+            ]
+          },
+          {
+            "id": "<ord#2>",
+            "number": "CMD-000025",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_bellevue",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#4>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 24,
+                "qty_delivered": 0,
+                "unit_price_minor": 37050
+              },
+              {
+                "id": "<ol#5>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_cit-33",
+                "qty_ordered": 8,
+                "qty_delivered": 0,
+                "unit_price_minor": 49400
+              },
+              {
+                "id": "<ol#6>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_jus-100",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 74100
+              }
+            ]
+          },
+          {
+            "id": "<ord#3>",
+            "number": "CMD-000026",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_lagon",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#7>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 4,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#8>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_eag-50",
+                "qty_ordered": 5,
+                "qty_delivered": 0,
+                "unit_price_minor": 26000
+              }
+            ]
+          }
+        ],
+        "invoices": [],
+        "products": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000
+          }
+        ],
+        "priceLists": {
+          "pl_bd_gc": {
+            "p_bd_bie-33": 109250,
+            "p_bd_cit-33": 49400,
+            "p_bd_col-150": 37050,
+            "p_bd_eag-50": 24700,
+            "p_bd_eau-150": 14250,
+            "p_bd_ene-25": 125400,
+            "p_bd_jus-100": 74100,
+            "p_bd_mal-33": 65550
+          }
+        },
+        "stock": {
+          "p_bd_bie-33": 20,
+          "p_bd_cit-33": 8,
+          "p_bd_col-150": 64,
+          "p_bd_eag-50": 5,
+          "p_bd_eau-150": 52,
+          "p_bd_ene-25": 4,
+          "p_bd_jus-100": 6,
+          "p_bd_mal-33": 8
+        },
+        "customers": [
+          {
+            "id": "c_bd_bambou",
+            "name": "Boutique Bambou (démo)",
+            "code": "C008",
+            "zone": "Sud",
+            "address": "Rue des Tulipes, Rose-Belle",
+            "phone": "+230 5000 1007",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_tilakaz",
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "zone": "Nord",
+            "address": "Route Royale, Grand-Baie",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_corail",
+            "name": "Hôtel Baie Corail (démo)",
+            "code": "C007",
+            "zone": "Sud",
+            "address": "Route côtière, Mahébourg",
+            "phone": "+230 5000 1006",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_flamboyant",
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "zone": "Nord",
+            "address": "Rue du Marché, Triolet",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_lagon",
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "zone": "Nord",
+            "address": "Front de mer, Trou-aux-Biches",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_soleil",
+            "name": "Snack Soleil (démo)",
+            "code": "C009",
+            "zone": "Sud",
+            "address": "Place du Marché, Mahébourg",
+            "phone": "+230 5000 1008",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_plaza",
+            "name": "Supermarché Plaza (démo)",
+            "code": "C006",
+            "zone": "Centre",
+            "address": "Route Saint-Jean, Quatre-Bornes",
+            "phone": "+230 5000 1005",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_bellevue",
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "zone": "Nord",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_central",
+            "name": "Tabagie Centrale (démo)",
+            "code": "C005",
+            "zone": "Centre",
+            "address": "Rue Châteauneuf, Curepipe",
+            "phone": "+230 5000 1004",
+            "price_list_id": null
+          }
+        ],
+        "methods": [
+          {
+            "method": "paystation",
+            "label": "PayStation"
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)"
+          },
+          {
+            "method": "juice",
+            "label": "Juice"
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien"
+          }
+        ]
+      }
+    },
+    {
+      "step": "deliver first order in full",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/agent/sync",
+        "body": {
+          "actions": [
+            {
+              "id": "act-deliver-0001",
+              "type": "deliver",
+              "payload": {
+                "orderId": "<ord#1>",
+                "lines": [
+                  {
+                    "lineId": "<ol#1>",
+                    "qtyDelivered": 6
+                  },
+                  {
+                    "lineId": "<ol#2>",
+                    "qtyDelivered": 10
+                  },
+                  {
+                    "lineId": "<ol#3>",
+                    "qtyDelivered": 12
+                  }
+                ],
+                "returns": [],
+                "reason": "",
+                "pod": {
+                  "name": "Réceptionnaire (démo)",
+                  "note": ""
+                },
+                "at": "2026-10-17T04:30:00.000Z"
+              }
+            }
+          ]
+        }
+      },
+      "status": 200,
+      "response": {
+        "results": [
+          {
+            "id": "act-deliver-0001",
+            "status": "applied",
+            "result": {
+              "orderId": "<ord#1>",
+              "orderNumber": "CMD-000024",
+              "outcome": "full",
+              "invoiceId": "<inv#1>",
+              "invoiceNumber": "FAC-000024",
+              "amountMinor": 1260000
+            }
+          }
+        ]
+      }
+    },
+    {
+      "step": "bundle after delivery",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "GET",
+        "path": "/api/agent/routes/<rte#1>/bundle"
+      },
+      "status": 200,
+      "response": {
+        "generatedAt": "2026-10-17T04:00:05.000Z",
+        "route": {
+          "id": "<rte#1>",
+          "name": "Nord - Grand-Baie",
+          "day": "2026-10-17",
+          "vehicle": "Camion 07 (démo)",
+          "status": "in_progress"
+        },
+        "stops": [
+          {
+            "customer_id": "c_bd_tilakaz",
+            "seq": 1,
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "address": "Route Royale, Grand-Baie",
+            "zone": "Nord",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_bellevue",
+            "seq": 2,
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "zone": "Nord",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "customer_id": "c_bd_lagon",
+            "seq": 3,
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "address": "Front de mer, Trou-aux-Biches",
+            "zone": "Nord",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "customer_id": "c_bd_flamboyant",
+            "seq": 4,
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "address": "Rue du Marché, Triolet",
+            "zone": "Nord",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          }
+        ],
+        "orders": [
+          {
+            "id": "<ord#1>",
+            "number": "CMD-000024",
+            "kind": "preorder",
+            "status": "delivered",
+            "customer_id": "c_bd_tilakaz",
+            "note": "Livrer avant 11 h",
+            "delivered_at": "2026-10-17T04:00:04.000Z",
+            "lines": [
+              {
+                "id": "<ol#1>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 6,
+                "qty_delivered": 6,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#2>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 10,
+                "qty_delivered": 10,
+                "unit_price_minor": 39000
+              },
+              {
+                "id": "<ol#3>",
+                "order_id": "<ord#1>",
+                "product_id": "p_bd_eau-150",
+                "qty_ordered": 12,
+                "qty_delivered": 12,
+                "unit_price_minor": 15000
+              }
+            ]
+          },
+          {
+            "id": "<ord#2>",
+            "number": "CMD-000025",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_bellevue",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#4>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_col-150",
+                "qty_ordered": 24,
+                "qty_delivered": 0,
+                "unit_price_minor": 37050
+              },
+              {
+                "id": "<ol#5>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_cit-33",
+                "qty_ordered": 8,
+                "qty_delivered": 0,
+                "unit_price_minor": 49400
+              },
+              {
+                "id": "<ol#6>",
+                "order_id": "<ord#2>",
+                "product_id": "p_bd_jus-100",
+                "qty_ordered": 6,
+                "qty_delivered": 0,
+                "unit_price_minor": 74100
+              }
+            ]
+          },
+          {
+            "id": "<ord#3>",
+            "number": "CMD-000026",
+            "kind": "preorder",
+            "status": "loaded",
+            "customer_id": "c_bd_lagon",
+            "note": "",
+            "delivered_at": null,
+            "lines": [
+              {
+                "id": "<ol#7>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_bie-33",
+                "qty_ordered": 4,
+                "qty_delivered": 0,
+                "unit_price_minor": 115000
+              },
+              {
+                "id": "<ol#8>",
+                "order_id": "<ord#3>",
+                "product_id": "p_bd_eag-50",
+                "qty_ordered": 5,
+                "qty_delivered": 0,
+                "unit_price_minor": 26000
+              }
+            ]
+          }
+        ],
+        "invoices": [
+          {
+            "id": "<inv#1>",
+            "number": "FAC-000024",
+            "order_id": "<ord#1>",
+            "customer_id": "c_bd_tilakaz",
+            "amount_minor": 1260000,
+            "paid_minor": 0,
+            "refunded_minor": 0,
+            "status": "unpaid",
+            "issued_at": "2026-10-17T04:00:04.000Z",
+            "payments": []
+          }
+        ],
+        "products": [
+          {
+            "id": "p_bd_bie-33",
+            "sku": "BIE-33",
+            "name": "Bière blonde 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 115000
+          },
+          {
+            "id": "p_bd_col-150",
+            "sku": "COL-150",
+            "name": "Boisson gazeuse cola 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 39000
+          },
+          {
+            "id": "p_bd_mal-33",
+            "sku": "MAL-33",
+            "name": "Boisson maltée 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 69000
+          },
+          {
+            "id": "p_bd_ene-25",
+            "sku": "ENE-25",
+            "name": "Boisson énergisante 25 cl",
+            "unit": "pack de 24",
+            "price_minor": 132000
+          },
+          {
+            "id": "p_bd_eag-50",
+            "sku": "EAG-50",
+            "name": "Eau gazeuse 50 cl",
+            "unit": "pack de 12",
+            "price_minor": 26000
+          },
+          {
+            "id": "p_bd_eau-150",
+            "sku": "EAU-150",
+            "name": "Eau plate 1,5 L",
+            "unit": "pack de 6",
+            "price_minor": 15000
+          },
+          {
+            "id": "p_bd_jus-100",
+            "sku": "JUS-100",
+            "name": "Jus de fruits 1 L",
+            "unit": "carton de 12",
+            "price_minor": 78000
+          },
+          {
+            "id": "p_bd_cit-33",
+            "sku": "CIT-33",
+            "name": "Soda citron 33 cl",
+            "unit": "casier de 24",
+            "price_minor": 52000
+          }
+        ],
+        "priceLists": {
+          "pl_bd_gc": {
+            "p_bd_bie-33": 109250,
+            "p_bd_cit-33": 49400,
+            "p_bd_col-150": 37050,
+            "p_bd_eag-50": 24700,
+            "p_bd_eau-150": 14250,
+            "p_bd_ene-25": 125400,
+            "p_bd_jus-100": 74100,
+            "p_bd_mal-33": 65550
+          }
+        },
+        "stock": {
+          "p_bd_bie-33": 14,
+          "p_bd_cit-33": 8,
+          "p_bd_col-150": 54,
+          "p_bd_eag-50": 5,
+          "p_bd_eau-150": 40,
+          "p_bd_ene-25": 4,
+          "p_bd_jus-100": 6,
+          "p_bd_mal-33": 8
+        },
+        "customers": [
+          {
+            "id": "c_bd_bambou",
+            "name": "Boutique Bambou (démo)",
+            "code": "C008",
+            "zone": "Sud",
+            "address": "Rue des Tulipes, Rose-Belle",
+            "phone": "+230 5000 1007",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_tilakaz",
+            "name": "Boutique Ti Lakaz (démo)",
+            "code": "C001",
+            "zone": "Nord",
+            "address": "Route Royale, Grand-Baie",
+            "phone": "+230 5000 1000",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_corail",
+            "name": "Hôtel Baie Corail (démo)",
+            "code": "C007",
+            "zone": "Sud",
+            "address": "Route côtière, Mahébourg",
+            "phone": "+230 5000 1006",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_flamboyant",
+            "name": "Restaurant Le Flamboyant (démo)",
+            "code": "C004",
+            "zone": "Nord",
+            "address": "Rue du Marché, Triolet",
+            "phone": "+230 5000 1003",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_lagon",
+            "name": "Snack Lagon Bleu (démo)",
+            "code": "C003",
+            "zone": "Nord",
+            "address": "Front de mer, Trou-aux-Biches",
+            "phone": "+230 5000 1002",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_soleil",
+            "name": "Snack Soleil (démo)",
+            "code": "C009",
+            "zone": "Sud",
+            "address": "Place du Marché, Mahébourg",
+            "phone": "+230 5000 1008",
+            "price_list_id": null
+          },
+          {
+            "id": "c_bd_plaza",
+            "name": "Supermarché Plaza (démo)",
+            "code": "C006",
+            "zone": "Centre",
+            "address": "Route Saint-Jean, Quatre-Bornes",
+            "phone": "+230 5000 1005",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_bellevue",
+            "name": "Supérette Belle Vue (démo)",
+            "code": "C002",
+            "zone": "Nord",
+            "address": "Avenue des Flamboyants, Pereybère",
+            "phone": "+230 5000 1001",
+            "price_list_id": "pl_bd_gc"
+          },
+          {
+            "id": "c_bd_central",
+            "name": "Tabagie Centrale (démo)",
+            "code": "C005",
+            "zone": "Centre",
+            "address": "Rue Châteauneuf, Curepipe",
+            "phone": "+230 5000 1004",
+            "price_list_id": null
+          }
+        ],
+        "methods": [
+          {
+            "method": "paystation",
+            "label": "PayStation"
+          },
+          {
+            "method": "card_tpe",
+            "label": "Carte bancaire (TPE)"
+          },
+          {
+            "method": "juice",
+            "label": "Juice"
+          },
+          {
+            "method": "link",
+            "label": "Paiement par lien"
+          }
+        ]
+      }
+    },
+    {
+      "step": "create juice payment",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/payments",
+        "body": {
+          "invoiceId": "<inv#1>",
+          "method": "juice",
+          "amountMinor": 1260000,
+          "idempotencyKey": "key-anomaly-pay-001"
+        }
+      },
+      "status": 200,
+      "response": {
+        "payment": {
+          "id": "<pay#1>",
+          "invoiceId": "<inv#1>",
+          "method": "juice",
+          "amountMinor": 1260000,
+          "currency": "MUR",
+          "status": "pending",
+          "refundedMinor": 0,
+          "providerRef": "<ref-JCE#1>",
+          "presentation": {
+            "kind": "app_request",
+            "value": "DEMO-JUICE:<ref-JCE#1>:1260000",
+            "instructions": "Le client scanne ce code ou valide la demande dans son application. Une capture d'écran ne vaut pas confirmation."
+          },
+          "failureReason": null,
+          "verifyReason": null,
+          "settlementStatus": "unsettled",
+          "createdAt": "2026-10-17T04:00:06.000Z",
+          "expiresAt": "2026-10-17T04:10:06.000Z",
+          "confirmedAt": null,
+          "confirmedVia": null
+        },
+        "replayed": false
+      }
+    },
+    {
+      "step": "simulate success",
+      "as": "u_bd_agent1",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/payments/<pay#1>/simulate",
+        "body": {
+          "outcome": "success"
+        }
+      },
+      "status": 200,
+      "response": {
+        "result": "confirmed"
+      }
+    },
+    {
+      "step": "login u_bd_finance",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_finance"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "demo statement with anomalies",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/statements/demo?anomalies=1"
+      },
+      "status": 200,
+      "response": {
+        "filename": "releve-demo-2026-10-17.csv",
+        "content": "date;reference;libelle;montant_brut;frais;montant_net\r\n2026-10-17;<ref-TPE#1>;REGLEMENT CARD_TPE;7410.00;134.68;7275.32\r\n2026-10-17;<ref-PS#1>;REGLEMENT PAYSTATION;6140.00;62.40;6077.60\r\n2026-10-17;<ref-JCE#1>;REGLEMENT JUICE;12600.00;113.40;12486.60\r\n2026-10-17;VIR-INCONNU-20261017;VIREMENT RECU SANS REFERENCE;1250.00;0.00;1250.00\r\n"
+      }
+    },
+    {
+      "step": "import statement with anomalies",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/finance/statements",
+        "body": {
+          "filename": "releve-demo-2026-10-17.csv",
+          "content": "date;reference;libelle;montant_brut;frais;montant_net\r\n2026-10-17;<ref-TPE#1>;REGLEMENT CARD_TPE;7410.00;134.68;7275.32\r\n2026-10-17;<ref-PS#1>;REGLEMENT PAYSTATION;6140.00;62.40;6077.60\r\n2026-10-17;<ref-JCE#1>;REGLEMENT JUICE;12600.00;113.40;12486.60\r\n2026-10-17;VIR-INCONNU-20261017;VIREMENT RECU SANS REFERENCE;1250.00;0.00;1250.00\r\n"
+        }
+      },
+      "status": 200,
+      "response": {
+        "statementId": "<stm#1>",
+        "lines": 4,
+        "matched": 2,
+        "exceptions": 2,
+        "skipped": 0
+      }
+    },
+    {
+      "step": "GET /api/finance/reconciliation",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/finance/reconciliation"
+      },
+      "status": 200,
+      "response": {
+        "statements": [
+          {
+            "id": "<stm#1>",
+            "company_id": "co_bd",
+            "filename": "releve-demo-2026-10-17.csv",
+            "imported_by": "u_bd_finance",
+            "imported_at": "2026-10-17T04:00:10.000Z",
+            "line_count": 4,
+            "matched_count": 2,
+            "skipped_count": 0,
+            "imported_by_name": "Sophie M. (démo)"
+          },
+          {
+            "id": "<stm#2>",
+            "company_id": "co_bd",
+            "filename": "releve-demo-2026-10-16.csv",
+            "imported_by": "u_bd_finance",
+            "imported_at": "2026-10-16T04:00:00.000Z",
+            "line_count": 1,
+            "matched_count": 1,
+            "skipped_count": 0,
+            "imported_by_name": "Sophie M. (démo)"
+          },
+          {
+            "id": "<stm#3>",
+            "company_id": "co_bd",
+            "filename": "releve-demo-2026-10-15.csv",
+            "imported_by": "u_bd_finance",
+            "imported_at": "2026-10-15T04:00:00.000Z",
+            "line_count": 4,
+            "matched_count": 4,
+            "skipped_count": 0,
+            "imported_by_name": "Sophie M. (démo)"
+          },
+          {
+            "id": "<stm#4>",
+            "company_id": "co_bd",
+            "filename": "releve-demo-2026-10-14.csv",
+            "imported_by": "u_bd_finance",
+            "imported_at": "2026-10-14T04:00:00.000Z",
+            "line_count": 4,
+            "matched_count": 4,
+            "skipped_count": 0,
+            "imported_by_name": "Sophie M. (démo)"
+          },
+          {
+            "id": "<stm#5>",
+            "company_id": "co_bd",
+            "filename": "releve-demo-2026-10-13.csv",
+            "imported_by": "u_bd_finance",
+            "imported_at": "2026-10-13T04:00:00.000Z",
+            "line_count": 4,
+            "matched_count": 4,
+            "skipped_count": 0,
+            "imported_by_name": "Sophie M. (démo)"
+          },
+          {
+            "id": "<stm#6>",
+            "company_id": "co_bd",
+            "filename": "releve-demo-2026-10-12.csv",
+            "imported_by": "u_bd_finance",
+            "imported_at": "2026-10-12T04:00:00.000Z",
+            "line_count": 4,
+            "matched_count": 4,
+            "skipped_count": 0,
+            "imported_by_name": "Sophie M. (démo)"
+          },
+          {
+            "id": "<stm#7>",
+            "company_id": "co_bd",
+            "filename": "releve-demo-2026-10-11.csv",
+            "imported_by": "u_bd_finance",
+            "imported_at": "2026-10-11T04:00:00.000Z",
+            "line_count": 4,
+            "matched_count": 4,
+            "skipped_count": 0,
+            "imported_by_name": "Sophie M. (démo)"
+          }
+        ],
+        "lines": [
+          {
+            "id": "<bl#1>",
+            "value_date": "2026-10-17",
+            "reference": "VIR-INCONNU-20261017",
+            "label": "VIREMENT RECU SANS REFERENCE",
+            "gross_minor": 125000,
+            "fee_minor": 0,
+            "net_minor": 125000,
+            "match_status": "unmatched",
+            "invoice": null,
+            "fee_expected_minor": null,
+            "method": null
+          },
+          {
+            "id": "<bl#2>",
+            "value_date": "2026-10-17",
+            "reference": "<ref-JCE#1>",
+            "label": "REGLEMENT JUICE",
+            "gross_minor": 1260000,
+            "fee_minor": 11340,
+            "net_minor": 1248660,
+            "match_status": "matched",
+            "invoice": "FAC-000024",
+            "fee_expected_minor": 11340,
+            "method": "juice"
+          },
+          {
+            "id": "<bl#3>",
+            "value_date": "2026-10-17",
+            "reference": "<ref-PS#1>",
+            "label": "REGLEMENT PAYSTATION",
+            "gross_minor": 614000,
+            "fee_minor": 6240,
+            "net_minor": 607760,
+            "match_status": "amount_mismatch",
+            "invoice": "FAC-000023",
+            "fee_expected_minor": 6240,
+            "method": "paystation"
+          },
+          {
+            "id": "<bl#4>",
+            "value_date": "2026-10-17",
+            "reference": "<ref-TPE#1>",
+            "label": "REGLEMENT CARD_TPE",
+            "gross_minor": 741000,
+            "fee_minor": 13468,
+            "net_minor": 727532,
+            "match_status": "matched",
+            "invoice": "FAC-000022",
+            "fee_expected_minor": 12968,
+            "method": "card_tpe"
+          },
+          {
+            "id": "<bl#5>",
+            "value_date": "2026-10-16",
+            "reference": "<ref-JCE#2>",
+            "label": "REGLEMENT JUICE",
+            "gross_minor": 1520000,
+            "fee_minor": 13680,
+            "net_minor": 1506320,
+            "match_status": "matched",
+            "invoice": "FAC-000021",
+            "fee_expected_minor": 13680,
+            "method": "juice"
+          },
+          {
+            "id": "<bl#6>",
+            "value_date": "2026-10-15",
+            "reference": "<ref-TPE#2>",
+            "label": "REGLEMENT CARD_TPE",
+            "gross_minor": 285000,
+            "fee_minor": 4988,
+            "net_minor": 280012,
+            "match_status": "matched",
+            "invoice": "FAC-000020",
+            "fee_expected_minor": 4988,
+            "method": "card_tpe"
+          },
+          {
+            "id": "<bl#7>",
+            "value_date": "2026-10-15",
+            "reference": "<ref-LNK#1>",
+            "label": "REGLEMENT LINK",
+            "gross_minor": 732450,
+            "fee_minor": 10987,
+            "net_minor": 721463,
+            "match_status": "matched",
+            "invoice": "FAC-000018",
+            "fee_expected_minor": 10987,
+            "method": "link"
+          },
+          {
+            "id": "<bl#8>",
+            "value_date": "2026-10-15",
+            "reference": "<ref-PS#2>",
+            "label": "REGLEMENT PAYSTATION",
+            "gross_minor": 1801200,
+            "fee_minor": 18012,
+            "net_minor": 1783188,
+            "match_status": "matched",
+            "invoice": "FAC-000019",
+            "fee_expected_minor": 18012,
+            "method": "paystation"
+          },
+          {
+            "id": "<bl#9>",
+            "value_date": "2026-10-15",
+            "reference": "<ref-JCE#3>",
+            "label": "REGLEMENT JUICE",
+            "gross_minor": 884000,
+            "fee_minor": 7956,
+            "net_minor": 876044,
+            "match_status": "matched",
+            "invoice": "FAC-000017",
+            "fee_expected_minor": 7956,
+            "method": "juice"
+          },
+          {
+            "id": "<bl#10>",
+            "value_date": "2026-10-14",
+            "reference": "<ref-LNK#2>",
+            "label": "REGLEMENT LINK",
+            "gross_minor": 535800,
+            "fee_minor": 8037,
+            "net_minor": 527763,
+            "match_status": "matched",
+            "invoice": "FAC-000013",
+            "fee_expected_minor": 8037,
+            "method": "link"
+          },
+          {
+            "id": "<bl#11>",
+            "value_date": "2026-10-14",
+            "reference": "<ref-TPE#3>",
+            "label": "REGLEMENT CARD_TPE",
+            "gross_minor": 1692000,
+            "fee_minor": 29610,
+            "net_minor": 1662390,
+            "match_status": "matched",
+            "invoice": "FAC-000015",
+            "fee_expected_minor": 29610,
+            "method": "card_tpe"
+          },
+          {
+            "id": "<bl#12>",
+            "value_date": "2026-10-14",
+            "reference": "<ref-JCE#4>",
+            "label": "REGLEMENT JUICE",
+            "gross_minor": 307800,
+            "fee_minor": 2770,
+            "net_minor": 305030,
+            "match_status": "matched",
+            "invoice": "FAC-000016",
+            "fee_expected_minor": 2770,
+            "method": "juice"
+          },
+          {
+            "id": "<bl#13>",
+            "value_date": "2026-10-14",
+            "reference": "<ref-PS#3>",
+            "label": "REGLEMENT PAYSTATION",
+            "gross_minor": 1474000,
+            "fee_minor": 14740,
+            "net_minor": 1459260,
+            "match_status": "matched",
+            "invoice": "FAC-000014",
+            "fee_expected_minor": 14740,
+            "method": "paystation"
+          },
+          {
+            "id": "<bl#14>",
+            "value_date": "2026-10-13",
+            "reference": "<ref-LNK#3>",
+            "label": "REGLEMENT LINK",
+            "gross_minor": 363000,
+            "fee_minor": 5445,
+            "net_minor": 357555,
+            "match_status": "matched",
+            "invoice": "FAC-000012",
+            "fee_expected_minor": 5445,
+            "method": "link"
+          },
+          {
+            "id": "<bl#15>",
+            "value_date": "2026-10-13",
+            "reference": "<ref-PS#4>",
+            "label": "REGLEMENT PAYSTATION",
+            "gross_minor": 1104000,
+            "fee_minor": 11040,
+            "net_minor": 1092960,
+            "match_status": "matched",
+            "invoice": "FAC-000009",
+            "fee_expected_minor": 11040,
+            "method": "paystation"
+          },
+          {
+            "id": "<bl#16>",
+            "value_date": "2026-10-13",
+            "reference": "<ref-TPE#4>",
+            "label": "REGLEMENT CARD_TPE",
+            "gross_minor": 1347000,
+            "fee_minor": 23573,
+            "net_minor": 1323427,
+            "match_status": "matched",
+            "invoice": "FAC-000010",
+            "fee_expected_minor": 23573,
+            "method": "card_tpe"
+          },
+          {
+            "id": "<bl#17>",
+            "value_date": "2026-10-13",
+            "reference": "<ref-JCE#5>",
+            "label": "REGLEMENT JUICE",
+            "gross_minor": 837900,
+            "fee_minor": 7541,
+            "net_minor": 830359,
+            "match_status": "matched",
+            "invoice": "FAC-000011",
+            "fee_expected_minor": 7541,
+            "method": "juice"
+          },
+          {
+            "id": "<bl#18>",
+            "value_date": "2026-10-12",
+            "reference": "<ref-PS#5>",
+            "label": "REGLEMENT PAYSTATION",
+            "gross_minor": 381900,
+            "fee_minor": 3819,
+            "net_minor": 378081,
+            "match_status": "matched",
+            "invoice": "FAC-000008",
+            "fee_expected_minor": 3819,
+            "method": "paystation"
+          },
+          {
+            "id": "<bl#19>",
+            "value_date": "2026-10-12",
+            "reference": "<ref-JCE#6>",
+            "label": "REGLEMENT JUICE",
+            "gross_minor": 765000,
+            "fee_minor": 6885,
+            "net_minor": 758115,
+            "match_status": "matched",
+            "invoice": "FAC-000006",
+            "fee_expected_minor": 6885,
+            "method": "juice"
+          },
+          {
+            "id": "<bl#20>",
+            "value_date": "2026-10-12",
+            "reference": "<ref-LNK#4>",
+            "label": "REGLEMENT LINK",
+            "gross_minor": 1680000,
+            "fee_minor": 25200,
+            "net_minor": 1654800,
+            "match_status": "matched",
+            "invoice": "FAC-000007",
+            "fee_expected_minor": 25200,
+            "method": "link"
+          },
+          {
+            "id": "<bl#21>",
+            "value_date": "2026-10-12",
+            "reference": "<ref-TPE#5>",
+            "label": "REGLEMENT CARD_TPE",
+            "gross_minor": 951900,
+            "fee_minor": 16658,
+            "net_minor": 935242,
+            "match_status": "matched",
+            "invoice": "FAC-000005",
+            "fee_expected_minor": 16658,
+            "method": "card_tpe"
+          },
+          {
+            "id": "<bl#22>",
+            "value_date": "2026-10-11",
+            "reference": "<ref-TPE#6>",
+            "label": "REGLEMENT CARD_TPE",
+            "gross_minor": 441000,
+            "fee_minor": 7718,
+            "net_minor": 433282,
+            "match_status": "matched",
+            "invoice": "FAC-000004",
+            "fee_expected_minor": 7718,
+            "method": "card_tpe"
+          },
+          {
+            "id": "<bl#23>",
+            "value_date": "2026-10-11",
+            "reference": "<ref-PS#6>",
+            "label": "REGLEMENT PAYSTATION",
+            "gross_minor": 1263500,
+            "fee_minor": 12635,
+            "net_minor": 1250865,
+            "match_status": "matched",
+            "invoice": "FAC-000003",
+            "fee_expected_minor": 12635,
+            "method": "paystation"
+          },
+          {
+            "id": "<bl#24>",
+            "value_date": "2026-10-11",
+            "reference": "<ref-JCE#7>",
+            "label": "REGLEMENT JUICE",
+            "gross_minor": 648000,
+            "fee_minor": 5832,
+            "net_minor": 642168,
+            "match_status": "matched",
+            "invoice": "FAC-000001",
+            "fee_expected_minor": 5832,
+            "method": "juice"
+          },
+          {
+            "id": "<bl#25>",
+            "value_date": "2026-10-11",
+            "reference": "<ref-LNK#5>",
+            "label": "REGLEMENT LINK",
+            "gross_minor": 1392000,
+            "fee_minor": 20880,
+            "net_minor": 1371120,
+            "match_status": "matched",
+            "invoice": "FAC-000002",
+            "fee_expected_minor": 20880,
+            "method": "link"
+          }
+        ],
+        "unsettled": [
+          {
+            "id": "<pay#2>",
+            "provider_ref": "<ref-PS#1>",
+            "method": "paystation",
+            "amount_minor": 624000,
+            "confirmed_at": "2026-10-16T04:00:00.000Z",
+            "invoice": "FAC-000023"
+          }
+        ]
+      }
+    },
+    {
+      "step": "finance exceptions",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<exc#1>",
+          "company_id": "co_bd",
+          "domain": "finance",
+          "type": "fee_variance",
+          "status": "open",
+          "entity": "bank_line",
+          "entity_id": "<bl#4>",
+          "message": "Écart de frais sur <ref-TPE#1> : 134.68 prélevé pour 129.68 attendu.",
+          "created_at": "2026-10-17T04:00:10.000Z",
+          "resolution": null,
+          "resolution_note": null,
+          "resolved_by": null,
+          "resolved_at": null,
+          "resolved_by_name": null,
+          "details": {
+            "reference": "<ref-TPE#1>",
+            "feeMinor": 13468,
+            "expectedMinor": 12968,
+            "paymentId": "<pay#3>"
+          }
+        },
+        {
+          "id": "<exc#2>",
+          "company_id": "co_bd",
+          "domain": "finance",
+          "type": "settlement_amount_mismatch",
+          "status": "open",
+          "entity": "bank_line",
+          "entity_id": "<bl#3>",
+          "message": "Écart de montant sur <ref-PS#1> : 6140.00 crédité pour 6240.00 attendu.",
+          "created_at": "2026-10-17T04:00:10.000Z",
+          "resolution": null,
+          "resolution_note": null,
+          "resolved_by": null,
+          "resolved_at": null,
+          "resolved_by_name": null,
+          "details": {
+            "reference": "<ref-PS#1>",
+            "creditedMinor": 614000,
+            "expectedMinor": 624000,
+            "paymentId": "<pay#2>"
+          }
+        },
+        {
+          "id": "<exc#3>",
+          "company_id": "co_bd",
+          "domain": "finance",
+          "type": "unknown_credit",
+          "status": "open",
+          "entity": "bank_line",
+          "entity_id": "<bl#1>",
+          "message": "Crédit bancaire sans paiement correspondant : VIR-INCONNU-20261017 (1250.00).",
+          "created_at": "2026-10-17T04:00:10.000Z",
+          "resolution": null,
+          "resolution_note": null,
+          "resolved_by": null,
+          "resolved_at": null,
+          "resolved_by_name": null,
+          "details": {
+            "reference": "VIR-INCONNU-20261017",
+            "grossMinor": 125000,
+            "valueDate": "2026-10-17"
+          }
+        }
+      ]
+    },
+    {
+      "step": "note too short",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/exceptions/<exc#1>/resolve",
+        "body": {
+          "resolution": "rejected",
+          "note": "x"
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : note Too small: expected string to have >=3 characters"
+        }
+      }
+    },
+    {
+      "step": "resolve",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/exceptions/<exc#1>/resolve",
+        "body": {
+          "resolution": "rejected",
+          "note": "Ligne d'un autre compte (démo)"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "resolve twice",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "POST",
+        "path": "/api/exceptions/<exc#1>/resolve",
+        "body": {
+          "resolution": "approved",
+          "note": "Deuxième décision (démo)"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "already_resolved",
+          "message": "Cette exception est déjà traitée."
+        }
+      }
+    },
+    {
+      "step": "resolved exceptions",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance&status=resolved"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<exc#1>",
+          "company_id": "co_bd",
+          "domain": "finance",
+          "type": "fee_variance",
+          "status": "resolved",
+          "entity": "bank_line",
+          "entity_id": "<bl#4>",
+          "message": "Écart de frais sur <ref-TPE#1> : 134.68 prélevé pour 129.68 attendu.",
+          "created_at": "2026-10-17T04:00:10.000Z",
+          "resolution": "rejected",
+          "resolution_note": "Ligne d'un autre compte (démo)",
+          "resolved_by": "u_bd_finance",
+          "resolved_at": "2026-10-17T04:00:14.000Z",
+          "resolved_by_name": "Sophie M. (démo)",
+          "details": {
+            "reference": "<ref-TPE#1>",
+            "feeMinor": 13468,
+            "expectedMinor": 12968,
+            "paymentId": "<pay#3>"
+          }
+        }
+      ]
+    },
+    {
+      "step": "exceptions CSV",
+      "as": "u_bd_finance",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance&format=csv"
+      },
+      "status": 200,
+      "type": "text/csv",
+      "response": "Créée le,Type,Description,État,Décision,Note,Traitée le\r\n2026-10-17T04:00:10.000Z,settlement_amount_mismatch,Écart de montant sur <ref-PS#1> : 6140.00 crédité pour 6240.00 attendu.,open,,,\r\n2026-10-17T04:00:10.000Z,unknown_credit,Crédit bancaire sans paiement correspondant : VIR-INCONNU-20261017 (1250.00).,open,,,\r\n"
+    },
+    {
+      "step": "login u_bd_centrale",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_centrale"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "dispatch cannot read finance exceptions",
+      "as": "u_bd_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/exceptions?domain=finance"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "forbidden",
+          "message": "Accès non autorisé."
+        }
+      }
+    }
+  ]
+}

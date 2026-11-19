@@ -1,0 +1,335 @@
+{
+  "scenario": "club-dues-and-reminders",
+  "description": "Monthly dues run for a period (twice refused or idempotent), reminder run by level and threshold.",
+  "transcript": [
+    {
+      "step": "login u_cs_compta",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_compta"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "bill November dues",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/dues/run",
+        "body": {
+          "period": "2026-11"
+        }
+      },
+      "status": 200,
+      "response": {
+        "created": 2,
+        "skipped": 0,
+        "amountMinor": 360000
+      }
+    },
+    {
+      "step": "bill November again",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/dues/run",
+        "body": {
+          "period": "2026-11"
+        }
+      },
+      "status": 200,
+      "response": {
+        "created": 0,
+        "skipped": 2,
+        "amountMinor": 0
+      }
+    },
+    {
+      "step": "invalid period",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/dues/run",
+        "body": {
+          "period": "novembre"
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : period Too big: expected string to have <=7 characters"
+        }
+      }
+    },
+    {
+      "step": "dues after run",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dues"
+      },
+      "status": 200,
+      "response": {
+        "plans": [
+          {
+            "id": "plan_cs_fam",
+            "code": "FAM",
+            "name": "Famille",
+            "billing": "annual",
+            "fee_minor": 3000000,
+            "active": 1,
+            "members": 3
+          },
+          {
+            "id": "plan_cs_ind",
+            "code": "IND",
+            "name": "Individuel",
+            "billing": "annual",
+            "fee_minor": 1800000,
+            "active": 1,
+            "members": 6
+          },
+          {
+            "id": "plan_cs_sen",
+            "code": "SEN",
+            "name": "Senior (65 ans et plus)",
+            "billing": "annual",
+            "fee_minor": 900000,
+            "active": 1,
+            "members": 1
+          },
+          {
+            "id": "plan_cs_jun",
+            "code": "JUN",
+            "name": "Junior (moins de 18 ans)",
+            "billing": "annual",
+            "fee_minor": 600000,
+            "active": 1,
+            "members": 2
+          },
+          {
+            "id": "plan_cs_men",
+            "code": "MEN",
+            "name": "Mensuel",
+            "billing": "monthly",
+            "fee_minor": 180000,
+            "active": 1,
+            "members": 2
+          }
+        ],
+        "periods": [
+          {
+            "period": "2026-11",
+            "count": 2,
+            "amount_minor": 360000,
+            "collected_minor": 0,
+            "billed_at": "2026-10-17T04:00:01.000Z"
+          },
+          {
+            "period": "2026-10",
+            "count": 2,
+            "amount_minor": 360000,
+            "collected_minor": 0,
+            "billed_at": "2026-10-05T06:00:00.000Z"
+          },
+          {
+            "period": "2026-09",
+            "count": 2,
+            "amount_minor": 360000,
+            "collected_minor": 180000,
+            "billed_at": "2026-09-05T06:00:00.000Z"
+          },
+          {
+            "period": "2026-08",
+            "count": 2,
+            "amount_minor": 360000,
+            "collected_minor": 180000,
+            "billed_at": "2026-08-05T06:00:00.000Z"
+          },
+          {
+            "period": "2026-07",
+            "count": 2,
+            "amount_minor": 360000,
+            "collected_minor": 360000,
+            "billed_at": "2026-07-05T06:00:00.000Z"
+          },
+          {
+            "period": "2026",
+            "count": 12,
+            "amount_minor": 21900000,
+            "collected_minor": 16800000,
+            "billed_at": "2026-01-10T04:00:00.000Z"
+          },
+          {
+            "period": "2025",
+            "count": 13,
+            "amount_minor": 22800000,
+            "collected_minor": 20100000,
+            "billed_at": "2025-01-10T04:00:00.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "step": "run reminders",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/reminders/run",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "sent": 1,
+        "alreadySent": 6,
+        "byLevel": {
+          "1": 1,
+          "2": 0,
+          "3": 0
+        }
+      }
+    },
+    {
+      "step": "run reminders again",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/reminders/run",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "sent": 0,
+        "alreadySent": 7,
+        "byLevel": {
+          "1": 0,
+          "2": 0,
+          "3": 0
+        }
+      }
+    },
+    {
+      "step": "reminders",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/reminders"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "<rem#1>",
+          "level": 1,
+          "channel": "email",
+          "amount_minor": 480000,
+          "overdue_days": 9,
+          "message": "Rappel : un montant reste dû sur votre compte - Club Sportif Démo. Membre 00009 : 4800.00 MUR dû, dont 1200.00 MUR en retard de 9 jour(s). Payer en ligne : <origin>/membre/<token#1>. Par virement, indiquez la référence CSD-00009-70.",
+          "sent_at": "2026-10-17T04:00:05.000Z",
+          "member_id": "<mbr#1>",
+          "member_number": "00009",
+          "member": "Zara Peerbux (démo)",
+          "sent_by": "Mélanie C. (démo)"
+        },
+        {
+          "id": "<rem#2>",
+          "level": 2,
+          "channel": "email",
+          "amount_minor": 895000,
+          "overdue_days": 35,
+          "message": "Second rappel : votre compte présente un retard - Club Sportif Démo. Membre 00010 : 8950.00 MUR dû, dont 5850.00 MUR en retard de 35 jour(s). Payer en ligne : <origin>/membre/<token#2>. Par virement, indiquez la référence CSD-00010-67.",
+          "sent_at": "2026-10-09T04:00:00.000Z",
+          "member_id": "<mbr#2>",
+          "member_number": "00010",
+          "member": "Olivier Desvaux (démo)",
+          "sent_by": "Mélanie C. (démo)"
+        },
+        {
+          "id": "<rem#3>",
+          "level": 3,
+          "channel": "email",
+          "amount_minor": 1800000,
+          "overdue_days": 220,
+          "message": "Dernier rappel : votre retard sera signalé à l'entrée du club - Club Sportif Démo. Membre 00015 : 18000.00 MUR dû, dont 18000.00 MUR en retard de 220 jour(s). Payer en ligne : <origin>/membre/<token#3>. Par virement, indiquez la référence CSD-00015-52.",
+          "sent_at": "2026-09-17T04:00:00.000Z",
+          "member_id": "<mbr#3>",
+          "member_number": "00015",
+          "member": "Hélène Tsang (démo)",
+          "sent_by": "Mélanie C. (démo)"
+        },
+        {
+          "id": "<rem#4>",
+          "level": 3,
+          "channel": "sms",
+          "amount_minor": 900000,
+          "overdue_days": 585,
+          "message": "Dernier rappel : votre retard sera signalé à l'entrée du club - Club Sportif Démo. Membre 00014 : 9000.00 MUR dû, dont 9000.00 MUR en retard de 585 jour(s). Payer en ligne : <origin>/membre/<token#4>. Par virement, indiquez la référence CSD-00014-55.",
+          "sent_at": "2026-09-17T04:00:00.000Z",
+          "member_id": "<mbr#4>",
+          "member_number": "00014",
+          "member": "Gérard Maurel (démo)",
+          "sent_by": "Mélanie C. (démo)"
+        },
+        {
+          "id": "<rem#5>",
+          "level": 3,
+          "channel": "sms",
+          "amount_minor": 739000,
+          "overdue_days": 220,
+          "message": "Dernier rappel : votre retard sera signalé à l'entrée du club - Club Sportif Démo. Membre 00013 : 7390.00 MUR dû, dont 6000.00 MUR en retard de 220 jour(s). Payer en ligne : <origin>/membre/<token#5>. Par virement, indiquez la référence CSD-00013-58.",
+          "sent_at": "2026-09-17T04:00:00.000Z",
+          "member_id": "<mbr#5>",
+          "member_number": "00013",
+          "member": "Amina Dulloo (démo)",
+          "sent_by": "Mélanie C. (démo)"
+        },
+        {
+          "id": "<rem#6>",
+          "level": 1,
+          "channel": "email",
+          "amount_minor": 895000,
+          "overdue_days": 13,
+          "message": "Rappel : un montant reste dû sur votre compte - Club Sportif Démo. Membre 00010 : 8950.00 MUR dû, dont 1800.00 MUR en retard de 13 jour(s). Payer en ligne : <origin>/membre/<token#2>. Par virement, indiquez la référence CSD-00010-67.",
+          "sent_at": "2026-09-17T04:00:00.000Z",
+          "member_id": "<mbr#2>",
+          "member_number": "00010",
+          "member": "Olivier Desvaux (démo)",
+          "sent_by": "Mélanie C. (démo)"
+        },
+        {
+          "id": "<rem#7>",
+          "level": 3,
+          "channel": "sms",
+          "amount_minor": 3880000,
+          "overdue_days": 585,
+          "message": "Dernier rappel : votre retard sera signalé à l'entrée du club - Club Sportif Démo. Membre 00008 : 38800.00 MUR dû, dont 37250.00 MUR en retard de 585 jour(s). Payer en ligne : <origin>/membre/<token#6>. Par virement, indiquez la référence CSD-00008-73.",
+          "sent_at": "2026-09-17T04:00:00.000Z",
+          "member_id": "<mbr#6>",
+          "member_number": "00008",
+          "member": "Yannick Ramsamy (démo)",
+          "sent_by": "Mélanie C. (démo)"
+        },
+        {
+          "id": "<rem#8>",
+          "level": 3,
+          "channel": "email",
+          "amount_minor": 1310000,
+          "overdue_days": 220,
+          "message": "Dernier rappel : votre retard sera signalé à l'entrée du club - Club Sportif Démo. Membre 00006 : 13100.00 MUR dû, dont 10500.00 MUR en retard de 220 jour(s). Payer en ligne : <origin>/membre/<token#7>. Par virement, indiquez la référence CSD-00006-79.",
+          "sent_at": "2026-09-17T04:00:00.000Z",
+          "member_id": "<mbr#7>",
+          "member_number": "00006",
+          "member": "Nitin Gopaul (démo)",
+          "sent_by": "Mélanie C. (démo)"
+        }
+      ]
+    }
+  ]
+}

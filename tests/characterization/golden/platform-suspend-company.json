@@ -1,0 +1,143 @@
+{
+  "scenario": "platform-suspend-company",
+  "description": "A suspended company's users are refused (403 company_suspended) until it is reactivated.",
+  "transcript": [
+    {
+      "step": "login u_platform",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_platform"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "suspend Grossiste Démo Océan",
+      "as": "u_platform",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/platform/companies/co_go",
+        "body": {
+          "status": "suspended"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "login u_go_centrale",
+      "as": "u_go_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_go_centrale"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "suspended company user refused",
+      "as": "u_go_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "company_suspended",
+          "message": "L'accès de cette entreprise est suspendu."
+        }
+      }
+    },
+    {
+      "step": "session still readable",
+      "as": "u_go_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/session"
+      },
+      "status": 200,
+      "response": {
+        "demoMode": true,
+        "version": "0.1.0",
+        "today": "2026-10-17",
+        "user": {
+          "id": "u_go_centrale",
+          "name": "Priya S. (démo)",
+          "role": "dispatcher",
+          "companyId": "co_go",
+          "companyName": "Grossiste Démo Océan",
+          "vertical": "distribution"
+        }
+      }
+    },
+    {
+      "step": "login u_platform",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_platform"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "reactivate",
+      "as": "u_platform",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/platform/companies/co_go",
+        "body": {
+          "status": "active"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "login u_go_centrale",
+      "as": "u_go_centrale",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_go_centrale"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "access restored",
+      "as": "u_go_centrale",
+      "request": {
+        "method": "GET",
+        "path": "/api/centrale/dashboard"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    }
+  ]
+}

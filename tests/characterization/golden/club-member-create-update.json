@@ -1,0 +1,228 @@
+{
+  "scenario": "club-member-create-update",
+  "description": "Secretariat creates a member (reference and badge generated), updates plan and status; invalid inputs refused; finance cannot create.",
+  "transcript": [
+    {
+      "step": "login u_cs_secretariat",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_secretariat"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "plans",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/dues"
+      },
+      "status": 200,
+      "response": "<not recorded>"
+    },
+    {
+      "step": "create member",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members",
+        "body": {
+          "name": "Nouveau Membre (démo)",
+          "email": "nouveau@membres.exemple.invalid",
+          "phone": "+230 5900 9999",
+          "planId": "plan_cs_fam"
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<mbr#1>",
+        "number": "00017",
+        "reference": "CSD-00017-46"
+      }
+    },
+    {
+      "step": "create member with badge",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members",
+        "body": {
+          "name": "Badge Fixe (démo)",
+          "planId": null,
+          "badge": "B99999"
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<mbr#2>",
+        "number": "00018",
+        "reference": "CSD-00018-43"
+      }
+    },
+    {
+      "step": "duplicate badge",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members",
+        "body": {
+          "name": "Badge Doublon (démo)",
+          "planId": null,
+          "badge": "B99999"
+        }
+      },
+      "status": 409,
+      "response": {
+        "error": {
+          "code": "badge_taken",
+          "message": "Ce badge est déjà attribué à un autre membre."
+        }
+      }
+    },
+    {
+      "step": "name too short",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members",
+        "body": {
+          "name": "X",
+          "planId": null
+        }
+      },
+      "status": 400,
+      "response": {
+        "error": {
+          "code": "invalid_input",
+          "message": "Données invalides : name Too small: expected string to have >=2 characters"
+        }
+      }
+    },
+    {
+      "step": "suspend and change phone",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/club/members/<mbr#1>",
+        "body": {
+          "status": "suspended",
+          "phone": "+230 5900 0000"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "change plan",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "PATCH",
+        "path": "/api/club/members/<mbr#1>",
+        "body": {
+          "planId": "plan_cs_ind"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "member after update",
+      "as": "u_cs_secretariat",
+      "request": {
+        "method": "GET",
+        "path": "/api/club/members/<mbr#1>"
+      },
+      "status": 200,
+      "response": {
+        "member": {
+          "id": "<mbr#1>",
+          "company_id": "co_cs",
+          "number": "00017",
+          "name": "Nouveau Membre (démo)",
+          "email": "nouveau@membres.exemple.invalid",
+          "phone": "+230 5900 0000",
+          "plan_id": "plan_cs_ind",
+          "status": "suspended",
+          "reference": "CSD-00017-46",
+          "badge": "B00017",
+          "joined_at": "2026-10-17",
+          "created_at": "2026-10-17T04:00:02.000Z",
+          "plan": {
+            "id": "plan_cs_ind",
+            "name": "Individuel",
+            "billing": "annual",
+            "fee_minor": 1800000
+          }
+        },
+        "account": {
+          "chargedMinor": 0,
+          "paidMinor": 0,
+          "balanceMinor": 0,
+          "dueMinor": 0,
+          "creditMinor": 0,
+          "overdueMinor": 0,
+          "overdueDays": 0,
+          "oldestOverdueId": null
+        },
+        "portalPath": "/membre/UX6Hj__mIprK-UXpYYT__A",
+        "gate": {
+          "decision": "deny",
+          "reason": "Membre suspendu par le club.",
+          "memberId": "<mbr#1>",
+          "overdueMinor": 0,
+          "overdueDays": 0
+        },
+        "charges": [],
+        "payments": [],
+        "statement": [],
+        "reminders": [],
+        "gateEvents": []
+      }
+    },
+    {
+      "step": "login u_cs_compta",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_cs_compta"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "finance cannot create members",
+      "as": "u_cs_compta",
+      "request": {
+        "method": "POST",
+        "path": "/api/club/members",
+        "body": {
+          "name": "Par la comptabilité",
+          "planId": null
+        }
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "forbidden",
+          "message": "Accès non autorisé."
+        }
+      }
+    }
+  ]
+}

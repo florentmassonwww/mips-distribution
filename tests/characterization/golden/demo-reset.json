@@ -1,0 +1,148 @@
+{
+  "scenario": "demo-reset",
+  "description": "Only the platform admin can reset the demo; after a reset the seeded data is back.",
+  "transcript": [
+    {
+      "step": "login u_bd_admin",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "reset refused for company admin",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/reset",
+        "body": {}
+      },
+      "status": 403,
+      "response": {
+        "error": {
+          "code": "forbidden",
+          "message": "Accès non autorisé."
+        }
+      }
+    },
+    {
+      "step": "create a user before reset",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/admin/users",
+        "body": {
+          "name": "Temporaire Démo",
+          "email": "temp@exemple.invalid",
+          "role": "agent"
+        }
+      },
+      "status": 200,
+      "response": {
+        "id": "<usr#1>"
+      }
+    },
+    {
+      "step": "login u_platform",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_platform"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "reset by platform admin",
+      "as": "u_platform",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/reset",
+        "body": {}
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "login u_bd_admin",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "POST",
+        "path": "/api/demo/login",
+        "body": {
+          "userId": "u_bd_admin"
+        }
+      },
+      "status": 200,
+      "response": {
+        "ok": true
+      }
+    },
+    {
+      "step": "users after reset",
+      "as": "u_bd_admin",
+      "request": {
+        "method": "GET",
+        "path": "/api/admin/users"
+      },
+      "status": 200,
+      "response": [
+        {
+          "id": "u_bd_admin",
+          "name": "Anjali R. (démo)",
+          "email": "admin@bd.exemple.invalid",
+          "role": "company_admin",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:04.000Z"
+        },
+        {
+          "id": "u_bd_centrale",
+          "name": "Kevin L. (démo)",
+          "email": "centrale@bd.exemple.invalid",
+          "role": "dispatcher",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:04.000Z"
+        },
+        {
+          "id": "u_bd_finance",
+          "name": "Sophie M. (démo)",
+          "email": "finance@bd.exemple.invalid",
+          "role": "finance",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:04.000Z"
+        },
+        {
+          "id": "u_bd_agent1",
+          "name": "Ravi D. (démo)",
+          "email": "agent1@bd.exemple.invalid",
+          "role": "agent",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:04.000Z"
+        },
+        {
+          "id": "u_bd_agent2",
+          "name": "Nadia P. (démo)",
+          "email": "agent2@bd.exemple.invalid",
+          "role": "agent",
+          "active": 1,
+          "created_at": "2026-10-17T04:00:04.000Z"
+        }
+      ]
+    }
+  ]
+}
