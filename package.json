@@ -13,6 +13,11 @@
     "golden:update": "node tests/characterization/run.mjs --update"
   },
   "devDependencies": {
+    "@sinonjs/fake-timers": "15.5.0",
     "playwright": "1.63.0"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }
