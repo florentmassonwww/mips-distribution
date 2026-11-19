@@ -12,7 +12,9 @@ The work is delivered step by step, one branch and one pull request per step.
 |---|---|
 | `reference/v0.1.0/` | Compiled v0.1.0 demo, kept as the behaviour reference (its source code is lost). See [`reference/README.md`](reference/README.md). |
 | `apps/api/` | API rebuilt from v0.1.0 in TypeScript (Hono, SQLite). See [`docs/API.md`](docs/API.md). |
+| `apps/web/` | Interface rebuilt from v0.1.0 in TSX (React, Vite): back office and driver screen. See [`docs/WEB.md`](docs/WEB.md). |
 | `packages/` | `core`, `connectors`, `ui`: created empty, filled in later steps. |
+| `tests/visual/` | Pixel comparison of every screen with the reference (4 widths, English and French). |
 | `tests/characterization/` | 52 scenarios replayed against the reference and against `apps/api`; recorded responses in `golden/`. See [`docs/REFERENCE-V0.1.0.md`](docs/REFERENCE-V0.1.0.md). |
 
 ## Run the tests
