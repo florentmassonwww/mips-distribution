@@ -10,9 +10,9 @@ import { formatMinor } from "../core/format.ts";
 import { addDays, businessDay, iso } from "../core/time.ts";
 import {
   type Connectors,
-  type OrderLineInput,
+  type OrderInput,
   type PaymentMethod,
-  type SaleResult,
+  type SyncActionResult,
   type SimulatedOutcome,
   applySyncAction,
   closeDay,
@@ -31,7 +31,7 @@ import {
   syncErp,
 } from "../http/legacy-modules.ts";
 import { CUSTOMERS, PRODUCTS } from "./catalog.ts";
-import { productIdOf, seedActor } from "./companies.ts";
+import { productIdOf, providerRef, seedActor } from "./companies.ts";
 
 /** Origin given to payment requests made by the seed. */
 const PAYMENT_ORIGIN = "http://127.0.0.1";
@@ -46,7 +46,19 @@ const PAST_ROUTES: Array<[string, string]> = [
 ];
 const RECEIVERS = ["M. Paul", "Mme Devi", "M. Ali", "Mme Lakshmi", "M. Kumar"];
 
+type OrderLineInput = OrderInput["lines"][number];
+type SaleResult = Extract<SyncActionResult, { status: "applied" | "duplicate" }>["result"] & { invoiceId: string };
+
 const line = (slug: string, sku: string, qty: number): OrderLineInput => ({ productId: productIdOf(slug, sku), qty });
+
+/** Result of a seeded delivery or sale: the seed's own actions always apply and produce an invoice. */
+function invoiced(outcome: SyncActionResult): SaleResult {
+  if (outcome.status === "rejected") throw new Error(`demo seed action ${outcome.id} rejected: ${outcome.message}`);
+  const { result } = outcome;
+  if (result.invoiceId === null) throw new Error(`demo seed action ${outcome.id} produced no invoice`);
+  return { ...result, invoiceId: result.invoiceId };
+}
+
 
 export async function seedDistributionHistory(db: Db, connectors: Connectors, now: Date): Promise<void> {
   const today = businessDay(now);
@@ -68,7 +80,7 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
     all<{ id: string; qty_ordered: number }>(db, "SELECT id, qty_ordered FROM order_lines WHERE order_id = ?", orderId);
   /** Delivers an order; `shortQty` units of its first line are refused (damaged crate). */
   const deliver = (agent: Actor, orderId: string, receiver: string, shortQty: number, at: Date): SaleResult =>
-    applySyncAction(
+    invoiced(applySyncAction(
       db,
       agent,
       {
@@ -86,14 +98,14 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
         },
       },
       at,
-    ).result;
+    ));
   const sell = (agent: Actor, actionId: string, routeId: string, customerId: string, lines: OrderLineInput[], receiver: string, at: Date) =>
-    applySyncAction(
+    invoiced(applySyncAction(
       db,
       agent,
       { id: actionId, type: "sale", payload: { routeId, customerId, lines, pod: { name: receiver, note: "" }, at: iso(at) } },
       at,
-    ).result;
+    ));
   const pay = async (agent: Actor, sale: SaleResult, method: PaymentMethod, idempotencyKey: string, at: Date) =>
     (
       await requestPayment(
@@ -155,11 +167,11 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
       // On even days the first customer's card is declined once before another payment.
       if (n === 0 && daysAgo % 2 == 0) {
         const refused = await pay(agent, sale, "card_tpe", `seed-${sale.invoiceId}-refus`, at);
-        notify(refused.provider_ref, "card_tpe", "failure", at);
+        notify(providerRef(refused), "card_tpe", "failure", at);
       }
       const method = METHOD_ROTATION[(daysAgo + n) % METHOD_ROTATION.length]!;
       const payment = await pay(agent, sale, method, `seed-${sale.invoiceId}-${method}`, at);
-      notify(payment.provider_ref, method, "success", at);
+      notify(providerRef(payment), method, "success", at);
     }
 
     closeRoute(db, agent, routeId, at);
@@ -199,7 +211,7 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
 
   const payInFull = async (sale: SaleResult, method: PaymentMethod): Promise<void> => {
     const payment = await pay(agent1, sale, method, `seed-${sale.invoiceId}-${method}`, yesterday);
-    notify(payment.provider_ref, method, "success", yesterday);
+    notify(providerRef(payment), method, "success", yesterday);
   };
   const corailSale = deliver(agent1, corailOrder, "M. Paul (réception)", 0, yesterday);
   await payInFull(corailSale, "juice");

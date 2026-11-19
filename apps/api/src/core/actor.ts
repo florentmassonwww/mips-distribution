@@ -22,3 +22,6 @@ export interface SessionUser extends Actor {
 
 /** Actor of automatic actions (provider notifications, scheduled runs, seed). */
 export const SYSTEM_ACTOR: Actor = { id: "system", role: "system" };
+
+/** Company of an actor, or null for platform-level and system actors. */
+export const companyOf = (actor: Actor): string | null => actor.companyId ?? null;

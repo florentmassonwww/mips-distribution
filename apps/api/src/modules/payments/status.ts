@@ -1,5 +1,5 @@
 // Following up a payment attempt: status query to the provider, cancellation, customer claim.
-import type { SessionUser } from "../../core/actor.ts";
+import { type Actor, companyOf } from "../../core/actor.ts";
 import { type Db, transaction } from "../../core/db.ts";
 import { ApiError } from "../../core/errors.ts";
 import { iso } from "../../core/time.ts";
@@ -12,7 +12,7 @@ import type { PaymentRow } from "./types.ts";
 const REFUSED_BY_PROVIDER = "Refusé ou annulé chez le prestataire.";
 
 /** Applies the provider's answer to a status query. Runs inside a transaction, on a fresh row. */
-function applyProviderStatus(db: Db, payment: PaymentRow, status: ProviderStatus, user: SessionUser, now: Date): void {
+function applyProviderStatus(db: Db, payment: PaymentRow, status: ProviderStatus, user: Actor, now: Date): void {
   if (status === "succeeded") confirmPayment(db, payment, "status_query", user, now);
   else if (status === "failed") failPayment(db, payment, REFUSED_BY_PROVIDER, user, now);
   else if (status === "unknown") markToVerify(db, payment, "Le prestataire ne connaît pas cette référence.", user, now);
@@ -26,11 +26,11 @@ function applyProviderStatus(db: Db, payment: PaymentRow, status: ProviderStatus
 export async function checkPaymentStatus(
   db: Db,
   connectors: ConnectorSet,
-  user: SessionUser,
+  user: Actor,
   paymentId: string,
   now: Date = new Date(),
 ): Promise<PaymentRow> {
-  const companyId = user.companyId;
+  const companyId = companyOf(user);
   const payment = getPaymentForUser(db, user, paymentId);
   if ((payment.status === "pending" || payment.status === "to_verify") && payment.provider_ref) {
     const status = await connectors.payments[payment.method].queryStatus(payment.provider_ref);
@@ -46,11 +46,11 @@ export async function checkPaymentStatus(
 export async function cancelPayment(
   db: Db,
   connectors: ConnectorSet,
-  user: SessionUser,
+  user: Actor,
   paymentId: string,
   now: Date = new Date(),
 ): Promise<PaymentRow> {
-  const companyId = user.companyId;
+  const companyId = companyOf(user);
   const payment = getPaymentForUser(db, user, paymentId);
   if (payment.status !== "pending") throw new ApiError(409, "bad_status", "Seule une tentative en attente peut être annulée.");
 
@@ -69,8 +69,8 @@ export async function cancelPayment(
 }
 
 /** The customer shows a proof of payment (e.g. a screenshot): never a confirmation, only "to verify". */
-export function claimPayment(db: Db, user: SessionUser, paymentId: string, now: Date = new Date()): PaymentRow {
-  const companyId = user.companyId;
+export function claimPayment(db: Db, user: Actor, paymentId: string, now: Date = new Date()): PaymentRow {
+  const companyId = companyOf(user);
   return transaction(db, () => {
     const payment = getPaymentForUser(db, user, paymentId);
     if (payment.status !== "pending") throw new ApiError(409, "bad_status", "Cette tentative n'est plus en attente.");

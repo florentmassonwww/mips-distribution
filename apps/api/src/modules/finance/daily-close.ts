@@ -1,5 +1,5 @@
 // Daily close: totals of a business day, frozen once finance closes it.
-import type { SessionUser } from "../../core/actor.ts";
+import { type Actor, companyOf } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, type Row, all, get, run, transaction } from "../../core/db.ts";
 import { ApiError } from "../../core/errors.ts";
@@ -64,8 +64,8 @@ export function getDayTotals(db: Db, companyId: string, day: string): DayTotals 
  * Closes a business day. Refused while attempts are pending: their outcome would change the
  * totals. Attempts "to verify" do not block (they are counted in the totals).
  */
-export function closeDay(db: Db, user: SessionUser, day: string, now: Date = new Date()): DayTotals {
-  const companyId = user.companyId!;
+export function closeDay(db: Db, user: Actor, day: string, now: Date = new Date()): DayTotals {
+  const companyId = companyOf(user)!;
   return transaction(db, () => {
     const totals = getDayTotals(db, companyId, day);
     // Lexicographic comparison of YYYY-MM-DD strings.

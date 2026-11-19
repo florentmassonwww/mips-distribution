@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { type Actor, SYSTEM_ACTOR } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
-import { type Db, all, get, run, transaction } from "../../core/db.ts";
+import { type Db, type Row, all, get, run, transaction } from "../../core/db.ts";
 import { ApiError } from "../../core/errors.ts";
 import { formatMinor } from "../../core/format.ts";
 import { newId } from "../../core/ids.ts";
@@ -395,7 +395,7 @@ export interface MemberPaymentFilters {
 }
 
 /** Latest 500 member payments of a club, newest first. */
-export function listMemberPayments(db: Db, companyId: string, filters: MemberPaymentFilters = {}): unknown[] {
+export function listMemberPayments(db: Db, companyId: string, filters: MemberPaymentFilters = {}): Row[] {
   const where = ["p.company_id = ?"];
   const params: string[] = [companyId];
   if (filters.status) {

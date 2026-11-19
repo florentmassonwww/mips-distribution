@@ -31,7 +31,7 @@ import {
   planFeeMinor,
   type UserSpec,
 } from "./catalog.ts";
-import { seedActor } from "./companies.ts";
+import { providerRef, seedActor } from "./companies.ts";
 
 const GATE_DEVICE_ID = "gd_cs_main";
 const CASH_NOTE = "Espèces remises au secrétariat";
@@ -94,7 +94,7 @@ export async function seedClub(db: Db, connectors: Connectors, now: Date = new D
       memberActor,
       at,
     );
-    const notification = connectors.payments.link.simulate(started.payment.provider_ref, "success", at)!;
+    const notification = connectors.payments.link.simulate(providerRef(started.payment), "success", at)!;
     handleNotification(db, connectors, "link", notification.rawBody, notification.signature, at);
   };
 

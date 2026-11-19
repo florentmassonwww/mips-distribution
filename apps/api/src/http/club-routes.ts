@@ -104,7 +104,7 @@ export function registerClubRoutes(app: App, deps: AppDeps): void {
       c,
       z.object({
         kind: z.enum(["consumption", "fee"]),
-        outlet: z.enum(CLUB_OUTLETS as [ClubOutlet, ...ClubOutlet[]]),
+        outlet: z.enum(CLUB_OUTLETS),
         label: z.string().min(2).max(80),
         amountMinor: z.number().int().positive().max(1e8),
       }),

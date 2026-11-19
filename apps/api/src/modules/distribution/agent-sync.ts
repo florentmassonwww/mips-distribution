@@ -496,7 +496,7 @@ function sellOnRoute(db: Db, agent: Actor, payload: unknown, now: Date): Deliver
 }
 
 export type SyncActionResult =
-  | { id: string; status: "duplicate" | "applied"; result: unknown }
+  | { id: string; status: "duplicate" | "applied"; result: DeliveryResult }
   | { id: string; status: "rejected"; code: string; message: string };
 
 /**

@@ -1,5 +1,5 @@
 // Receipt of an invoice: invoice, delivered lines, delivery proof and payment attempts.
-import type { SessionUser } from "../../core/actor.ts";
+import { type Actor, companyOf } from "../../core/actor.ts";
 import { type Db, type Row, all, get } from "../../core/db.ts";
 import { notFound } from "../../core/errors.ts";
 import { paymentView } from "./legacy-imports.ts";
@@ -29,13 +29,13 @@ export interface Receipt {
   payments: Array<Record<string, unknown>>;
 }
 
-export function getReceipt(db: Db, user: SessionUser, invoiceId: string): Receipt {
+export function getReceipt(db: Db, user: Actor, invoiceId: string): Receipt {
   const invoice = get<ReceiptInvoice>(
     db,
     `SELECT i.*, c.name AS customer, c.address, co.name AS company, o.number AS order_number
     FROM invoices i JOIN customers c ON c.id = i.customer_id JOIN companies co ON co.id = i.company_id JOIN orders o ON o.id = i.order_id WHERE i.id = ? AND i.company_id = ?`,
     invoiceId,
-    user.companyId,
+    companyOf(user),
   );
   if (!invoice) throw notFound("Facture");
   assertInvoiceAccess(db, user, invoice);

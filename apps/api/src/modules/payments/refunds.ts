@@ -1,5 +1,5 @@
 // Refunds of confirmed payments, full or partial, through the provider.
-import type { SessionUser } from "../../core/actor.ts";
+import { type Actor, companyOf } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run, transaction } from "../../core/db.ts";
 import { ApiError } from "../../core/errors.ts";
@@ -26,13 +26,13 @@ function reserveRefund(db: Db, companyId: string | null, paymentId: string, amou
 export async function refundPayment(
   db: Db,
   connectors: ConnectorSet,
-  user: SessionUser,
+  user: Actor,
   paymentId: string,
   amountMinor: number,
   reason: string,
   now: Date = new Date(),
 ): Promise<PaymentRow> {
-  const companyId = user.companyId;
+  const companyId = companyOf(user);
   const { payment, key } = transaction(db, () => reserveRefund(db, companyId, paymentId, amountMinor));
 
   let refundRef: string;

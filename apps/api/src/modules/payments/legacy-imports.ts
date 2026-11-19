@@ -4,7 +4,7 @@ import type { Db } from "../../core/db.ts";
 import type { ErpSettings, PaymentMethod, PaymentNotification } from "../connectors/index.ts";
 import type { PaymentRow } from "./types.ts";
 import * as m_club_member_payments from "../club/member-payments.ts";
-import * as m_club_payment_view from "../club/payment-view.ts";
+import * as m_club_payment_view from "./payment-view.ts";
 import * as m_distribution_exceptions from "../distribution/exceptions.ts";
 import * as m_distribution_settings from "../distribution/settings.ts";
 

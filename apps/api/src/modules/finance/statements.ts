@@ -1,6 +1,6 @@
 // Bank statements: demo statement generation, and import with matching against payments.
 import { createHash } from "node:crypto";
-import type { SessionUser } from "../../core/actor.ts";
+import { type Actor, companyOf } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, all, get, run, transaction } from "../../core/db.ts";
 import { ApiError } from "../../core/errors.ts";
@@ -69,7 +69,7 @@ const lineHash = (line: StatementLine): string =>
 /** Matches one new bank line against the payment with its reference; opens an exception otherwise. */
 function matchLine(
   db: Db,
-  user: SessionUser,
+  user: Actor,
   companyId: string,
   line: StatementLine,
   bankLineId: string,
@@ -160,12 +160,12 @@ function matchLine(
 export function importStatement(
   db: Db,
   connectors: ConnectorSet,
-  user: SessionUser,
+  user: Actor,
   filename: string,
   content: string,
   now: Date = new Date(),
 ): ImportResult {
-  const companyId = user.companyId!;
+  const companyId = companyOf(user)!;
   const lines = connectors.bank.parse(content);
   if (!lines.length) throw new ApiError(400, "bad_statement", "Le relevé ne contient aucune ligne.");
 

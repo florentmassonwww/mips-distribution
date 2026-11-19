@@ -2,9 +2,9 @@
 import { type Db, get } from "../../core/db.ts";
 import type { Role } from "../../core/actor.ts";
 
-/** Payment methods offered to agents and members, in display order. */
-export const PAYMENT_METHODS = ["paystation", "card_tpe", "juice", "link"] as const;
-export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+// Payment methods are defined by the connectors module (one connector per method).
+import { PAYMENT_METHODS, type PaymentMethod } from "../connectors/types.ts";
+export { PAYMENT_METHODS, type PaymentMethod };
 
 /** Roles that handle operations exceptions (deliveries, stock). */
 export const OPS_ROLES: readonly Role[] = ["company_admin", "dispatcher"];
@@ -23,7 +23,7 @@ export interface PaymentMethodSettings {
 
 export interface CompanySettings {
   payments: {
-    methods: Record<string, PaymentMethodSettings>;
+    methods: Record<PaymentMethod, PaymentMethodSettings>;
     settlementAccountLabel: string;
     attemptMinutes: number;
   };
@@ -37,7 +37,7 @@ export interface CompanySettings {
   club: {
     refPrefix: string;
     dueDays: number;
-    reminders: { levels: number[]; minAmountMinor: number };
+    reminders: { levels: [number, number, number]; minAmountMinor: number };
     gate: { flagAfterDays: number; denyAfterDays: number; minAmountMinor: number };
     accounts: {
       receivable: string;
@@ -76,7 +76,7 @@ export function defaultCompanySettings(): CompanySettings {
           method,
           { enabled: true, feeBps: DEFAULT_FEE_BPS[method], merchantRef: `DEMO-${method.toUpperCase()}` },
         ]),
-      ),
+      ) as Record<PaymentMethod, PaymentMethodSettings>,
       settlementAccountLabel: "Compte courant MCB du distributeur (libellé de démonstration)",
       attemptMinutes: 10,
     },
@@ -117,7 +117,7 @@ export function defaultCompanySettings(): CompanySettings {
 }
 
 /** Effective settings of a company: stored values merged over the defaults, section by section. */
-export function readCompanySettings(db: Db, companyId: string): CompanySettings {
+export function readCompanySettings(db: Db, companyId: string | null): CompanySettings {
   const row = get<{ settings_json: string }>(db, "SELECT settings_json FROM companies WHERE id = ?", companyId);
   const stored = JSON.parse(row?.settings_json || "{}") as StoredSettings;
   const defaults = defaultCompanySettings();

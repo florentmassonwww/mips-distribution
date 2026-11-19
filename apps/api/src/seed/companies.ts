@@ -144,3 +144,9 @@ export function seedPlatformAndCompanies(db: Db, now: Date): void {
     now,
   );
 }
+
+/** Provider reference of a seeded payment: every simulated provider returns one at initiation. */
+export function providerRef(payment: { id: string; provider_ref: string | null }): string {
+  if (payment.provider_ref === null) throw new Error(`demo seed payment ${payment.id} has no provider reference`);
+  return payment.provider_ref;
+}

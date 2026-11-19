@@ -58,4 +58,4 @@ export const clientKey = (c: Context): string => c.req.header("x-forwarded-for")
 export const queryFilter = (c: Context, name: string): string | undefined => c.req.query(name) || undefined;
 
 /** One of the payment methods the platform supports. */
-export const paymentMethodSchema = z.enum(PAYMENT_METHODS as [PaymentMethod, ...PaymentMethod[]]);
+export const paymentMethodSchema = z.enum(PAYMENT_METHODS);

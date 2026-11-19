@@ -1,6 +1,6 @@
 // Payment initiation. Two guards against double debits: the idempotency key (a retried request
 // returns the same attempt) and at most one attempt in progress per invoice.
-import type { SessionUser } from "../../core/actor.ts";
+import { type Actor, companyOf } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run, transaction } from "../../core/db.ts";
 import { ApiError, notFound } from "../../core/errors.ts";
@@ -28,13 +28,13 @@ interface CreatedAttempt {
 /** Creates the pending attempt, or finds the one created earlier with the same idempotency key. */
 function createAttempt(
   db: Db,
-  user: SessionUser,
+  user: Actor,
   input: CreatePaymentInput,
   settings: CompanySettings,
   expiresAt: Date,
   now: Date,
 ): CreatedAttempt {
-  const companyId = user.companyId;
+  const companyId = companyOf(user);
   const invoice = get<InvoiceRow>(db, "SELECT * FROM invoices WHERE id = ? AND company_id = ?", input.invoiceId, companyId);
   if (!invoice) throw notFound("Facture");
   assertInvoiceAccess(db, user, invoice);
@@ -110,12 +110,12 @@ function createAttempt(
 export async function initiatePayment(
   db: Db,
   connectors: ConnectorSet,
-  user: SessionUser,
+  user: Actor,
   input: CreatePaymentInput,
   origin: string,
   now: Date = new Date(),
 ): Promise<InitiatePaymentResult> {
-  const companyId = user.companyId;
+  const companyId = companyOf(user);
   const settings = companySettings(db, companyId);
   const provider = connectors.payments[input.method];
   const expiresAt = new Date(now.getTime() + settings.payments.attemptMinutes * 60_000);

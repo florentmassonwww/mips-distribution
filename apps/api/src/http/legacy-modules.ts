@@ -14,7 +14,7 @@ import * as m_club_dues from "../modules/club/dues.ts";
 import * as m_club_gate from "../modules/club/gate.ts";
 import * as m_club_member_payments from "../modules/club/member-payments.ts";
 import * as m_club_members from "../modules/club/members.ts";
-import * as m_club_payment_view from "../modules/club/payment-view.ts";
+import * as m_club_payment_view from "../modules/payments/payment-view.ts";
 import * as m_club_portal from "../modules/club/portal.ts";
 import * as m_club_reminders from "../modules/club/reminders.ts";
 import * as m_club_statements from "../modules/club/statements.ts";
@@ -35,147 +35,17 @@ import * as m_payments_index from "../modules/payments/index.ts";
 // ---------------------------------------------------------------------------------------------
 // Shared vocabulary
 
-export type PaymentMethod = "paystation" | "card_tpe" | "juice" | "link";
-export type ClubOutlet = "restaurant" | "bar" | "tennis" | "squash" | "golf" | "shop" | "events" | "other";
-/** Outcome a simulated provider can be asked to produce. */
-export type SimulatedOutcome = "success" | "failure" | "lost_notification" | "duplicate" | "wrong_amount";
-
-/** A signed provider notification, as the simulated providers emit it. */
-export interface SignedNotification {
-  rawBody: string;
-  signature: string;
-}
-
-export interface PaymentProvider {
-  readonly method: PaymentMethod;
-  readonly label: string;
-  readonly demo: boolean;
-  readonly capabilities: Record<string, boolean>;
-  readonly toVerify: string[];
-  /** Settles the provider-side transaction and returns its notification (null when it is "lost"). */
-  simulate(providerRef: string, outcome: SimulatedOutcome, now: Date): SignedNotification | null;
-}
-
-export interface ConnectorInfo {
-  readonly label: string;
-  readonly demo: boolean;
-  readonly toVerify: string[];
-}
-
-export interface Connectors {
-  payments: Record<PaymentMethod, PaymentProvider>;
-  bank: ConnectorInfo;
-  erp: ConnectorInfo;
-  access: ConnectorInfo;
-}
-
-export interface CompanySettings {
-  payments: {
-    methods: Record<PaymentMethod, { enabled: boolean; feeBps: number; merchantRef: string }>;
-    settlementAccountLabel: string;
-    attemptMinutes: number;
-  };
-  erp: { system: string; endpoint: string; secretRef: string; autoSync: boolean; simulateFailure: boolean };
-  club: {
-    refPrefix: string;
-    dueDays: number;
-    reminders: { levels: [number, number, number]; minAmountMinor: number };
-    gate: { flagAfterDays: number; denyAfterDays: number; minAmountMinor: number };
-    [key: string]: unknown;
-  };
-}
-
-export interface OrderLineInput {
-  productId: string;
-  qty: number;
-}
-
-export interface OrderInput {
-  customerId: string;
-  routeId?: string | null;
-  note: string;
-  lines: OrderLineInput[];
-}
-
-export interface RouteInput {
-  name: string;
-  day: string;
-  agentId?: string | null;
-  vehicle: string;
-  customerIds: string[];
-}
-
-/** Offline action sent by an agent's device (delivery or on-the-spot sale). */
-export interface SyncAction {
-  id: string;
-  type: "deliver" | "sale";
-  payload: unknown;
-}
-
-/** What a delivery or a sale produced: the invoice to collect. */
-export interface SaleResult {
-  invoiceId: string;
-  amountMinor: number;
-  [key: string]: unknown;
-}
-
-export interface SyncActionResult {
-  id: string;
-  status: "applied" | "duplicate" | "rejected";
-  result: SaleResult;
-  code?: string;
-  message?: string;
-}
-
-export interface PaymentRequest {
-  invoiceId: string;
-  method: PaymentMethod;
-  amountMinor: number;
-  idempotencyKey: string;
-}
-
-export interface NotificationOutcome {
-  result: string;
-  paymentId: string | null;
-  companyId: string | null;
-}
-
-export interface MemberInput {
-  name: string;
-  email: string;
-  phone: string;
-  planId: string | null;
-  badge?: string;
-}
-
-export interface MemberPatch {
-  status?: "active" | "suspended" | "resigned";
-  planId?: string | null;
-  email?: string;
-  phone?: string;
-}
-
-export interface ChargeInput {
-  kind: "consumption" | "fee";
-  outlet: ClubOutlet | string;
-  label: string;
-  amountMinor: number;
-}
-
-export interface ErpSyncOptions {
-  ids?: string[];
-  retryFailed?: boolean;
-}
-
-export interface DailyClose extends Row {
-  day: string;
-  closed_at: string;
-  closed_by: string | null;
-  totals: { invoiced: number; outstanding: number; toVerify: number; openExceptions: number };
-}
-
-// ---------------------------------------------------------------------------------------------
-// Distribution
+export type { PaymentMethod, ClubOutlet, CompanySettings } from "../modules/distribution/settings.ts";
+export type { SimulatedOutcome, SignedNotification, DemoConnectorSet as Connectors } from "../modules/connectors/types.ts";
+export type { CreateOrderInput as OrderInput } from "../modules/distribution/orders.ts";
+export type { CreateRouteInput as RouteInput } from "../modules/distribution/delivery-routes.ts";
+export type { SyncActionInput as SyncAction, SyncActionResult } from "../modules/distribution/agent-sync.ts";
+export type { CreatePaymentInput as PaymentRequest } from "../modules/payments/schemas.ts";
+export type { NotificationOutcome } from "../modules/payments/notifications.ts";
+export type { CreateMemberInput as MemberInput, UpdateMemberInput as MemberPatch } from "../modules/club/members.ts";
+export type { ChargeMemberInput as ChargeInput } from "../modules/club/charges.ts";
+export type { SyncOptions as ErpSyncOptions } from "../modules/finance/accounting-entries.ts";
+export type { DailyCloseEntry as DailyClose } from "../modules/finance/daily-close.ts";
 
 export const PAYMENT_METHODS = m_distribution_settings.PAYMENT_METHODS;
 /** Roles that run operations (orders, routes, stock). */
