@@ -1,0 +1,24 @@
+// Who performs an action: a signed-in user, a public member link, or the system itself.
+
+export type Role = "platform_admin" | "company_admin" | "dispatcher" | "finance" | "agent";
+
+export interface Actor {
+  id: string;
+  role: Role | "member" | "system";
+  companyId?: string | null;
+  name?: string;
+}
+
+/** Signed-in user, as resolved from the session cookie. */
+export interface SessionUser extends Actor {
+  role: Role;
+  name: string;
+  email: string;
+  companyId: string | null;
+  companyName: string | null;
+  companyStatus: string | null;
+  vertical: "distribution" | "club" | null;
+}
+
+/** Actor of automatic actions (provider notifications, scheduled runs, seed). */
+export const SYSTEM_ACTOR: Actor = { id: "system", role: "system" };

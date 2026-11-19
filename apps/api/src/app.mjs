@@ -1,7 +1,7 @@
 // Builds a ready-to-serve instance: database, migrations, simulated connectors, demo seed, Hono app.
 // Same start-up sequence as the v0.1.0 reference.
 import { openDatabase, migrate, createConnectors, seed, hasData, createApp } from "./legacy/index.mjs";
-import { random } from "./runtime.mjs";
+import { randomBytes } from "./core/random.ts";
 
 /**
  * @param {object} [options]
@@ -12,8 +12,8 @@ import { random } from "./runtime.mjs";
  * @param {() => Date} [options.now] Clock.
  */
 export async function createInstance(options = {}) {
-  const sessionSecret = options.sessionSecret ?? random.bytes(32).toString("hex");
-  const webhookSecret = options.webhookSecret ?? random.bytes(32).toString("hex");
+  const sessionSecret = options.sessionSecret ?? randomBytes(32).toString("hex");
+  const webhookSecret = options.webhookSecret ?? randomBytes(32).toString("hex");
   const config = {
     demoMode: true,
     port: 0,

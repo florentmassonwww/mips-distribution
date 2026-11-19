@@ -1,24 +1,20 @@
 // Library bindings used by the extracted v0.1.0 code (step 1a, stage 2).
 /* eslint-disable */
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { DatabaseSync } from "node:sqlite";
 import { Hono } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { z } from "zod";
-import { random } from "../runtime.mjs";
+import { randomBytes } from "../core/random.ts";
+import { openDatabase } from "../core/db.ts";
 
 // node:crypto in place of the bundled pure-JS SHA-256 / HMAC.
 const me = (alg) => createHash(alg);
 const he = (alg, key) => createHmac(alg, key);
 // Random bytes go through the runtime source (crypto.getRandomValues, seedable in tests).
-const ge = (n) => random.bytes(n);
+const ge = (n) => randomBytes(n);
 const ve = (a, b) => timingSafeEqual(a, b);
 // node:sqlite in place of the bundled SQLite WebAssembly build.
-function je(file) {
-  const db = new DatabaseSync(file);
-  db.exec("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;");
-  return db;
-}
+const je = openDatabase;
 // Hono and its cookie helpers.
 const Zt = Hono;
 const re = (c, name) => getCookie(c, name);

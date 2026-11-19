@@ -10,11 +10,14 @@
   "scripts": {
     "test": "node tests/characterization/run.mjs",
     "test:characterization": "node tests/characterization/run.mjs",
-    "golden:update": "node tests/characterization/run.mjs --update"
+    "golden:update": "node tests/characterization/run.mjs --update",
+    "typecheck": "tsc -p apps/api"
   },
   "devDependencies": {
     "@sinonjs/fake-timers": "15.5.0",
-    "playwright": "1.63.0"
+    "@types/node": "22.20.5",
+    "playwright": "1.63.0",
+    "typescript": "5.9.3"
   },
   "workspaces": [
     "apps/*",

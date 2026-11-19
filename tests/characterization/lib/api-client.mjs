@@ -23,7 +23,8 @@ function seeded(seed) {
 
 export async function launchApi() {
   const { createInstance } = await import("../../../apps/api/src/app.mjs");
-  const { random } = await import("../../../apps/api/src/runtime.mjs");
+  const { randomBytes, setRandomGenerator } = await import("../../../apps/api/src/core/random.ts");
+  const random = { bytes: randomBytes, setGenerator: setRandomGenerator };
   return {
     async open(seed) {
       const clock = FakeTimers.install({ now: new Date(T0), toFake: ["Date"] });
