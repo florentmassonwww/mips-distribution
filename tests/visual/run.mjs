@@ -126,7 +126,8 @@ async function capture(baseUrl, screen, width, lang) {
   for (let attempt = 1; ; attempt++) {
     await page.reload();
     await page.waitForFunction(() => document.querySelector("#root")?.children.length > 0, null, { timeout: 30000 });
-    await advance(page, baseUrl, 2000);
+    // Advance once only: a retry must not move the clock further than on the other side.
+    if (attempt === 1) await advance(page, baseUrl, 2000);
     if (!needsSession) break;
     const signedIn = await page
       .waitForFunction(() => /Signed in|Connecté/.test(document.body.innerText), null, { timeout: 30000 })
