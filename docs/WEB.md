@@ -2,7 +2,9 @@
 
 The v0.1.0 interface (React 19, React Router 7, hash routes), rebuilt from its compiled demo
 (step 1b) and rewritten as strict TSX. It renders exactly like the reference: the visual comparison
-checks every route at 1280, 1366, 1920 and 390 px, in English and French, pixel for pixel.
+checks every route at 1280, 1366, 1920 and 390 px, in English and French, pixel for pixel, except
+the intended differences listed in `tests/visual/divergences.mjs` (the back office at 390 px: no
+horizontal scrolling, the area navigation wraps, wide tables scroll inside their card).
 
 ```bash
 npm run build                         # builds apps/web/dist
@@ -24,7 +26,7 @@ npm run test:visual                   # build, then the 288-screenshot compariso
 | `src/finance/` | Exceptions, journal, invoices, reconciliation and statement import, daily close, accounting entries |
 | `src/admin/`, `src/platform/` | Company users, settings, audit log; platform companies |
 | `src/club/` | Club dashboard, members, dues, reminders, payments, reconciliation, export, gate, front desk, member portal, demo banner |
-| `src/style.css` | Stylesheet, unchanged from v0.1.0 |
+| `src/style.css` | Stylesheet of v0.1.0 (minified line), followed by the narrow-screen rules added since |
 
 ## Behaviours a refactor can break silently
 
@@ -45,8 +47,6 @@ Reported during the rewrite; the visual comparison and the API calls hold them f
 
 ## v0.1.0 behaviours kept for parity, to change in later steps
 
-- At 390 px the back-office screens overflow horizontally (about 850 px in English, 1,160 px in
-  French), as in v0.1.0. The requirement is no horizontal scrolling at 390 px.
 - A few French strings bypass the translation table (for example "tentative(s)", "{n} facture(s)",
   " le " in the route close notice, the payment-link share text) and stay French in English.
 - The demo banner says "Offline demo · data stays in this browser": true of the v0.1.0 offline demo,
