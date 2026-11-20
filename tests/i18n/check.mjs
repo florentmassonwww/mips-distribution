@@ -56,6 +56,8 @@ visit(parse(tablePath), (node) => {
     else if (table.has(key)) errors.push(`${where(property)}: duplicate key ${JSON.stringify(key)} (first at ${table.get(key)})`);
     else table.set(key, where(property));
     if (!isText(property.initializer)) errors.push(`${where(property)}: the English text must be a plain string`);
+    else if (/\((s|es|ies)\)/.test(property.initializer.text))
+      errors.push(`${where(property)}: "(s)" form in the English text: use translateCount`);
   }
 });
 

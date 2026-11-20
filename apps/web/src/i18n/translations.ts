@@ -1081,4 +1081,6 @@ Collected (confirmed): {5}`,
   "{0} tentatives": `{0} attempts`,
   "{1}/{0} écriture": `{1}/{0} entry`,
   "{1}/{0} écritures": `{1}/{0} entries`,
+  "{0} : {1} pour {2}": `{0}: {1} for {2}`,
+  "MIPS Distribution · démo": `MIPS Distribution · demo`,
 };
