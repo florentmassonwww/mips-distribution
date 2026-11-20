@@ -8,4 +8,7 @@
   .side nav .group { flex-wrap: wrap; row-gap: 4px; }
   /* Long unbroken hints (such as a file format) wrap inside their card. */
   label.field > span { overflow-wrap: anywhere; }
+  /* Tabs wrap onto a second row when their labels do not fit (e.g. five tabs in English, or a
+     font that renders wider); when they fit, nothing changes. */
+  .tabs { flex-wrap: wrap; }
 }
