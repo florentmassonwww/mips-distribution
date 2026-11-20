@@ -7,7 +7,7 @@ import { DataTable } from "../shared/DataTable.tsx";
 import { useFeedback } from "../shared/Feedback.tsx";
 import { formatDate, formatMoney } from "../shared/format.ts";
 import { useApi } from "../shared/hooks.ts";
-import { BANK_SETTLEMENT_STATUS, CONFIRMATION_SOURCE, PAYMENT_CHANNEL, PAYMENT_STATUS } from "../shared/labels.ts";
+import { BANK_SETTLEMENT_STATUS, CONFIRMATION_SOURCE, FEE_TO_BE_AGREED, PAYMENT_CHANNEL, PAYMENT_STATUS } from "../shared/labels.ts";
 import { Card, CsvExportLink, PageHeader } from "../shared/Layout.tsx";
 import { QueryView } from "../shared/QueryView.tsx";
 import type { JournalEntry } from "./types.ts";
@@ -190,7 +190,13 @@ export function TransactionJournal() {
                     entry.fee_actual_minor === null ? (
                       entry.status === `confirmed` ? (
                         <span className="muted">
-                          {formatMoney(entry.fee_expected_minor)} {translate(`att.`)}
+                          {entry.fee_expected_known ? (
+                            <>
+                              {formatMoney(entry.fee_expected_minor)} {translate(`att.`)}
+                            </>
+                          ) : (
+                            FEE_TO_BE_AGREED
+                          )}
                         </span>
                       ) : (
                         `—`
