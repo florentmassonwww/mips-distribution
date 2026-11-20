@@ -17,7 +17,7 @@ import {
 } from "../shared/offline.ts";
 import { BackButton } from "./BackButton.tsx";
 import { SignaturePad } from "./SignaturePad.tsx";
-import { findCustomer } from "./route-helpers.ts";
+import { findCustomerOutlet } from "./route-helpers.ts";
 
 /** Quick reasons for a partial or refused delivery (translated once, when the module loads). */
 export const DELIVERY_ISSUE_REASONS = [
@@ -43,13 +43,13 @@ interface DeliveryFormProps {
   work: LocalRouteView;
   /** The pre-order delivered; none for an on-the-spot sale. */
   order?: BundleOrder;
-  customerId: string;
-  onCancel: (customerId: string) => void;
+  customerOutletId: string;
+  onCancel: (customerOutletId: string) => void;
   onSubmit: (action: QueuedAction) => Promise<void>;
 }
 
-export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: DeliveryFormProps) {
-  const customer = findCustomer(work, customerId);
+export function DeliveryForm({ work, order, customerOutletId, onCancel, onSubmit }: DeliveryFormProps) {
+  const outlet = findCustomerOutlet(work, customerOutletId);
   const productsById = useMemo(() => new Map(work.products.map((product) => [product.id, product])), [work.products]);
   // A delivery cannot exceed what was ordered; a sale cannot exceed the stock on board.
   const lines = useMemo<FormLine[]>(
@@ -66,10 +66,10 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
             key: product.id,
             productId: product.id,
             max: Math.max(0, work.stock[product.id] ?? 0),
-            price: unitPrice(work, customer, product),
+            price: unitPrice(work, outlet, product),
             ordered: 0,
           })),
-    [order, work, customer],
+    [order, work, outlet],
   );
   const [quantities, setQuantities] = useState<Record<string, number | undefined>>(() =>
     Object.fromEntries(lines.map((line) => [line.key, line.ordered])),
@@ -86,7 +86,7 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
   const deliveredQty = lines.reduce((sum, line) => sum + (quantities[line.key] ?? 0), 0);
   const orderedQty = lines.reduce((sum, line) => sum + line.ordered, 0);
   // Returns are credited at the customer's price.
-  const returnsValue = Object.entries(returns).reduce((sum, [productId, qty]) => sum + qty * unitPrice(work, customer, product(productId)), 0);
+  const returnsValue = Object.entries(returns).reduce((sum, [productId, qty]) => sum + qty * unitPrice(work, outlet, product(productId)), 0);
   const total = lines.reduce((sum, line) => sum + (quantities[line.key] ?? 0) * line.price, 0) - returnsValue;
   const outcome: Outcome = order ? (deliveredQty === 0 ? "refused" : deliveredQty < orderedQty ? "partial" : "full") : "full";
   const needsReason = outcome !== "full";
@@ -122,7 +122,7 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
           type: "deliver",
           state: "queued",
           createdAt: handover.at,
-          customerId,
+          customerOutletId,
           orderId: order.id,
           totalMinor: Math.max(0, total),
           items,
@@ -139,11 +139,11 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
           type: "sale",
           state: "queued",
           createdAt: handover.at,
-          customerId,
+          customerOutletId,
           totalMinor: total,
           items,
-          label: translate("Vente sur place · {0}", customer?.name ?? ""),
-          payload: { routeId: work.route.id, customerId, lines: items, ...handover },
+          label: translate("Vente sur place · {0}", outlet?.name ?? ""),
+          payload: { routeId: work.route.id, customerOutletId, lines: items, ...handover },
         };
     try {
       await onSubmit(action);
@@ -157,7 +157,7 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
 
   return (
     <div className="stack">
-      <BackButton onClick={() => onCancel(customerId)}>{customer?.name}</BackButton>
+      <BackButton onClick={() => onCancel(customerOutletId)}>{outlet?.name}</BackButton>
       <h1>{order ? translate("Livrer {0}", order.number) : translate("Vente sur place")}</h1>
       {!order && (
         <input
@@ -232,7 +232,7 @@ export function DeliveryForm({ work, order, customerId, onCancel, onSubmit }: De
                     <li key={returned.id} className="qtyrow">
                       <div className="grow">
                         {returned.name}
-                        <div className="small muted">{formatMoney(unitPrice(work, customer, returned))}</div>
+                        <div className="small muted">{formatMoney(unitPrice(work, outlet, returned))}</div>
                       </div>
                       <Stepper
                         label={translate("Retour {0}", returned.name)}

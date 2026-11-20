@@ -5,32 +5,32 @@ import { formatMoney } from "../shared/format.ts";
 import { INVOICE_STATUS, ORDER_STATUS } from "../shared/labels.ts";
 import type { BundleInvoice, BundleOrder, LocalRouteView } from "../shared/offline.ts";
 import { BackButton } from "./BackButton.tsx";
-import { amountDue, findCustomer } from "./route-helpers.ts";
+import { amountDue, findCustomerOutlet } from "./route-helpers.ts";
 import type { FieldView } from "./RouteScreen.tsx";
 
 interface StopScreenProps {
   work: LocalRouteView;
-  customerId: string;
+  customerOutletId: string;
   online: boolean;
   closed: boolean;
   go: (view: FieldView) => void;
 }
 
-export function StopScreen({ work, customerId, online, closed, go }: StopScreenProps) {
-  const customer = findCustomer(work, customerId);
+export function StopScreen({ work, customerOutletId, online, closed, go }: StopScreenProps) {
+  const outlet = findCustomerOutlet(work, customerOutletId);
   const productNames = new Map(work.products.map((product) => [product.id, product.name]));
-  const orders = work.orders.filter((order) => order.customer_id === customerId);
-  const invoices = work.invoices.filter((invoice) => invoice.customer_id === customerId);
+  const orders = work.orders.filter((order) => order.customer_outlet_id === customerOutletId);
+  const invoices = work.invoices.filter((invoice) => invoice.customer_outlet_id === customerOutletId);
 
   return (
     <div className="stack">
       <BackButton onClick={() => go({ name: "home" })}>{translate("Tournée")}</BackButton>
       <div>
-        <h1>{customer?.name}</h1>
+        <h1>{outlet?.name}</h1>
         <div className="muted">
-          {customer?.address} · {customer?.phone}
+          {outlet?.address} · {outlet?.phone}
         </div>
-        {customer?.price_list_id && (
+        {outlet?.price_list_id && (
           <div style={{ marginTop: 6 }}>
             <Badge kind="info">{translate("Tarif grands comptes")}</Badge>
           </div>
@@ -46,7 +46,7 @@ export function StopScreen({ work, customerId, online, closed, go }: StopScreenP
         <InvoiceCard key={invoice.id} invoice={invoice} online={online} go={go} />
       ))}
       {!closed && (
-        <button className="big secondary" onClick={() => go({ name: "sale", customerId })}>
+        <button className="big secondary" onClick={() => go({ name: "sale", customerOutletId })}>
           {translate("Nouvelle vente sur place")}
         </button>
       )}

@@ -36,7 +36,7 @@ export const DEMO_TABLES = [
   "routes",
   "price_list_items",
   "products",
-  "customers",
+  "customer_outlets",
   "price_lists",
   "counters",
   "users",

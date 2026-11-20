@@ -59,7 +59,7 @@ export function Invoices() {
                       ),
                     ],
                     [translate(`Émise`), (invoice) => formatDate(invoice.issued_at, true)],
-                    [translate(`Commerce`), (invoice) => invoice.customer],
+                    [translate(`Commerce`), (invoice) => invoice.customer_outlet],
                     [translate(`Tournée`), (invoice) => invoice.route ?? `—`],
                     [translate(`Montant`), (invoice) => formatMoney(invoice.amount_minor), `right`],
                     [translate(`Encaissé confirmé`), (invoice) => formatMoney(invoice.paid_minor - invoice.refunded_minor), `right`],

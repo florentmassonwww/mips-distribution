@@ -41,7 +41,7 @@ export interface InvoiceRow {
   company_id: string;
   number: string;
   order_id: string;
-  customer_id: string;
+  customer_outlet_id: string;
   route_id: string | null;
   agent_id: string | null;
   currency: string;

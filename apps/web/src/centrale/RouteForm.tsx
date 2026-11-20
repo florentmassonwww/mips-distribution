@@ -10,19 +10,19 @@ export interface RouteDraft {
   agentId: string;
   vehicle: string;
   /** Outlets to visit, in visiting order (the order in which they were ticked). */
-  customerIds: string[];
+  customerOutletIds: string[];
 }
 
 interface RouteFormProps {
   reference: ReferenceData;
   draft: RouteDraft;
   onChange: (draft: RouteDraft) => void;
-  onToggleCustomer: (customerId: string) => void;
+  onToggleCustomerOutlet: (customerOutletId: string) => void;
   onSubmit: () => void;
 }
 
 /** New route card. The draft is owned by the page, so it survives closing and reopening the form. */
-export function RouteForm({ reference, draft, onChange, onToggleCustomer, onSubmit }: RouteFormProps) {
+export function RouteForm({ reference, draft, onChange, onToggleCustomerOutlet, onSubmit }: RouteFormProps) {
   return (
     <Card title={translate(`Nouvelle tournée`)}>
       <div className="stack">
@@ -57,14 +57,14 @@ export function RouteForm({ reference, draft, onChange, onToggleCustomer, onSubm
             {translate(`Commerces à visiter, dans l'ordre de sélection`)}
           </div>
           <div className="chips">
-            {reference.customers.map((customer) => {
-              const position = draft.customerIds.indexOf(customer.id);
-              const selected = draft.customerIds.includes(customer.id);
+            {reference.customer_outlets.map((outlet) => {
+              const position = draft.customerOutletIds.indexOf(outlet.id);
+              const selected = draft.customerOutletIds.includes(outlet.id);
               return (
-                <label key={customer.id} className={`chip ${selected ? `on` : ``}`}>
-                  <input type="checkbox" checked={selected} onChange={() => onToggleCustomer(customer.id)} />
+                <label key={outlet.id} className={`chip ${selected ? `on` : ``}`}>
+                  <input type="checkbox" checked={selected} onChange={() => onToggleCustomerOutlet(outlet.id)} />
                   {selected ? `${position + 1}. ` : ``}
-                  {customer.name} · {customer.zone}
+                  {outlet.name} · {outlet.zone}
                 </label>
               );
             })}

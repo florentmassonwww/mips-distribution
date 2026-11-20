@@ -1,4 +1,5 @@
 // Bank statements: demo statement generation, and import with matching against payments.
+import { type LineException, type LineMatch, expectedFee, isFeeVariance, matchStatementLine } from "@mips/core";
 import { createHash } from "node:crypto";
 import { type Actor, companyOf } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
@@ -8,7 +9,7 @@ import { formatMinor } from "../../core/format.ts";
 import { newId } from "../../core/ids.ts";
 import { businessDay, iso } from "../../core/time.ts";
 import { type ConnectorSet, type StatementLine, STATEMENT_HEADER } from "../connectors/index.ts";
-import { expectedFee, settlePayment } from "../payments/index.ts";
+import { settlePayment } from "../payments/index.ts";
 import type { PaymentRow } from "../payments/types.ts";
 import { raiseException as openException } from "../distribution/exceptions.ts";
 import { readCompanySettings as companySettings } from "../distribution/settings.ts";
@@ -39,7 +40,7 @@ export function generateDemoStatement(db: Db, companyId: string, withAnomalies: 
   const lines = payments.map((payment, index) => {
     let gross = payment.amount_minor - payment.refunded_minor;
     // The expected fee is computed on the full amount, refunds included.
-    let fee = expectedFee(payment.amount_minor, methods[payment.method].feeBps);
+    let fee = expectedFee(payment.amount_minor, methods[payment.method].feeBps).minor;
     if (anomalies && index === 0) fee += ANOMALY_EXTRA_FEE_MINOR;
     if (anomalies && index === 1) gross -= ANOMALY_SHORT_CREDIT_MINOR;
     return [day, payment.provider_ref, `REGLEMENT ${payment.method.toUpperCase()}`, formatMinor(gross), formatMinor(fee), formatMinor(gross - fee)].join(";");
@@ -50,7 +51,7 @@ export function generateDemoStatement(db: Db, companyId: string, withAnomalies: 
   return [STATEMENT_HEADER, ...lines].join("\r\n") + "\r\n";
 }
 
-type MatchStatus = "matched" | "unmatched" | "amount_mismatch" | "duplicate";
+type MatchStatus = LineMatch;
 
 export interface ImportCounts {
   matched: number;
@@ -78,74 +79,41 @@ function matchLine(
   now: Date,
 ): MatchStatus {
   const ref = line.reference;
-  if (!payment) {
-    openException(
-      db,
-      companyId,
-      "finance",
-      "unknown_credit",
-      "bank_line",
-      bankLineId,
-      `Crédit bancaire sans paiement correspondant : ${ref} (${formatMinor(line.grossMinor)}).`,
-      { reference: ref, grossMinor: line.grossMinor, valueDate: line.valueDate },
-      now,
-    );
-    return "unmatched";
+  const decision = matchStatementLine(
+    line.grossMinor,
+    payment && { status: payment.status, settlement: payment.settlement_status, amountMinor: payment.amount_minor, refundedMinor: payment.refunded_minor },
+  );
+  if (decision.match !== "matched") {
+    const expectedMinor = payment ? payment.amount_minor - payment.refunded_minor : 0;
+    const exceptions: Record<LineException, [string, Record<string, unknown>]> = {
+      unknown_credit: [`Crédit bancaire sans paiement correspondant : ${ref} (${formatMinor(line.grossMinor)}).`, { reference: ref, grossMinor: line.grossMinor, valueDate: line.valueDate }],
+      duplicate_settlement: [`Référence ${ref} créditée une seconde fois sur le relevé.`, { reference: ref, grossMinor: line.grossMinor }],
+      credit_on_failed: [
+        `Crédit reçu pour ${ref}, enregistré comme échoué : à contrôler avec le prestataire.`,
+        { reference: ref, grossMinor: line.grossMinor, paymentId: payment?.id },
+      ],
+      settlement_amount_mismatch: [
+        `Écart de montant sur ${ref} : ${formatMinor(line.grossMinor)} crédité pour ${formatMinor(expectedMinor)} attendu.`,
+        { reference: ref, creditedMinor: line.grossMinor, expectedMinor, paymentId: payment?.id },
+      ],
+    };
+    const [message, details] = exceptions[decision.exception];
+    openException(db, companyId, "finance", decision.exception, "bank_line", bankLineId, message, details, now);
+    return decision.match;
   }
-  if (payment.settlement_status === "settled") {
-    openException(
-      db,
-      companyId,
-      "finance",
-      "duplicate_settlement",
-      "bank_line",
-      bankLineId,
-      `Référence ${ref} créditée une seconde fois sur le relevé.`,
-      { reference: ref, grossMinor: line.grossMinor },
-      now,
-    );
-    return "duplicate";
-  }
-  if (payment.status === "failed") {
-    openException(
-      db,
-      companyId,
-      "finance",
-      "credit_on_failed",
-      "bank_line",
-      bankLineId,
-      `Crédit reçu pour ${ref}, enregistré comme échoué : à contrôler avec le prestataire.`,
-      { reference: ref, grossMinor: line.grossMinor, paymentId: payment.id },
-      now,
-    );
-    return "unmatched";
-  }
-  const expectedMinor = payment.amount_minor - payment.refunded_minor;
-  if (line.grossMinor !== expectedMinor) {
-    openException(
-      db,
-      companyId,
-      "finance",
-      "settlement_amount_mismatch",
-      "bank_line",
-      bankLineId,
-      `Écart de montant sur ${ref} : ${formatMinor(line.grossMinor)} crédité pour ${formatMinor(expectedMinor)} attendu.`,
-      { reference: ref, creditedMinor: line.grossMinor, expectedMinor, paymentId: payment.id },
-      now,
-    );
-    return "amount_mismatch";
-  }
+  // A match always has its payment.
+  const matched = payment!;
 
-  settlePayment(db, payment, { id: bankLineId, feeMinor: line.feeMinor, valueDate: line.valueDate }, user, now);
+  settlePayment(db, matched, { id: bankLineId, feeMinor: line.feeMinor, valueDate: line.valueDate }, user, now);
   // Read after settlement: a payment confirmed by this very line just got its expected fee.
   const expected = get<{ fee_expected_minor: number; fee_expected_known: number }>(
     db,
     "SELECT fee_expected_minor, fee_expected_known FROM payments WHERE id = ?",
-    payment.id,
+    matched.id,
   )!;
   const expectedFeeMinor = expected.fee_expected_minor;
   // A fee variance does not prevent the match. A fee still to be agreed has no expected amount.
-  if (expected.fee_expected_known && line.feeMinor !== expectedFeeMinor) {
+  if (isFeeVariance(line.feeMinor, { minor: expectedFeeMinor, known: !!expected.fee_expected_known })) {
     openException(
       db,
       companyId,
@@ -154,7 +122,7 @@ function matchLine(
       "bank_line",
       bankLineId,
       `Écart de frais sur ${ref} : ${formatMinor(line.feeMinor)} prélevé pour ${formatMinor(expectedFeeMinor)} attendu.`,
-      { reference: ref, feeMinor: line.feeMinor, expectedMinor: expectedFeeMinor, paymentId: payment.id },
+      { reference: ref, feeMinor: line.feeMinor, expectedMinor: expectedFeeMinor, paymentId: matched.id },
       now,
     );
   }

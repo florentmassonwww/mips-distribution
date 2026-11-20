@@ -1,4 +1,5 @@
 // Bank settlement of a payment, found on an imported bank statement.
+import { confirmedBySettlement } from "@mips/core";
 import type { Actor } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run } from "../../core/db.ts";
@@ -19,7 +20,7 @@ export interface SettlementLine {
  * pending or to verify is confirmed first.
  */
 export function settlePayment(db: Db, payment: PaymentRow, line: SettlementLine, actor: Actor, now: Date): void {
-  if (payment.status === "pending" || payment.status === "to_verify") confirmPayment(db, payment, "bank_statement", actor, now);
+  if (confirmedBySettlement(payment.status)) confirmPayment(db, payment, "bank_statement", actor, now);
   run(
     db,
     "UPDATE payments SET settlement_status = 'settled', settled_at = ?, fee_actual_minor = ?, bank_line_id = ? WHERE id = ?",

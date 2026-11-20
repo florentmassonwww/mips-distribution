@@ -35,8 +35,8 @@ export function listJournal(db: Db, companyId: string, filters: JournalFilters =
     db,
     `SELECT p.id, p.created_at, p.updated_at, p.confirmed_at, p.settled_at, p.method, p.amount_minor, p.refunded_minor, p.currency, p.status, p.settlement_status,
       p.provider_ref, p.failure_reason, p.verify_reason, p.confirmed_via, p.fee_expected_minor, p.fee_expected_known, p.fee_actual_minor,
-      i.number AS invoice, i.id AS invoice_id, o.number AS order_number, o.id AS order_id, c.name AS customer, u.name AS agent, co.name AS company
-    FROM payments p JOIN invoices i ON i.id = p.invoice_id JOIN orders o ON o.id = p.order_id JOIN customers c ON c.id = i.customer_id
+      i.number AS invoice, i.id AS invoice_id, o.number AS order_number, o.id AS order_id, c.name AS customer_outlet, u.name AS agent, co.name AS company
+    FROM payments p JOIN invoices i ON i.id = p.invoice_id JOIN orders o ON o.id = p.order_id JOIN customer_outlets c ON c.id = i.customer_outlet_id
     JOIN companies co ON co.id = p.company_id LEFT JOIN users u ON u.id = p.agent_id
     WHERE ${where.join(" AND ")} ORDER BY p.created_at DESC, p.rowid DESC LIMIT 500`,
     ...params,
@@ -47,10 +47,10 @@ export function listJournal(db: Db, companyId: string, filters: JournalFilters =
 export function listInvoices(db: Db, companyId: string): Row[] {
   return all(
     db,
-    `SELECT i.id, i.number, i.issued_at, i.amount_minor, i.paid_minor, i.refunded_minor, i.status, i.order_id, o.number AS order_number, c.name AS customer, u.name AS agent, r.name AS route,
+    `SELECT i.id, i.number, i.issued_at, i.amount_minor, i.paid_minor, i.refunded_minor, i.status, i.order_id, o.number AS order_number, c.name AS customer_outlet, u.name AS agent, r.name AS route,
       (SELECT COALESCE(SUM(amount_minor - refunded_minor), 0) FROM payments WHERE invoice_id = i.id AND settlement_status = 'settled') AS settled_minor,
       (SELECT status FROM erp_entries WHERE company_id = i.company_id AND kind = 'invoice' AND entity_id = i.id) AS erp_status
-    FROM invoices i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = i.customer_id LEFT JOIN users u ON u.id = i.agent_id LEFT JOIN routes r ON r.id = i.route_id
+    FROM invoices i JOIN orders o ON o.id = i.order_id JOIN customer_outlets c ON c.id = i.customer_outlet_id LEFT JOIN users u ON u.id = i.agent_id LEFT JOIN routes r ON r.id = i.route_id
     WHERE i.company_id = ? ORDER BY i.issued_at DESC, i.rowid DESC LIMIT 500`,
     companyId,
   );

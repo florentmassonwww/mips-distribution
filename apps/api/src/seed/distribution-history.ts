@@ -4,6 +4,7 @@
 //
 // Every step goes through the business functions and the simulated providers, in a fixed order:
 // that order determines every generated identifier, so it must not change.
+import { expectedFee } from "@mips/core";
 import { type Db, all, get } from "../core/db.ts";
 import type { Actor } from "../core/actor.ts";
 import { formatMinor } from "../core/format.ts";
@@ -15,8 +16,8 @@ import { resolveException } from "../modules/distribution/exceptions.ts";
 import { type CreateOrderInput as OrderInput, createOrder, setOrderStatus } from "../modules/distribution/orders.ts";
 import { type PaymentMethod, defaultCompanySettings as defaultSettings } from "../modules/distribution/settings.ts";
 import { closeDay, generateDemoStatement as demoBankStatement, importStatement as importBankStatement, syncAccountingEntries as syncErp } from "../modules/finance/index.ts";
-import { expectedFee, initiatePayment as requestPayment, processNotification as handleNotification } from "../modules/payments/index.ts";
-import { CUSTOMERS, PRODUCTS } from "./catalog.ts";
+import { initiatePayment as requestPayment, processNotification as handleNotification } from "../modules/payments/index.ts";
+import { CUSTOMER_OUTLETS, PRODUCTS } from "./catalog.ts";
 import { productIdOf, providerRef, seedActor } from "./companies.ts";
 
 /** Origin given to payment requests made by the seed. */
@@ -54,7 +55,7 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
   const dispatcher = seedActor(db, "u_bd_centrale");
   const agent1 = seedActor(db, "u_bd_agent1");
   const finance = seedActor(db, "u_bd_finance");
-  const customerIds = CUSTOMERS.map(([key]) => `c_bd_${key}`);
+  const customerOutletIds = CUSTOMER_OUTLETS.map(([key]) => `c_bd_${key}`);
   const skus = PRODUCTS.map(([sku]) => sku);
 
   /** The simulated provider settles the transaction and its notification is processed. */
@@ -85,11 +86,11 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
       },
       at,
     ));
-  const sell = (agent: Actor, actionId: string, routeId: string, customerId: string, lines: OrderLineInput[], receiver: string, at: Date) =>
+  const sell = (agent: Actor, actionId: string, routeId: string, customerOutletId: string, lines: OrderLineInput[], receiver: string, at: Date) =>
     invoiced(applySyncAction(
       db,
       agent,
-      { id: actionId, type: "sale", payload: { routeId, customerId, lines, pod: { name: receiver, note: "" }, at: iso(at) } },
+      { id: actionId, type: "sale", payload: { routeId, customerOutletId, lines, pod: { name: receiver, note: "" }, at: iso(at) } },
       at,
     ));
   const pay = async (agent: Actor, sale: SaleResult, method: PaymentMethod, idempotencyKey: string, at: Date) =>
@@ -110,14 +111,14 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
     const day = businessDay(at);
     const agent = seedActor(db, daysAgo % 2 ? "u_bd_agent1" : "u_bd_agent2");
     const [routeName, vehicle] = PAST_ROUTES[daysAgo % 2]!;
-    const routeId = createRoute(db, dispatcher, { name: routeName, day, agentId: agent.id, vehicle, customerIds: [] }, at).id;
+    const routeId = createRoute(db, dispatcher, { name: routeName, day, agentId: agent.id, vehicle, customerOutletIds: [] }, at).id;
     const orderIds = [0, 1, 2].map(
       (n) =>
         createOrder(
           db,
           dispatcher,
           {
-            customerId: customerIds[(daysAgo * 2 + n) % customerIds.length]!,
+            customerOutletId: customerOutletIds[(daysAgo * 2 + n) % customerOutletIds.length]!,
             routeId,
             note: "",
             lines: [
@@ -142,7 +143,7 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
         agent,
         `seed-sale-j${daysAgo}`,
         routeId,
-        customerIds[(daysAgo * 2 + 4) % customerIds.length]!,
+        customerOutletIds[(daysAgo * 2 + 4) % customerOutletIds.length]!,
         [line("bd", "COL-150", 3 + daysAgo), line("bd", "EAU-150", 6)],
         RECEIVERS[daysAgo % RECEIVERS.length]!,
         at,
@@ -176,19 +177,19 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
   const yesterdayRoute = createRoute(
     db,
     dispatcher,
-    { name: "Sud - Mahébourg", day: yesterdayDay, agentId: agent1.id, vehicle: "Camion 12 (démo)", customerIds: [] },
+    { name: "Sud - Mahébourg", day: yesterdayDay, agentId: agent1.id, vehicle: "Camion 12 (démo)", customerOutletIds: [] },
     yesterday,
   ).id;
   const corailOrder = createOrder(
     db,
     dispatcher,
-    { customerId: "c_bd_corail", routeId: yesterdayRoute, note: "", lines: [line("bd", "BIE-33", 10), line("bd", "EAU-150", 30)] },
+    { customerOutletId: "c_bd_corail", routeId: yesterdayRoute, note: "", lines: [line("bd", "BIE-33", 10), line("bd", "EAU-150", 30)] },
     yesterday,
   ).id;
   const bambouOrder = createOrder(
     db,
     dispatcher,
-    { customerId: "c_bd_bambou", routeId: yesterdayRoute, note: "", lines: [line("bd", "COL-150", 12), line("bd", "CIT-33", 6)] },
+    { customerOutletId: "c_bd_bambou", routeId: yesterdayRoute, note: "", lines: [line("bd", "COL-150", 12), line("bd", "CIT-33", 6)] },
     yesterday,
   ).id;
   for (const orderId of [corailOrder, bambouOrder]) setOrderStatus(db, dispatcher, orderId, "prepared", yesterday);
@@ -217,7 +218,7 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
 
   const juiceRef = get<{ provider_ref: string }>(db, "SELECT provider_ref FROM payments WHERE invoice_id = ?", corailSale.invoiceId)!
     .provider_ref;
-  const juiceFee = expectedFee(corailSale.amountMinor, defaultSettings().payments.methods.juice.feeBps);
+  const juiceFee = expectedFee(corailSale.amountMinor, defaultSettings().payments.methods.juice.feeBps).minor;
   importBankStatement(
     db,
     connectors,
@@ -241,7 +242,7 @@ function seedTodayRoutes(db: Db, dispatcher: Actor, agent1: Actor, today: string
       day: today,
       agentId: agent1.id,
       vehicle: "Camion 07 (démo)",
-      customerIds: ["c_bd_tilakaz", "c_bd_bellevue", "c_bd_lagon", "c_bd_flamboyant"],
+      customerOutletIds: ["c_bd_tilakaz", "c_bd_bellevue", "c_bd_lagon", "c_bd_flamboyant"],
     },
     now,
   ).id;
@@ -250,7 +251,7 @@ function seedTodayRoutes(db: Db, dispatcher: Actor, agent1: Actor, today: string
       db,
       dispatcher,
       {
-        customerId: "c_bd_tilakaz",
+        customerOutletId: "c_bd_tilakaz",
         routeId: northRoute,
         note: "Livrer avant 11 h",
         lines: [line("bd", "BIE-33", 6), line("bd", "COL-150", 10), line("bd", "EAU-150", 12)],
@@ -261,7 +262,7 @@ function seedTodayRoutes(db: Db, dispatcher: Actor, agent1: Actor, today: string
       db,
       dispatcher,
       {
-        customerId: "c_bd_bellevue",
+        customerOutletId: "c_bd_bellevue",
         routeId: northRoute,
         note: "",
         lines: [line("bd", "COL-150", 24), line("bd", "CIT-33", 8), line("bd", "JUS-100", 6)],
@@ -271,7 +272,7 @@ function seedTodayRoutes(db: Db, dispatcher: Actor, agent1: Actor, today: string
     createOrder(
       db,
       dispatcher,
-      { customerId: "c_bd_lagon", routeId: northRoute, note: "", lines: [line("bd", "BIE-33", 4), line("bd", "EAG-50", 5)] },
+      { customerOutletId: "c_bd_lagon", routeId: northRoute, note: "", lines: [line("bd", "BIE-33", 4), line("bd", "EAG-50", 5)] },
       now,
     ).id,
   ];
@@ -292,21 +293,21 @@ function seedTodayRoutes(db: Db, dispatcher: Actor, agent1: Actor, today: string
       day: today,
       agentId: "u_bd_agent2",
       vehicle: "Camion 03 (démo)",
-      customerIds: ["c_bd_central", "c_bd_plaza"],
+      customerOutletIds: ["c_bd_central", "c_bd_plaza"],
     },
     now,
   ).id;
   createOrder(
     db,
     dispatcher,
-    { customerId: "c_bd_central", routeId: centreRoute, note: "", lines: [line("bd", "COL-150", 6), line("bd", "EAU-150", 10)] },
+    { customerOutletId: "c_bd_central", routeId: centreRoute, note: "", lines: [line("bd", "COL-150", 6), line("bd", "EAU-150", 10)] },
     now,
   );
   createOrder(
     db,
     dispatcher,
     {
-      customerId: "c_bd_plaza",
+      customerOutletId: "c_bd_plaza",
       routeId: centreRoute,
       note: "Quai de livraison n° 2",
       lines: [line("bd", "BIE-33", 20), line("bd", "JUS-100", 15), line("bd", "ENE-25", 6)],
@@ -317,7 +318,7 @@ function seedTodayRoutes(db: Db, dispatcher: Actor, agent1: Actor, today: string
   createOrder(
     db,
     dispatcher,
-    { customerId: "c_bd_corail", note: "À affecter", lines: [line("bd", "EAU-150", 50), line("bd", "EAG-50", 20)] },
+    { customerOutletId: "c_bd_corail", note: "À affecter", lines: [line("bd", "EAU-150", 50), line("bd", "EAG-50", 20)] },
     now,
   );
 
@@ -331,14 +332,14 @@ function seedTodayRoutes(db: Db, dispatcher: Actor, agent1: Actor, today: string
       day: today,
       agentId: "u_go_agent1",
       vehicle: "Fourgon 1 (démo)",
-      customerIds: ["c_go_central", "c_go_plaza"],
+      customerOutletIds: ["c_go_central", "c_go_plaza"],
     },
     now,
   ).id;
   const oceanOrder = createOrder(
     db,
     oceanDispatcher,
-    { customerId: "c_go_plaza", routeId: oceanRoute, note: "", lines: [line("go", "COL-150", 10), line("go", "EAU-150", 20)] },
+    { customerOutletId: "c_go_plaza", routeId: oceanRoute, note: "", lines: [line("go", "COL-150", 10), line("go", "EAU-150", 20)] },
     now,
   ).id;
   setOrderStatus(db, oceanDispatcher, oceanOrder, "prepared", now);

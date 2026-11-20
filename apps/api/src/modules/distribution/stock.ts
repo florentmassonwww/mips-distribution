@@ -1,9 +1,10 @@
 // Warehouse stock and the movement log shared by the warehouse and the vehicles.
+import { checkWarehouseLevel } from "@mips/core";
 import { type Db, all, get, run, transaction } from "../../core/db.ts";
 import { newId } from "../../core/ids.ts";
 import { iso } from "../../core/time.ts";
 import { recordAudit } from "../../core/audit.ts";
-import { ApiError, notFound } from "../../core/errors.ts";
+import { notFound } from "../../core/errors.ts";
 import type { Actor } from "../../core/actor.ts";
 import { requireCompanyId } from "./access.ts";
 
@@ -72,7 +73,7 @@ export function adjustStock(db: Db, actor: Actor, productId: string, delta: numb
       delta,
     );
     const { qty } = get<{ qty: number }>(db, "SELECT qty FROM warehouse_stock WHERE company_id = ? AND product_id = ?", companyId, productId)!;
-    if (qty < 0) throw new ApiError(409, "negative_stock", "L'ajustement rendrait le stock négatif.");
+    checkWarehouseLevel(qty);
     recordStockMovement(db, companyId, productId, null, "adjust", delta, "Ajustement", actor.id, now, reason);
     recordAudit(db, actor, "stock.adjusted", "product", productId, { product: product.name, delta, reason }, companyId, now);
   });

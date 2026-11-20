@@ -138,7 +138,7 @@ export function TransactionJournal() {
                   (entry) => (
                     <>
                       <strong>{entry.invoice}</strong>
-                      <div className="small muted">{entry.customer}</div>
+                      <div className="small muted">{entry.customer_outlet}</div>
                     </>
                   ),
                 ],

@@ -1,5 +1,6 @@
 // State transitions of a payment attempt, and their effects on the invoice, the accounting
 // entries, the finance exceptions and the audit log. Callers run them inside a transaction.
+import { canConfirm, canFail, canMarkToVerify, expectedFee, invoiceStatus } from "@mips/core";
 import type { Actor } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run } from "../../core/db.ts";
@@ -8,33 +9,24 @@ import { autoResolveExceptions as resolveExceptions, queueErpEntry as queueAccou
 import { readCompanySettings as companySettings } from "../distribution/settings.ts";
 import type { ConfirmationSource, InvoiceRow, InvoiceStatus, PaymentRow, PaymentStatus } from "./types.ts";
 
-/**
- * Recomputes the invoice status from its payments. An attempt in progress wins over amounts:
- * "to verify" first (a possible double debit), then "pending".
- */
+/** Recomputes the invoice status from its amounts and attempts (rule: invoiceStatus in @mips/core). */
 export function refreshInvoiceStatus(db: Db, invoiceId: string): InvoiceStatus {
   const invoice = get<InvoiceRow>(db, "SELECT * FROM invoices WHERE id = ?", invoiceId)!;
   const hasPayment = (status: PaymentStatus): boolean =>
     !!get(db, "SELECT 1 FROM payments WHERE invoice_id = ? AND status = ?", invoiceId, status);
-  const collected = invoice.paid_minor - invoice.refunded_minor;
-  const lastStatus = get<{ status: PaymentStatus }>(
+  const lastAttempt = get<{ status: PaymentStatus }>(
     db,
     "SELECT status FROM payments WHERE invoice_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1",
     invoiceId,
   )?.status;
-  const status: InvoiceStatus = hasPayment("to_verify")
-    ? "to_verify"
-    : hasPayment("pending")
-      ? "pending"
-      : collected >= invoice.amount_minor
-        ? "paid"
-        : collected > 0
-          ? "partially_paid"
-          : invoice.paid_minor > 0
-            ? "refunded"
-            : lastStatus === "failed"
-              ? "failed"
-              : "unpaid";
+  const status = invoiceStatus({
+    amountMinor: invoice.amount_minor,
+    paidMinor: invoice.paid_minor,
+    refundedMinor: invoice.refunded_minor,
+    hasAttemptToVerify: hasPayment("to_verify"),
+    hasPendingAttempt: hasPayment("pending"),
+    lastAttempt,
+  });
   run(db, "UPDATE invoices SET status = ? WHERE id = ?", status, invoiceId);
   return status;
 }
@@ -43,25 +35,17 @@ export function touchPayment(db: Db, paymentId: string, now: Date): void {
   run(db, "UPDATE payments SET updated_at = ? WHERE id = ?", iso(now), paymentId);
 }
 
-/**
- * Expected provider fee, rounded to the minor unit, on the full amount of the attempt; 0 while the
- * fee is to be agreed (`feeBps` null).
- */
-export function expectedFee(amountMinor: number, feeBps: number | null): number {
-  return feeBps === null ? 0 : Math.round((amountMinor * feeBps) / 1e4);
-}
-
 /** Confirms the payment (provider proof only). False when it was already confirmed or refunded. */
 export function confirmPayment(db: Db, payment: PaymentRow, via: ConfirmationSource, actor: Actor, now: Date): boolean {
-  if (payment.status === "confirmed" || payment.status === "refunded") return false;
-  const feeBps = companySettings(db, payment.company_id).payments.methods[payment.method].feeBps;
+  if (!canConfirm(payment.status)) return false;
+  const fee = expectedFee(payment.amount_minor, companySettings(db, payment.company_id).payments.methods[payment.method].feeBps);
   run(
     db,
     "UPDATE payments SET status = 'confirmed', confirmed_at = ?, confirmed_via = ?, fee_expected_minor = ?, fee_expected_known = ?, failure_reason = NULL, verify_reason = NULL WHERE id = ?",
     iso(now),
     via,
-    expectedFee(payment.amount_minor, feeBps),
-    Number(feeBps !== null),
+    fee.minor,
+    Number(fee.known),
     payment.id,
   );
   touchPayment(db, payment.id, now);
@@ -116,7 +100,7 @@ export function confirmPayment(db: Db, payment: PaymentRow, via: ConfirmationSou
 
 /** Marks a pending or to-verify attempt as failed. False otherwise. */
 export function failPayment(db: Db, payment: PaymentRow, reason: string, actor: Actor, now: Date): boolean {
-  if (payment.status !== "pending" && payment.status !== "to_verify") return false;
+  if (!canFail(payment.status)) return false;
   run(db, "UPDATE payments SET status = 'failed', failure_reason = ?, verify_reason = NULL WHERE id = ?", reason, payment.id);
   touchPayment(db, payment.id, now);
   refreshInvoiceStatus(db, payment.invoice_id);
@@ -139,7 +123,7 @@ export function failPayment(db: Db, payment: PaymentRow, reason: string, actor: 
  * (risk of double debit) until finance checks it. False when the attempt is not pending.
  */
 export function markToVerify(db: Db, payment: PaymentRow, reason: string, actor: Actor, now: Date): boolean {
-  if (payment.status !== "pending") return false;
+  if (!canMarkToVerify(payment.status)) return false;
   run(db, "UPDATE payments SET status = 'to_verify', verify_reason = ? WHERE id = ?", reason, payment.id);
   touchPayment(db, payment.id, now);
   refreshInvoiceStatus(db, payment.invoice_id);

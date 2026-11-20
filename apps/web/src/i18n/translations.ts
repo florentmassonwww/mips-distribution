@@ -233,6 +233,7 @@ export const translations: Readonly<Record<string, string>> = {
   Retour: `Back`,
   "Action refusée par le serveur.": `Action rejected by the server.`,
   "{0} enregistrée.": `{0} recorded.`,
+  "{0} enregistrée. Montant facturé : {1} (affiché : {2}), les prix ont changé.": `{0} recorded. Amount invoiced: {1} (shown: {2}), prices have changed.`,
   "En ligne": `Online`,
   "Hors ligne": `Offline`,
   "{0} action à synchroniser": `{0} action to sync`,

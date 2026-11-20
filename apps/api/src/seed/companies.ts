@@ -4,26 +4,26 @@ import { type Actor, SYSTEM_ACTOR } from "../core/actor.ts";
 import { setCompanyModules } from "../core/modules.ts";
 import { addDays, iso } from "../core/time.ts";
 import { defaultCompanySettings as defaultSettings } from "../modules/distribution/settings.ts";
-import { CUSTOMERS, PRODUCTS, type CustomerSpec, type ProductSpec, type UserSpec } from "./catalog.ts";
+import { CUSTOMER_OUTLETS, PRODUCTS, type CustomerOutletSpec, type ProductSpec, type UserSpec } from "./catalog.ts";
 
 export interface CompanySeed {
   id: string;
   name: string;
-  /** Short slug, also used to build the users', products' and customers' identifiers. */
+  /** Short slug, also used to build the users', products' and customer outlets' identifiers. */
   slug: string;
   plan: string;
   subscriptionStatus: string;
   users: readonly UserSpec[];
   products?: readonly ProductSpec[];
-  customers?: readonly CustomerSpec[];
+  customerOutlets?: readonly CustomerOutletSpec[];
 }
 
 /**
  * Inserts a distribution company (Distribution module, one depot) with its users, products (and
- * stock), key-account price list and customers. Fixed identifiers only: no random draw.
+ * stock), key-account price list and customer outlets. Fixed identifiers only: no random draw.
  */
 export function seedCompany(db: Db, company: CompanySeed, now: Date): void {
-  const { id: companyId, slug, products = PRODUCTS, customers = CUSTOMERS } = company;
+  const { id: companyId, slug, products = PRODUCTS, customerOutlets = CUSTOMER_OUTLETS } = company;
   run(
     db,
     "INSERT INTO companies (id, name, slug, plan, subscription_status, subscription_renews_at, settings_json, created_at) VALUES (?,?,?,?,?,?,?,?)",
@@ -84,10 +84,10 @@ export function seedCompany(db: Db, company: CompanySeed, now: Date): void {
     );
   }
 
-  customers.forEach(([key, name, address, zone, keyAccount], index) =>
+  customerOutlets.forEach(([key, name, address, zone, keyAccount], index) =>
     run(
       db,
-      "INSERT INTO customers (id, company_id, code, name, address, zone, phone, price_list_id) VALUES (?,?,?,?,?,?,?,?)",
+      "INSERT INTO customer_outlets (id, company_id, code, name, address, zone, phone, price_list_id) VALUES (?,?,?,?,?,?,?,?)",
       `c_${slug}_${key}`,
       companyId,
       `C${String(index + 1).padStart(3, "0")}`,
@@ -153,7 +153,7 @@ export function seedPlatformAndCompanies(db: Db, now: Date): void {
         ["agent1", "Yusuf A. (démo)", "agent"],
       ],
       products: PRODUCTS.slice(1, 6),
-      customers: CUSTOMERS.slice(4, 8),
+      customerOutlets: CUSTOMER_OUTLETS.slice(4, 8),
     },
     now,
   );

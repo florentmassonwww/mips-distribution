@@ -20,6 +20,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:i18n
       - run: npm run test:api
+      - run: npm run test:core
       - run: npm run test:api-unit
       - run: npx playwright install --with-deps chromium
       - run: npm run test:reference

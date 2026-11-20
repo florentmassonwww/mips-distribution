@@ -1,5 +1,6 @@
 // Payments on member accounts: cash at the club desk, online payment link, and the state machine
 // shared with bank transfers (pending → confirmed | failed | to_verify).
+import { statusQueryDecision } from "@mips/core";
 import { z } from "zod";
 import { type Actor, SYSTEM_ACTOR } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
@@ -323,16 +324,18 @@ export async function checkMemberPaymentStatus(
   const payment = requireMemberPayment(db, companyId, paymentId);
   const open = payment.status === "pending" || payment.status === "to_verify";
   if (payment.method === "link" && open && payment.provider_ref) {
-    const status = await connectors.payments.link.queryStatus(payment.provider_ref);
+    const report = await connectors.payments.link.queryStatus(payment.provider_ref);
     transaction(db, () => {
       const current = requireMemberPayment(db, companyId, paymentId);
-      if (status === "succeeded") confirmMemberPayment(db, current, "status_query", actor, now);
-      else if (status === "failed") failMemberPayment(db, current, "Refusé ou annulé chez le prestataire.", actor, now);
-      else if (status === "unknown") {
-        markMemberPaymentToVerify(db, current, "Le prestataire ne connaît pas cette référence.", actor, now);
-      } else if (current.expires_at && iso(now) > current.expires_at) {
-        markMemberPaymentToVerify(db, current, "Sans réponse du prestataire après expiration du délai.", actor, now);
-      }
+      // Same rule as for invoices: confirmed only for the amount requested.
+      const decision = statusQueryDecision(
+        { status: current.status, amountMinor: current.amount_minor, currency: current.currency, expiresAt: current.expires_at },
+        report,
+        now,
+      );
+      if (decision.action === "confirm") confirmMemberPayment(db, current, "status_query", actor, now);
+      else if (decision.action === "fail") failMemberPayment(db, current, decision.reason, actor, now);
+      else if (decision.action === "to_verify") markMemberPaymentToVerify(db, current, decision.reason, actor, now);
     });
   }
   return requireMemberPayment(db, companyId, paymentId);

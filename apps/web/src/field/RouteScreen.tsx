@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { translate, translateCount } from "../i18n/translate.ts";
 import { localizeErrorMessage } from "../shared/errors.ts";
 import { useFeedback } from "../shared/Feedback.tsx";
-import { formatDate, formatDayLong, formatTime } from "../shared/format.ts";
+import { formatDate, formatDayLong, formatMoney, formatTime } from "../shared/format.ts";
 import { LanguageToggle } from "../shared/LanguageToggle.tsx";
 import { applyQueuedActions, readQueue, useNetwork } from "../shared/offline.ts";
 import { useSession } from "../shared/session.ts";
@@ -22,9 +22,9 @@ import type { SyncResult } from "./types.ts";
 
 export type FieldView =
   | { name: "home" }
-  | { name: "stop"; customerId: string }
+  | { name: "stop"; customerOutletId: string }
   | { name: "deliver"; orderId: string }
-  | { name: "sale"; customerId: string }
+  | { name: "sale"; customerOutletId: string }
   | { name: "pay"; invoiceId: string }
   | { name: "receipt"; invoiceId: string };
 
@@ -65,18 +65,24 @@ export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
     setView(next);
     window.scrollTo(0, 0);
   };
-  const backTo = (customerId?: string) => go(customerId ? { name: "stop", customerId } : { name: "home" });
+  const backTo = (customerOutletId?: string) => go(customerOutletId ? { name: "stop", customerOutletId } : { name: "home" });
 
   // After a delivery or a sale: an invoice to collect opens the payment screen; otherwise (queued
   // offline, or refused by the server) back to the stop.
-  const afterSubmit = (result: SyncResult | null, customerId: string) => {
+  const afterSubmit = (result: SyncResult | null, customerOutletId: string) => {
     if (result?.status === "rejected") {
       ui.toast(result.message ? localizeErrorMessage(result.code ?? "", result.message) : translate("Action refusée par le serveur."), "err");
-      go({ name: "stop", customerId });
+      go({ name: "stop", customerOutletId });
     } else if (result?.result?.invoiceId) {
-      ui.toast(translate("{0} enregistrée.", result.result.orderNumber));
+      const mismatch = result.result.priceMismatch;
+      if (mismatch) {
+        ui.toast(
+          translate("{0} enregistrée. Montant facturé : {1} (affiché : {2}), les prix ont changé.", result.result.orderNumber, formatMoney(mismatch.invoicedMinor), formatMoney(mismatch.shownMinor)),
+          "warn",
+        );
+      } else ui.toast(translate("{0} enregistrée.", result.result.orderNumber));
       go({ name: "pay", invoiceId: result.result.invoiceId });
-    } else go({ name: "stop", customerId });
+    } else go({ name: "stop", customerOutletId });
   };
 
   const tabs: [Tab, string][] = [
@@ -146,7 +152,7 @@ export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
               </button>
             ))}
           </div>
-          {tab === "route" && <StopList work={work} onOpen={(customerId) => go({ name: "stop", customerId })} closed={closed} />}
+          {tab === "route" && <StopList work={work} onOpen={(customerOutletId) => go({ name: "stop", customerOutletId })} closed={closed} />}
           {tab === "catalog" && <CatalogTab work={work} />}
           {tab === "history" && (
             <HistoryTab
@@ -161,23 +167,23 @@ export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
           )}
         </>
       )}
-      {view.name === "stop" && <StopScreen work={work} customerId={view.customerId} online={network.online} closed={closed} go={go} />}
+      {view.name === "stop" && <StopScreen work={work} customerOutletId={view.customerOutletId} online={network.online} closed={closed} go={go} />}
       {view.name === "deliver" && (
         <DeliveryForm
           work={work}
           order={deliveredOrder}
           // The order comes from the stop screen, so it is in the bundle.
-          customerId={deliveredOrder!.customer_id}
-          onCancel={(customerId) => go({ name: "stop", customerId })}
-          onSubmit={async (action) => afterSubmit(await submit(action), action.customerId)}
+          customerOutletId={deliveredOrder!.customer_outlet_id}
+          onCancel={(customerOutletId) => go({ name: "stop", customerOutletId })}
+          onSubmit={async (action) => afterSubmit(await submit(action), action.customerOutletId)}
         />
       )}
       {view.name === "sale" && (
         <DeliveryForm
           work={work}
-          customerId={view.customerId}
-          onCancel={(customerId) => go({ name: "stop", customerId })}
-          onSubmit={async (action) => afterSubmit(await submit(action), action.customerId)}
+          customerOutletId={view.customerOutletId}
+          onCancel={(customerOutletId) => go({ name: "stop", customerOutletId })}
+          onSubmit={async (action) => afterSubmit(await submit(action), action.customerOutletId)}
         />
       )}
       {view.name === "pay" && (
@@ -185,10 +191,10 @@ export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
           invoiceId={view.invoiceId}
           methods={bundle.methods}
           online={network.online}
-          onBack={(customerId) => {
+          onBack={(customerOutletId) => {
             // Leaving the payment screen refreshes the bundle so the stop shows the new status.
             sync().catch(() => null);
-            backTo(customerId);
+            backTo(customerOutletId);
           }}
           onReceipt={() => go({ name: "receipt", invoiceId: view.invoiceId })}
         />

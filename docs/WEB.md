@@ -44,6 +44,11 @@ Reported during the rewrite; the visual comparison and the API calls hold them f
 - **Offline storage** (JSON in `localStorage`): `md_queue_<userId>` (queued actions, key order part
   of the sent payload), `md_bundle_<routeId>`, `md_route_<userId>`, `md_force_offline` (and the
   `md-network` window event), `md_lang`. The demo reset forgets every `md_*` key except `md_lang`.
+  Since step 3 the outlet fields are `customerOutletId` / `customer_outlets`: a queued action saved
+  with `customerId` is converted when read, a bundle of the old format is dropped and downloaded
+  again.
+- **Price change while offline** (step 3): when the server answers a delivery with `priceMismatch`,
+  the driver screen shows a warning toast with the amount invoiced and the amount shown.
 - **Driver screen.** Sync immediately and every 20 s while online; receipt polled every 2.5 s in the
   payment panel; payment idempotency key `<attempt id>-<method>`, renewed only after an accepted
   attempt; signature sent as a PNG data URL.

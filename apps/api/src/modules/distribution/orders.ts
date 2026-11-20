@@ -8,7 +8,7 @@ import { recordAudit } from "../../core/audit.ts";
 import { ApiError, notFound } from "../../core/errors.ts";
 import type { Actor } from "../../core/actor.ts";
 import { requireCompanyId } from "./access.ts";
-import { customerPrices, requireActiveCustomer } from "./catalog.ts";
+import { customerOutletPrices, requireActiveCustomerOutlet } from "./catalog.ts";
 import { nextNumber } from "./counters.ts";
 import { addRouteStop, requireRoute } from "./delivery-routes.ts";
 
@@ -19,7 +19,7 @@ export interface OrderRow {
   id: string;
   company_id: string;
   number: string;
-  customer_id: string;
+  customer_outlet_id: string;
   route_id: string | null;
   kind: OrderKind;
   status: OrderStatus;
@@ -30,7 +30,7 @@ export interface OrderRow {
 }
 
 export const createOrderInput = z.object({
-  customerId: z.string(),
+  customerOutletId: z.string(),
   routeId: z.string().nullish(),
   note: z.string().max(300).default(""),
   lines: z
@@ -54,17 +54,17 @@ export function requireOrder(db: Db, companyId: string, orderId: string): OrderR
 export function createOrder(db: Db, actor: Actor, input: CreateOrderInput, now: Date = new Date()): { id: string; number: string } {
   const companyId = requireCompanyId(actor);
   return transaction(db, () => {
-    requireActiveCustomer(db, companyId, input.customerId);
-    const prices = customerPrices(db, companyId, input.customerId);
+    requireActiveCustomerOutlet(db, companyId, input.customerOutletId);
+    const prices = customerOutletPrices(db, companyId, input.customerOutletId);
     const orderId = newId("ord");
     const number = nextNumber(db, companyId, "order", "CMD");
     run(
       db,
-      "INSERT INTO orders (id, company_id, number, customer_id, kind, status, note, created_by, created_at) VALUES (?,?,?,?,'preorder','confirmed',?,?,?)",
+      "INSERT INTO orders (id, company_id, number, customer_outlet_id, kind, status, note, created_by, created_at) VALUES (?,?,?,?,'preorder','confirmed',?,?,?)",
       orderId,
       companyId,
       number,
-      input.customerId,
+      input.customerOutletId,
       input.note,
       actor.id,
       iso(now),
@@ -107,7 +107,7 @@ export function assignOrder(db: Db, actor: Actor, orderId: string, routeId: stri
       if (requireRoute(db, companyId, routeId).status !== "planned") {
         throw new ApiError(409, "route_locked", "Cette tournée est déjà chargée : affectez la commande à une tournée planifiée.");
       }
-      addRouteStop(db, companyId, routeId, order.customer_id);
+      addRouteStop(db, companyId, routeId, order.customer_outlet_id);
     }
     run(db, "UPDATE orders SET route_id = ? WHERE id = ?", routeId, orderId);
     recordAudit(db, actor, "order.assigned", "order", orderId, { number: order.number, routeId }, companyId, now);
@@ -159,10 +159,10 @@ export function listOrders(db: Db, companyId: string, filters: OrderFilters = {}
   }
   return all(
     db,
-    `SELECT o.id, o.number, o.kind, o.status, o.created_at, o.delivered_at, o.route_id, c.name AS customer, c.zone, r.name AS route, r.status AS route_status,
+    `SELECT o.id, o.number, o.kind, o.status, o.created_at, o.delivered_at, o.route_id, c.name AS customer_outlet, c.zone, r.name AS route, r.status AS route_status,
       (SELECT SUM(qty_ordered * unit_price_minor) FROM order_lines WHERE order_id = o.id) AS ordered_minor,
       i.id AS invoice_id, i.number AS invoice_number, i.amount_minor AS invoice_minor, i.status AS invoice_status
-    FROM orders o JOIN customers c ON c.id = o.customer_id LEFT JOIN routes r ON r.id = o.route_id LEFT JOIN invoices i ON i.order_id = o.id
+    FROM orders o JOIN customer_outlets c ON c.id = o.customer_outlet_id LEFT JOIN routes r ON r.id = o.route_id LEFT JOIN invoices i ON i.order_id = o.id
     WHERE ${conditions.join(" AND ")} ORDER BY o.created_at DESC, o.rowid DESC LIMIT 300`,
     ...params,
   );
@@ -172,7 +172,7 @@ export function listOrders(db: Db, companyId: string, filters: OrderFilters = {}
 export function orderChain(db: Db, companyId: string, orderId: string) {
   const order = get(
     db,
-    `SELECT o.*, c.name AS customer, c.address, r.name AS route, u.name AS created_by_name FROM orders o JOIN customers c ON c.id = o.customer_id
+    `SELECT o.*, c.name AS customer_outlet, c.address, r.name AS route, u.name AS created_by_name FROM orders o JOIN customer_outlets c ON c.id = o.customer_outlet_id
     LEFT JOIN routes r ON r.id = o.route_id LEFT JOIN users u ON u.id = o.created_by WHERE o.id = ? AND o.company_id = ?`,
     orderId,
     companyId,

@@ -7,7 +7,7 @@ import { assertInvoiceAccess } from "./lookups.ts";
 import type { InvoiceRow, PaymentRow } from "./types.ts";
 
 export interface ReceiptInvoice extends InvoiceRow {
-  customer: string;
+  customer_outlet: string;
   address: string | null;
   company: string;
   order_number: string;
@@ -32,8 +32,8 @@ export interface Receipt {
 export function getReceipt(db: Db, user: Actor, invoiceId: string): Receipt {
   const invoice = get<ReceiptInvoice>(
     db,
-    `SELECT i.*, c.name AS customer, c.address, co.name AS company, o.number AS order_number
-    FROM invoices i JOIN customers c ON c.id = i.customer_id JOIN companies co ON co.id = i.company_id JOIN orders o ON o.id = i.order_id WHERE i.id = ? AND i.company_id = ?`,
+    `SELECT i.*, c.name AS customer_outlet, c.address, co.name AS company, o.number AS order_number
+    FROM invoices i JOIN customer_outlets c ON c.id = i.customer_outlet_id JOIN companies co ON co.id = i.company_id JOIN orders o ON o.id = i.order_id WHERE i.id = ? AND i.company_id = ?`,
     invoiceId,
     companyOf(user),
   );

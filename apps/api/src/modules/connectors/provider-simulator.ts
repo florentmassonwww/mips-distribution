@@ -15,7 +15,7 @@ import type {
   PaymentMethod,
   PaymentNotification,
   ProviderCapabilities,
-  ProviderStatus,
+  StatusReport,
   SignedNotification,
   SimulatedOutcome,
   SimulatedPaymentProvider,
@@ -27,6 +27,8 @@ interface DemoProviderTxRow {
   amount_minor: number;
   currency: string;
   status: "pending" | "succeeded" | "failed";
+  /** Amount the customer actually paid (a "wrong_amount" outcome pays 1.00 less). */
+  received_minor: number | null;
   refunded_minor: number;
   last_event_json: string | null;
   created_at: string;
@@ -93,8 +95,10 @@ export class SimulatedProvider implements SimulatedPaymentProvider {
     return { providerRef, presentation: this.spec.present(request, providerRef) };
   }
 
-  async queryStatus(providerRef: string): Promise<ProviderStatus> {
-    return this.transaction(providerRef)?.status ?? "unknown";
+  async queryStatus(providerRef: string): Promise<StatusReport> {
+    const tx = this.transaction(providerRef);
+    if (!tx) return { status: "unknown", amountMinor: null, currency: null };
+    return { status: tx.status, amountMinor: tx.status === "succeeded" ? (tx.received_minor ?? tx.amount_minor) : null, currency: tx.currency };
   }
 
   async cancel(providerRef: string): Promise<boolean> {
@@ -162,7 +166,15 @@ export class SimulatedProvider implements SimulatedPaymentProvider {
 
     // Every outcome but "failure" is a payment the customer actually made.
     const succeeded = outcome !== "failure";
-    run(this.db, "UPDATE demo_provider_tx SET status = ? WHERE provider_ref = ?", succeeded ? "succeeded" : "failed", providerRef);
+    // "wrong_amount": the provider received, and reports, 1.00 less than requested.
+    const receivedMinor = outcome === "wrong_amount" ? tx.amount_minor - 100 : tx.amount_minor;
+    run(
+      this.db,
+      "UPDATE demo_provider_tx SET status = ?, received_minor = ? WHERE provider_ref = ?",
+      succeeded ? "succeeded" : "failed",
+      succeeded ? receivedMinor : null,
+      providerRef,
+    );
     // Paid, but the notification never arrives: only a status query or the statement reveals it.
     if (outcome === "lost_notification") return null;
 
@@ -171,8 +183,7 @@ export class SimulatedProvider implements SimulatedPaymentProvider {
       eventId: `evt_demo_${uuidV4()}`,
       type,
       providerRef,
-      // "wrong_amount": the provider reports 1.00 less than requested.
-      amountMinor: outcome === "wrong_amount" ? tx.amount_minor - 100 : tx.amount_minor,
+      amountMinor: receivedMinor,
       currency: tx.currency,
       occurredAt: iso(now),
       ...(succeeded ? {} : { failureReason: "Refusé par l'émetteur (simulation)" }),

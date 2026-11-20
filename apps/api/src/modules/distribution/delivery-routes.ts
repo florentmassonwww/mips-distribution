@@ -1,5 +1,6 @@
 // Delivery routes ("tournées", table `routes`): planning, stops, vehicle loading and summaries.
 // Lifecycle: planned → loaded (by the warehouse) → in_progress (by the agent) → closed.
+import { checkLoadLine, loadQuantities } from "@mips/core";
 import { z } from "zod";
 import { type Db, all, get, run, transaction } from "../../core/db.ts";
 import { newId } from "../../core/ids.ts";
@@ -8,7 +9,7 @@ import { recordAudit } from "../../core/audit.ts";
 import { ApiError, notFound } from "../../core/errors.ts";
 import type { Actor } from "../../core/actor.ts";
 import { requireCompanyId } from "./access.ts";
-import { requireActiveCustomer } from "./catalog.ts";
+import { requireActiveCustomerOutlet } from "./catalog.ts";
 import { recordStockMovement } from "./stock.ts";
 
 export type RouteStatus = "planned" | "loaded" | "in_progress" | "closed";
@@ -31,7 +32,7 @@ export const createRouteInput = z.object({
   day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   agentId: z.string().nullish(),
   vehicle: z.string().max(40).default(""),
-  customerIds: z.array(z.string()).max(200).default([]),
+  customerOutletIds: z.array(z.string()).max(200).default([]),
 });
 export type CreateRouteInput = z.output<typeof createRouteInput>;
 export type UpdateRouteInput = Partial<CreateRouteInput>;
@@ -50,16 +51,16 @@ export function requireRoute(db: Db, companyId: string, routeId: string): RouteR
 }
 
 /** Adds a customer as the last stop of a route; a customer already on the route keeps its place. */
-export function addRouteStop(db: Db, companyId: string, routeId: string, customerId: string): void {
+export function addRouteStop(db: Db, companyId: string, routeId: string, customerOutletId: string): void {
   const { n: seq } = get<{ n: number }>(db, "SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM route_stops WHERE route_id = ?", routeId)!;
   // The identifier is drawn even when the stop already exists (INSERT OR IGNORE).
   run(
     db,
-    "INSERT OR IGNORE INTO route_stops (id, route_id, company_id, customer_id, seq) VALUES (?,?,?,?,?)",
+    "INSERT OR IGNORE INTO route_stops (id, route_id, company_id, customer_outlet_id, seq) VALUES (?,?,?,?,?)",
     newId("stp"),
     routeId,
     companyId,
-    customerId,
+    customerOutletId,
     seq,
   );
 }
@@ -88,9 +89,9 @@ export function createRoute(db: Db, actor: Actor, input: CreateRouteInput, now: 
       input.vehicle,
       iso(now),
     );
-    for (const customerId of input.customerIds) {
-      requireActiveCustomer(db, companyId, customerId);
-      addRouteStop(db, companyId, routeId, customerId);
+    for (const customerOutletId of input.customerOutletIds) {
+      requireActiveCustomerOutlet(db, companyId, customerOutletId);
+      addRouteStop(db, companyId, routeId, customerOutletId);
     }
     recordAudit(db, actor, "route.created", "route", routeId, { name: input.name, day: input.day }, companyId, now);
     return { id: routeId };
@@ -108,7 +109,7 @@ export function updateRoute(db: Db, actor: Actor, routeId: string, input: Update
     }
     if (input.name) run(db, "UPDATE routes SET name = ? WHERE id = ?", input.name, routeId);
     if (input.vehicle !== undefined) run(db, "UPDATE routes SET vehicle = ? WHERE id = ?", input.vehicle, routeId);
-    if (input.customerIds) replaceRouteStops(db, companyId, routeId, input.customerIds);
+    if (input.customerOutletIds) replaceRouteStops(db, companyId, routeId, input.customerOutletIds);
     recordAudit(db, actor, "route.updated", "route", routeId, { name: route.name, fields: Object.keys(input) }, companyId, now);
   });
 }
@@ -117,25 +118,25 @@ export function updateRoute(db: Db, actor: Actor, routeId: string, input: Update
  * Renumbers the stops from the requested customer list. Customers that still have an order on the
  * route stay on it (appended after the requested ones) so that no order loses its stop.
  */
-function replaceRouteStops(db: Db, companyId: string, routeId: string, customerIds: string[]): void {
+function replaceRouteStops(db: Db, companyId: string, routeId: string, customerOutletIds: string[]): void {
   const withOrders = new Set(
-    all<{ customer_id: string }>(
+    all<{ customer_outlet_id: string }>(
       db,
-      "SELECT DISTINCT customer_id FROM orders WHERE route_id = ? AND status != 'cancelled'",
+      "SELECT DISTINCT customer_outlet_id FROM orders WHERE route_id = ? AND status != 'cancelled'",
       routeId,
-    ).map((row) => row.customer_id),
+    ).map((row) => row.customer_outlet_id),
   );
-  for (const customerId of customerIds) requireActiveCustomer(db, companyId, customerId);
-  const stops = [...new Set([...customerIds, ...withOrders])];
+  for (const customerOutletId of customerOutletIds) requireActiveCustomerOutlet(db, companyId, customerOutletId);
+  const stops = [...new Set([...customerOutletIds, ...withOrders])];
   run(db, "DELETE FROM route_stops WHERE route_id = ?", routeId);
-  stops.forEach((customerId, index) =>
+  stops.forEach((customerOutletId, index) =>
     run(
       db,
-      "INSERT INTO route_stops (id, route_id, company_id, customer_id, seq) VALUES (?,?,?,?,?)",
+      "INSERT INTO route_stops (id, route_id, company_id, customer_outlet_id, seq) VALUES (?,?,?,?,?)",
       newId("stp"),
       routeId,
       companyId,
-      customerId,
+      customerOutletId,
       index + 1,
     ),
   );
@@ -161,19 +162,16 @@ export function loadRoute(db: Db, actor: Actor, routeId: string, extras: LoadExt
     }
 
     // Quantity to load per product, in this order: prepared orders first, then the extras.
-    const toLoad = new Map<string, number>();
-    for (const row of all<{ product_id: string; q: number }>(
+    const prepared = all<{ product_id: string; q: number }>(
       db,
       `SELECT l.product_id, SUM(l.qty_ordered) AS q FROM order_lines l JOIN orders o ON o.id = l.order_id
       WHERE o.route_id = ? AND o.status = 'prepared' GROUP BY l.product_id`,
       routeId,
-    )) {
-      toLoad.set(row.product_id, row.q);
-    }
-    for (const extra of extras) {
-      if (extra.qty > 0) toLoad.set(extra.productId, (toLoad.get(extra.productId) ?? 0) + extra.qty);
-    }
-    if (!toLoad.size) throw new ApiError(409, "nothing_to_load", "Rien à charger : ajoutez des commandes préparées ou du stock de vente.");
+    );
+    const toLoad = loadQuantities(
+      prepared.map((row) => ({ productId: row.product_id, qty: row.q })),
+      extras,
+    );
 
     for (const [productId, qty] of toLoad) {
       const product = get<{ name: string; qty: number | null }>(
@@ -184,14 +182,7 @@ export function loadRoute(db: Db, actor: Actor, routeId: string, extras: LoadExt
         companyId,
       );
       if (!product) throw notFound("Produit");
-      const available = product.qty ?? 0;
-      if (available < qty) {
-        throw new ApiError(
-          409,
-          "insufficient_stock",
-          `Stock dépôt insuffisant pour ${product.name} : ${available} disponible(s), ${qty} demandé(s).`,
-        );
-      }
+      checkLoadLine(product.name, product.qty ?? 0, qty);
       run(db, "UPDATE warehouse_stock SET qty = qty - ? WHERE company_id = ? AND product_id = ?", qty, companyId, productId);
       run(
         db,

@@ -6,7 +6,7 @@ import type { ClubOutlet } from "../modules/distribution/settings.ts";
 export type ProductSpec = readonly [sku: string, name: string, unit: string, priceRupees: number, stock: number];
 
 /** [key, name, address, zone, on the "Grands comptes" price list]. */
-export type CustomerSpec = readonly [key: string, name: string, address: string, zone: string, keyAccount?: boolean];
+export type CustomerOutletSpec = readonly [key: string, name: string, address: string, zone: string, keyAccount?: boolean];
 
 /** [key, name, role]. */
 export type UserSpec = readonly [key: string, name: string, role: string];
@@ -22,7 +22,7 @@ export const PRODUCTS: readonly ProductSpec[] = [
   ["ENE-25", "Boisson énergisante 25 cl", "pack de 24", 1320, 120],
 ];
 
-export const CUSTOMERS: readonly CustomerSpec[] = [
+export const CUSTOMER_OUTLETS: readonly CustomerOutletSpec[] = [
   ["tilakaz", "Boutique Ti Lakaz (démo)", "Route Royale, Grand-Baie", "Nord"],
   ["bellevue", "Supérette Belle Vue (démo)", "Avenue des Flamboyants, Pereybère", "Nord", true],
   ["lagon", "Snack Lagon Bleu (démo)", "Front de mer, Trou-aux-Biches", "Nord"],

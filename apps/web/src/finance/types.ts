@@ -7,7 +7,7 @@ export interface JournalEntry {
   order_id: string;
   created_at: string;
   invoice: string;
-  customer: string;
+  customer_outlet: string;
   agent: string | null;
   method: string;
   amount_minor: number;
@@ -31,7 +31,7 @@ export interface Invoice {
   number: string;
   order_number: string;
   issued_at: string;
-  customer: string;
+  customer_outlet: string;
   route: string | null;
   amount_minor: number;
   paid_minor: number;

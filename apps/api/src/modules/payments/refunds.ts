@@ -1,8 +1,8 @@
 // Refunds of confirmed payments, full or partial, through the provider.
+import { checkRefund, refundKey, statusAfterRefund } from "@mips/core";
 import { type Actor, companyOf } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run, transaction } from "../../core/db.ts";
-import { ApiError } from "../../core/errors.ts";
 import type { ConnectorSet } from "../connectors/index.ts";
 import { autoResolveExceptions as resolveExceptions, queueErpEntry as queueAccountingEntry } from "../distribution/exceptions.ts";
 import { requireCompanyPayment as getCompanyPayment } from "./payment-view.ts";
@@ -16,12 +16,9 @@ import type { PaymentRow } from "./types.ts";
  */
 function reserveRefund(db: Db, companyId: string | null, paymentId: string, amountMinor: number): { payment: PaymentRow; key: string } {
   const payment = getCompanyPayment(db, companyId, paymentId);
-  if (payment.status !== "confirmed") throw new ApiError(409, "bad_status", "Seul un paiement confirmé peut être remboursé.");
-  if (amountMinor <= 0 || amountMinor > payment.amount_minor - payment.refunded_minor) {
-    throw new ApiError(400, "amount_exceeds_balance", "Montant supérieur au solde remboursable.");
-  }
+  checkRefund({ status: payment.status, amountMinor: payment.amount_minor, refundedMinor: payment.refunded_minor }, amountMinor);
   run(db, "UPDATE payments SET refunded_minor = refunded_minor + ? WHERE id = ?", amountMinor, payment.id);
-  return { payment, key: `${payment.id}:${payment.refunded_minor}` };
+  return { payment, key: refundKey(payment.id, payment.refunded_minor) };
 }
 
 export async function refundPayment(
@@ -46,8 +43,11 @@ export async function refundPayment(
   }
 
   transaction(db, () => {
+    // The reservation is already counted in refunded_minor: nothing left means refunded.
     const refunded = getCompanyPayment(db, companyId, paymentId);
-    if (refunded.refunded_minor >= refunded.amount_minor) run(db, "UPDATE payments SET status = 'refunded' WHERE id = ?", payment.id);
+    if (statusAfterRefund({ status: refunded.status, amountMinor: refunded.amount_minor, refundedMinor: refunded.refunded_minor }, 0) === "refunded") {
+      run(db, "UPDATE payments SET status = 'refunded' WHERE id = ?", payment.id);
+    }
     touchPayment(db, payment.id, now);
     run(db, "UPDATE invoices SET refunded_minor = refunded_minor + ? WHERE id = ?", amountMinor, payment.invoice_id);
     refreshInvoiceStatus(db, payment.invoice_id);

@@ -6,17 +6,17 @@ import { Badge } from "../shared/Badge.tsx";
 import { Field } from "../shared/Form.tsx";
 import { formatMoney } from "../shared/format.ts";
 import { type LocalRouteView, unitPrice } from "../shared/offline.ts";
-import { findCustomer } from "./route-helpers.ts";
+import { findCustomerOutlet } from "./route-helpers.ts";
 
 export function CatalogTab({ work }: { work: LocalRouteView }) {
-  const [customerId, setCustomerId] = useState("");
-  const customer = findCustomer(work, customerId);
+  const [customerOutletId, setCustomerOutletId] = useState("");
+  const outlet = findCustomerOutlet(work, customerOutletId);
   return (
     <div className="stack">
       <Field label={translate("Prix applicables pour")}>
-        <select value={customerId} onChange={(event) => setCustomerId(event.target.value)}>
+        <select value={customerOutletId} onChange={(event) => setCustomerOutletId(event.target.value)}>
           <option value="">{translate("Tarif de base")}</option>
-          {work.customers.map((option) => (
+          {work.customer_outlets.map((option) => (
             <option key={option.id} value={option.id}>
               {option.name}
             </option>
@@ -35,7 +35,7 @@ export function CatalogTab({ work }: { work: LocalRouteView }) {
                 </div>
               </div>
               <div className="right">
-                <strong>{formatMoney(unitPrice(work, customer, product))}</strong>
+                <strong>{formatMoney(unitPrice(work, outlet, product))}</strong>
                 <div>
                   {/* A negative stock means more went out than was loaded: shown as a variance. */}
                   <Badge kind={onBoard > 5 ? "ok" : onBoard > 0 ? "warn" : "err"}>

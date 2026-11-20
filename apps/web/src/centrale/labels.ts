@@ -28,7 +28,7 @@ export const ERP_ENTRY_KIND_LABELS: Record<string, string> = {
 /** English names of the exception detail fields shown instead of the (French) server message. */
 export const EXCEPTION_DETAIL_LABELS: Record<string, string> = {
   order: `Order`,
-  customer: `Outlet`,
+  customerOutlet: `Outlet`,
   reason: `Reason`,
   invoice: `Invoice`,
   reference: `Reference`,

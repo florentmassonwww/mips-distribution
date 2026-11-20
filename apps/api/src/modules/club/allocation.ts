@@ -1,7 +1,7 @@
 // Member account: payments are allocated to the oldest charges first, and the balance, the amount
 // overdue and its age are derived from the charges and confirmed payments.
+import { allocatePayments, overdue } from "@mips/core";
 import { type Db, all, get, run } from "../../core/db.ts";
-import { daysBetween } from "./dates.ts";
 import type { CountRow, MemberChargeRow } from "./types.ts";
 
 const confirmedPaidMinor = (db: Db, memberId: string): number =>
@@ -17,22 +17,17 @@ const confirmedPaidMinor = (db: Db, memberId: string): number =>
  * Called after any change to the charges or payments; never edited by hand.
  */
 export function reallocatePayments(db: Db, memberId: string): void {
-  let available = confirmedPaidMinor(db, memberId);
   const charges = all<MemberChargeRow>(
     db,
     "SELECT * FROM member_charges WHERE member_id = ? AND status != 'cancelled' ORDER BY due_date, created_at, rowid",
     memberId,
   );
-  for (const charge of charges) {
-    const allocated = Math.min(charge.amount_minor, Math.max(available, 0));
-    available -= allocated;
-    run(
-      db,
-      "UPDATE member_charges SET allocated_minor = ?, status = ? WHERE id = ?",
-      allocated,
-      allocated >= charge.amount_minor ? "paid" : "open",
-      charge.id,
-    );
+  const allocations = allocatePayments(
+    confirmedPaidMinor(db, memberId),
+    charges.map((charge) => ({ id: charge.id, amountMinor: charge.amount_minor, dueDate: charge.due_date })),
+  );
+  for (const allocation of allocations) {
+    run(db, "UPDATE member_charges SET allocated_minor = ?, status = ? WHERE id = ?", allocation.allocatedMinor, allocation.status, allocation.id);
   }
 }
 
@@ -65,22 +60,22 @@ export function memberAccount(db: Db, memberId: string, day: string): MemberAcco
     memberId,
   )!.n;
   const paidMinor = confirmedPaidMinor(db, memberId);
-  const overdue = all<OverdueChargeRow>(
+  const late = all<OverdueChargeRow>(
     db,
     "SELECT id, due_date, amount_minor - allocated_minor AS rest FROM member_charges WHERE member_id = ? AND status = 'open' AND due_date < ? ORDER BY due_date, created_at, rowid",
     memberId,
     day,
   );
   const balanceMinor = chargedMinor - paidMinor;
-  const oldest = overdue[0];
   return {
     chargedMinor,
     paidMinor,
     balanceMinor,
     dueMinor: Math.max(balanceMinor, 0),
     creditMinor: Math.max(-balanceMinor, 0),
-    overdueMinor: overdue.reduce((sum, charge) => sum + charge.rest, 0),
-    overdueDays: oldest ? daysBetween(oldest.due_date, day) : 0,
-    oldestOverdueId: oldest?.id ?? null,
+    ...overdue(
+      late.map((charge) => ({ id: charge.id, dueDate: charge.due_date, restMinor: charge.rest })),
+      day,
+    ),
   };
 }
