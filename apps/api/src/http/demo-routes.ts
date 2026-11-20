@@ -1,5 +1,5 @@
 // Demo-mode routes: one-click logins, demo reset, and simulated provider outcomes.
-import { deleteCookie, setCookie } from "hono/cookie";
+import { setCookie } from "hono/cookie";
 import { z } from "zod";
 import { all, get, type Row } from "../core/db.ts";
 import { ApiError, notFound } from "../core/errors.ts";
@@ -7,7 +7,7 @@ import { resetDemo } from "../seed/index.ts";
 import { requireMemberByPortalToken as memberByToken } from "../modules/club/portal.ts";
 import { type SimulatedOutcome } from "../modules/connectors/types.ts";
 import { getPaymentForUser as getPayment, processNotification as handleNotification } from "../modules/payments/index.ts";
-import { type App, type AppDeps, clientKey, readJson, routeParam } from "./context.ts";
+import { type App, type AppDeps, readJson, routeParam } from "./context.ts";
 import { COMPANY_ROLES, COOKIE_LIFETIME_SECONDS, SESSION_COOKIE } from "./session.ts";
 import { ONE_MINUTE_MS } from "./rate-limit.ts";
 
@@ -42,15 +42,6 @@ export function registerDemoRoutes(app: App, deps: AppDeps): void {
     return c.json({ ok: true });
   });
 
-  // "Reset" button of the demo banner. In the offline v0.1.0 demo it wiped the database kept in the
-  // browser; on a server it restores the seeded demo data for everyone and signs the caller out.
-  // Demo mode only (this file is registered only then), rate-limited, open to any visitor as before.
-  app.post("/api/offline/reset", async (c) => {
-    rateLimit(`demoreset:${clientKey(c)}`, 5, ONE_MINUTE_MS);
-    await resetDemo(db, connectors, now());
-    deleteCookie(c, SESSION_COOKIE, { path: "/" });
-    return c.json({ ok: true });
-  });
 
   /** Asks the simulated provider for an outcome and processes the notification it sends, if any. */
   const simulateOutcome = async (payment: Row, outcome: SimulatedOutcome): Promise<string> => {

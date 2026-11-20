@@ -8,6 +8,7 @@ import { useFeedback } from "../shared/Feedback.tsx";
 import { Field } from "../shared/Form.tsx";
 import { formatDate } from "../shared/format.ts";
 import { useApi } from "../shared/hooks.ts";
+import { forgetDemoData } from "../shared/offline.ts";
 import { Card, PageHeader } from "../shared/Layout.tsx";
 import { QueryView } from "../shared/QueryView.tsx";
 
@@ -63,13 +64,14 @@ export function CompaniesPage() {
     const confirmed = await ui.ask({
       kind: "confirm",
       title: translate("Réinitialiser la démonstration ?"),
-      text: translate("Toutes les données sont effacées et le jeu de données fictif est rechargé."),
+      text: translate("Toutes les données sont effacées pour tous les utilisateurs du serveur et le jeu de données fictif est rechargé."),
       danger: true,
       confirm: translate("Réinitialiser"),
     });
     if (confirmed) {
       await ui.run(async () => {
         await apiRequest("POST", "/api/demo/reset");
+        forgetDemoData();
         await companies.reload();
       }, translate("Données de démonstration rechargées."));
     }

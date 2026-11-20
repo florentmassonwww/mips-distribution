@@ -16,6 +16,7 @@ import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
 import crypto from "node:crypto";
 import { SCREENS } from "./screens.mjs";
+import { DIVERGENCES } from "./divergences.mjs";
 
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
@@ -148,16 +149,26 @@ async function capture(baseUrl, screen, width, lang) {
     last = h;
   }
   if (screen.act) await screen.act(page);
+  // The demo banner states how the demo is hosted, which differs on purpose between the offline
+  // v0.1.0 demo and the served application: its text is read, then replaced on both sides by the
+  // same placeholder so that it does not shift the rest of the page.
+  const banner = await page.evaluate(() => {
+    const b = document.querySelector(".demo-banner");
+    if (!b) return null;
+    const text = b.innerText;
+    b.innerHTML = "<strong>DEMO</strong>";
+    return text;
+  });
   const png = await page.screenshot({ fullPage: true, animations: "disabled", caret: "hide" });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   await context.close();
-  return { png: PNG.sync.read(png), errors, overflow };
+  return { png: PNG.sync.read(png), errors, overflow, banner };
 }
 
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir, { recursive: true });
 const selected = SCREENS.filter((s) => !only || s.name.includes(only));
-let failed = 0, total = 0;
+let failed = 0, total = 0, diverged = 0;
 const notes = [];
 try {
   for (const screen of selected) {
@@ -165,7 +176,7 @@ try {
       for (const width of widths) {
         total++;
         const id = `${screen.name}.${lang}.${width}`;
-        const key = crypto.createHash("sha256").update([referenceHash, screen.name, String(screen.as), String(screen.path), String(screen.act ?? ""), lang, width].join("|")).digest("hex").slice(0, 20);
+        const key = crypto.createHash("sha256").update(["harness-2", referenceHash, screen.name, String(screen.as), String(screen.path), String(screen.act ?? ""), lang, width].join("|")).digest("hex").slice(0, 20);
         const cached = path.join(cacheDir, `${id}.${key}.json`);
         let ref;
         if (fs.existsSync(cached)) {
@@ -178,9 +189,22 @@ try {
         }
         // Compare; on a difference, capture the rebuilt side once more: Chromium occasionally
         // renders a few pixels differently in the overflowing area of a page (seen at 390 px).
+        const divergence = DIVERGENCES.find((d) => d.ids.test(id));
         const compare = (neu) => {
           const problems = [];
           if (neu.errors.length) problems.push(`console errors: ${neu.errors.join(" | ").slice(0, 200)}`);
+          // Requirements of the rebuilt interface, checked on every capture.
+          if (neu.overflow > 0) problems.push(`horizontal overflow ${neu.overflow}px at ${width}px`);
+          if (neu.banner !== null && /restent dans ce navigateur|stays in this browser/.test(neu.banner)) problems.push(`banner still claims an offline demo: ${neu.banner}`);
+          // Intended differences from v0.1.0 (divergences.mjs): requirements only, no pixel comparison.
+          if (divergence) {
+            if (ref.png.width === neu.png.width && ref.png.height === neu.png.height) {
+              const diff = new PNG({ width: ref.png.width, height: ref.png.height });
+              const n = pixelmatch(ref.png.data, neu.png.data, diff.data, ref.png.width, ref.png.height, { threshold: 0.05 });
+              return { problems, diff: n ? diff : null };
+            }
+            return { problems, diff: null };
+          }
           if (ref.png.width !== neu.png.width || ref.png.height !== neu.png.height) {
             problems.push(`size ${neu.png.width}×${neu.png.height}, reference ${ref.png.width}×${ref.png.height}`);
             return { problems, diff: null };
@@ -197,12 +221,18 @@ try {
           ({ problems, diff } = compare(neu));
         }
         if (diff) fs.writeFileSync(path.join(outDir, `${id}.diff.png`), PNG.sync.write(diff));
-        if (neu.overflow > 0) notes.push(`${id}: horizontal overflow ${neu.overflow}px (reference: ${ref.overflow}px)`);
+        if (divergence) {
+          fs.writeFileSync(path.join(outDir, `${id}.reference.png`), PNG.sync.write(ref.png));
+          fs.writeFileSync(path.join(outDir, `${id}.rebuilt.png`), PNG.sync.write(neu.png));
+        }
         if (problems.length) {
           failed++;
           fs.writeFileSync(path.join(outDir, `${id}.reference.png`), PNG.sync.write(ref.png));
           fs.writeFileSync(path.join(outDir, `${id}.rebuilt.png`), PNG.sync.write(neu.png));
           console.log(`✗ ${id}: ${problems.join("; ")}`);
+        } else if (divergence) {
+          diverged++;
+          console.log(`≈ ${id}: intended difference (${divergence.reason})`);
         } else console.log(`✓ ${id}`);
       }
     }
@@ -213,5 +243,5 @@ try {
   clock.uninstall();
 }
 if (notes.length) console.log("\nNotes:\n" + notes.map((n) => "  " + n).join("\n"));
-console.log(`\n${total - failed}/${total} screenshots identical`);
+console.log(`\n${total - failed - diverged}/${total} screenshots identical, ${diverged} intended differences (images in tests/visual/output), ${failed} failed`);
 process.exitCode = failed ? 1 : 0;

@@ -190,7 +190,7 @@ export const translations: Readonly<Record<string, string>> = {
   Détails: `Details`,
   "Entreprise créée avec son administrateur.": `Company created with its administrator.`,
   "Réinitialiser la démonstration ?": `Reset the demo?`,
-  "Toutes les données sont effacées et le jeu de données fictif est rechargé.": `All data is erased and the fictitious data set is reloaded.`,
+  "Toutes les données sont effacées pour tous les utilisateurs du serveur et le jeu de données fictif est rechargé.": `All data is erased for every user of the server and the fictitious data set is reloaded.`,
   Réinitialiser: `Reset`,
   "Données de démonstration rechargées.": `Demo data reloaded.`,
   "Chaque entreprise a ses données, ses utilisateurs et ses paramètres. La plateforme n'accède pas aux données opérationnelles.": `Each company has its own data, users and settings. The platform has no access to operational data.`,
@@ -1043,6 +1043,5 @@ Collected (confirmed): {5}`,
   "Refusée : {0} en retard de {1} jour(s), à régulariser avant l'entrée.": `Refused: {0} overdue by {1} day(s), to settle before entry.`,
   "Date d'échéance": `Due date`,
   "à régler avant le": `due by`,
-  "Démo hors ligne · les données restent dans ce navigateur": `Offline demo · data stays in this browser`,
-  "Les données fictives de départ sont rechargées. Tout ce qui a été fait dans ce navigateur est effacé.": `The initial fictitious data is reloaded. Everything done in this browser is erased.`
+  "Serveur de démonstration partagé · les données sont communes à tous les visiteurs": `Shared demo server · data is common to every visitor`,
 };
