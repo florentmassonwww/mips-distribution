@@ -40,6 +40,82 @@ function rename(object, from, to, convert) {
 
 const modulesOfVertical = (vertical) => (vertical ? [vertical] : []);
 
+// CSV exports and statements: rows of raw cells. Cells are split on the delimiter outside quotes
+// and joined back unchanged, so only the cells an evolution rewrites differ.
+function splitCells(row, delimiter) {
+  const cells = [];
+  let cell = "";
+  let quoted = false;
+  for (const char of row) {
+    if (char === '"') quoted = !quoted;
+    if (char === delimiter && !quoted) {
+      cells.push(cell);
+      cell = "";
+    } else cell += char;
+  }
+  cells.push(cell);
+  return cells;
+}
+
+/**
+ * Rewrites the data rows of a CSV text: `fn(cells, header)` returns the new cells, or null to drop
+ * the row. Line endings and every untouched cell are kept as they are.
+ */
+function mapCsv(text, delimiter, fn) {
+  const newline = text.includes("\r\n") ? "\r\n" : "\n";
+  const [head, ...rows] = text.split(newline);
+  const header = splitCells(head, delimiter);
+  const mapped = [];
+  for (const row of rows) {
+    if (row === "") {
+      mapped.push(row);
+      continue;
+    }
+    const cells = fn(splitCells(row, delimiter), header);
+    if (cells) mapped.push(cells.join(delimiter));
+  }
+  return [head, ...mapped].join(newline);
+}
+
+/** "1234.56" ↔ 123456 (amounts in CSV exports and statements). */
+const toMinor = (text) => Math.round(Number(text) * 100);
+const fromMinor = (minor) => (minor / 100).toFixed(2);
+
+/** Method of a simulated provider reference placeholder (`<ref-PS#1>` → paystation). */
+const METHOD_OF_REF = { PS: "paystation", TPE: "card_tpe", JCE: "juice", LNK: "link" };
+const methodOfRef = (text) => METHOD_OF_REF[/<ref-([A-Z]+)#\d+>/.exec(text)?.[1]];
+
+/**
+ * Gross amount of a v0.1.0 settlement whose net was `netMinor` after the demo fee of `method`
+ * (gross − round(gross × bps / 10 000) = net). Throws when the net has no single such gross.
+ */
+function grossOfV010Net(netMinor, method) {
+  const bps = V010_FEE_BPS[method];
+  const estimate = Math.round(netMinor / (1 - bps / 1e4));
+  const candidates = [];
+  for (let gross = estimate - 3; gross <= estimate + 3; gross++) {
+    if (gross - Math.round((gross * bps) / 1e4) === netMinor) candidates.push(gross);
+  }
+  const roundRupees = candidates.filter((gross) => gross % 100 === 0);
+  const found = candidates.length === 1 ? candidates : roundRupees;
+  if (found.length !== 1) throw new Error(`evolutions: no single gross for net ${netMinor} (${method}): ${candidates}`);
+  return found[0];
+}
+
+/**
+ * A v0.1.0 demo statement (`;`-separated) as generated with fees to be agreed: settlement lines
+ * carry no fee and their net is the gross. `keepFeeMinor(lineIndex)` keeps a deliberate anomaly.
+ */
+function statementWithoutFees(content, keepFeeMinor = () => 0) {
+  let index = -1;
+  return mapCsv(content, ";", (cells) => {
+    index++;
+    if (!cells[2].startsWith("REGLEMENT")) return cells;
+    const fee = keepFeeMinor(index);
+    return [cells[0], cells[1], cells[2], cells[3], fromMinor(fee), fromMinor(toMinor(cells[3]) - fee)];
+  });
+}
+
 // ───────── evolutions ─────────
 
 export const EVOLUTIONS = [
@@ -109,6 +185,202 @@ export const EVOLUTIONS = [
       if (entry.status === 403 && error?.code === "wrong_vertical") {
         const module = error.message.includes("distribution") ? "distribution" : "club";
         entry.response.error = { code: "module_not_enabled", message: MODULE_MESSAGE[module] };
+      }
+      return entry;
+    },
+  },
+
+  // Step 2: payment fees are "to be agreed" until the company sets them. v0.1.0 used invented demo
+  // rates (paystation 100, card_tpe 175, juice 90, link 150 bps); the demo data now has none.
+  {
+    id: "fee-settings-to-be-agreed",
+    step: 2,
+    scenarios: /^(admin-settings-methods|finance-erp-retry)$/,
+    reason:
+      "Default feeBps is null (to be agreed) instead of the invented demo rates. The scenarios send back the settings they read, so the request bodies carry null too.",
+    entry(entry) {
+      if (isCall(entry, "GET", "/api/admin/settings")) eachWithKey(entry.response?.settings?.payments?.methods, "feeBps", (method) => (method.feeBps = null));
+      if (isCall(entry, "PUT", "/api/admin/settings")) eachWithKey(entry.request.body?.payments?.methods, "feeBps", (method) => (method.feeBps = null));
+      return entry;
+    },
+  },
+  {
+    id: "no-demo-fee-charged",
+    step: 2,
+    scenarios:
+      /^(centrale-reference-and-dashboard|payment-duplicate-notification|finance-journal-and-invoices|finance-refund|finance-statement-reconciliation|finance-statement-anomalies|finance-daily-close|admin-users|club-dashboard-and-members|club-charges|club-cash-payment|club-member-portal-and-online-payment|club-statement-reconciliation)$/,
+    reason:
+      "The demo bank statements (seed and generated) charge no fee while it is to be agreed: settled payments and daily-close totals show fee_actual_minor 0, bank lines a fee of 0 (or only the deliberate 5.00 anomaly) and a net equal to the gross, the payment.settled audit a feeMinor of 0.",
+    // Before fee-expected-to-be-agreed: bank line fees are corrected with the v0.1.0 expected fee.
+    entry(entry) {
+      const read = entry.request.method === "GET" || isCall(entry, "POST", "/api/finance/close");
+      if (!read || entry.status !== 200 || typeof entry.response !== "object") return entry;
+      eachWithKey(entry.response, "fee_actual_minor", (row) => {
+        if (row.fee_actual_minor !== null) row.fee_actual_minor = 0;
+      });
+      if (/^\/api\/(finance|club)\/reconciliation$/.test(entry.request.path)) {
+        entry.response.lines.forEach((line) => {
+          // What the bank charged beyond the v0.1.0 expected fee (the anomaly) is still charged.
+          line.fee_minor -= line.fee_expected_minor ?? line.fee_minor;
+          line.net_minor = line.gross_minor - line.fee_minor;
+        });
+      }
+      eachWithKey(entry.response, "details", (row) => {
+        if (row.action === "payment.settled") row.details.feeMinor = 0;
+      });
+      return entry;
+    },
+  },
+  {
+    id: "fee-expected-to-be-agreed",
+    step: 2,
+    scenarios:
+      /^(payment-duplicate-notification|finance-journal-and-invoices|finance-refund|finance-statement-reconciliation|finance-statement-anomalies|finance-daily-close)$/,
+    reason:
+      "With fees to be agreed the expected fee is 0 and not known: payment rows (journal, reconciliation lines) gain fee_expected_known = 0 (null on a bank line without payment); daily-close totals sum 0.",
+    entry(entry) {
+      const rows = isCall(entry, "GET", /^\/api\/finance\/journal(\?|$)/)
+        ? entry.response
+        : isCall(entry, "GET", "/api/finance/reconciliation")
+          ? entry.response.lines
+          : null;
+      if (Array.isArray(rows)) {
+        rows.forEach((row) => {
+          row.fee_expected_known = row.fee_expected_minor === null ? null : 0;
+          if (row.fee_expected_minor !== null) row.fee_expected_minor = 0;
+        });
+      }
+      if (/^\/api\/finance\/close/.test(entry.request.path) && entry.status === 200 && typeof entry.response === "object") {
+        eachWithKey(entry.response, "fee_expected_minor", (totals) => (totals.fee_expected_minor = 0));
+      }
+      return entry;
+    },
+  },
+  {
+    id: "demo-statement-without-fees",
+    step: 2,
+    scenarios: /^(finance-statement-reconciliation|finance-statement-anomalies|club-statement-reconciliation)$/,
+    reason:
+      "The generated demo statement charges no fee while fees are to be agreed (net = gross); with anomalies, the deliberate extra fee of 5.00 on the first line remains. The scenarios import the statement they read, so the request bodies change too.",
+    entry(entry) {
+      const anomalies = /anomalies=1/.test(entry.request.path) || /statement with anomalies/.test(entry.step);
+      const keep = (index) => (anomalies && index === 0 ? 500 : 0);
+      if (isCall(entry, "GET", /^\/api\/(finance|club)\/statements\/demo/)) entry.response.content = statementWithoutFees(entry.response.content, keep);
+      if (isCall(entry, "POST", /^\/api\/(finance|club)\/statements$/)) entry.request.body.content = statementWithoutFees(entry.request.body.content, keep);
+      return entry;
+    },
+  },
+  {
+    id: "no-fee-variance-when-to-be-agreed",
+    step: 2,
+    scenarios: /^finance-statement-anomalies$/,
+    reason:
+      "No fee-variance exception is raised while the fee is to be agreed. The fee_variance exception disappears, the exception placeholders after it are renumbered, and the scenario, which resolves the first listed exception, now resolves the amount mismatch (so the open-exceptions CSV no longer lists it).",
+    transcript(entries) {
+      const listed = entries.find((entry) => isCall(entry, "GET", "/api/exceptions?domain=finance"));
+      const removed = listed.response.filter((exception) => exception.type === "fee_variance").map((exception) => exception.id);
+      listed.response = listed.response.filter((exception) => exception.type !== "fee_variance");
+      const number = (placeholder) => Number(/#(\d+)>/.exec(placeholder)[1]);
+      const shift = (n) => n - removed.filter((id) => number(id) < n).length;
+      const renumbered = JSON.parse(JSON.stringify(entries).replace(/<exc#(\d+)>/g, (_, n) => `<exc#${shift(Number(n))}>`));
+      const first = renumbered.find((entry) => isCall(entry, "GET", "/api/exceptions?domain=finance")).response[0];
+      const resolved = renumbered.find((entry) => isCall(entry, "GET", "/api/exceptions?domain=finance&status=resolved"));
+      const decision = resolved.response[0];
+      resolved.response = [
+        {
+          ...first,
+          status: decision.status,
+          resolution: decision.resolution,
+          resolution_note: decision.resolution_note,
+          resolved_by: decision.resolved_by,
+          resolved_at: decision.resolved_at,
+          resolved_by_name: decision.resolved_by_name,
+        },
+      ];
+      const csv = renumbered.find((entry) => isCall(entry, "GET", "/api/exceptions?domain=finance&format=csv"));
+      csv.response = mapCsv(csv.response, ",", (cells) => (cells[1] === first.type ? null : cells));
+      return renumbered;
+    },
+  },
+  {
+    id: "erp-settlement-gross",
+    step: 2,
+    scenarios: /^finance-erp-retry$/,
+    reason: "Accounting entries of bank settlements carry the net credited amount, now the gross since the demo statements charge no fee.",
+    entry(entry) {
+      if (!isCall(entry, "GET", /^\/api\/finance\/erp(\?|$)/)) return entry;
+      if (typeof entry.response === "string") {
+        entry.response = mapCsv(entry.response, ",", (cells) =>
+          cells[1] === "settlement" ? cells.with(3, fromMinor(grossOfV010Net(toMinor(cells[3]), methodOfRef(cells[2])))) : cells,
+        );
+      } else {
+        entry.response.entries
+          .filter((row) => row.kind === "settlement")
+          .forEach((row) => (row.amount_minor = grossOfV010Net(row.amount_minor, methodOfRef(row.label))));
+      }
+      return entry;
+    },
+  },
+  {
+    id: "club-export-without-fee-lines",
+    step: 2,
+    scenarios: /^club-accounting-export$/,
+    reason:
+      "Online payments were settled without a fee: each bank settlement debits the bank with the full amount and has no provider-fee line (627000). Totals are unchanged.",
+    entry(entry) {
+      if (!isCall(entry, "GET", /^\/api\/club\/accounting/) || entry.status !== 200) return entry;
+      const merge = (lines, read, write) => {
+        const kept = [];
+        for (const line of lines) {
+          const { journal, account, piece, debit } = read(line);
+          if (journal === "BQ" && account === "627000") {
+            const bank = kept.findLast((other) => read(other).journal === "BQ" && read(other).account === "512000" && read(other).piece === piece);
+            write(bank, read(bank).debit + debit);
+          } else kept.push(line);
+        }
+        return kept;
+      };
+      if (typeof entry.response === "string") {
+        const rows = [];
+        mapCsv(entry.response, ",", (cells) => (rows.push(cells), null));
+        const read = (cells) => ({ journal: cells[1], account: cells[2], piece: cells[4], debit: toMinor(cells[6]) });
+        const kept = new Set(merge(rows, read, (cells, debit) => (cells[6] = fromMinor(debit))));
+        let index = -1;
+        entry.response = mapCsv(entry.response, ",", () => {
+          index++;
+          return kept.has(rows[index]) ? rows[index] : null;
+        });
+      } else {
+        entry.response.lines = merge(entry.response.lines, (line) => line, (line, debit) => (line.debit = debit));
+      }
+      return entry;
+    },
+  },
+  {
+    id: "csv-exports-without-fees",
+    step: 2,
+    scenarios: /^(finance-journal-and-invoices|finance-statement-reconciliation|admin-users)$/,
+    reason: "The journal, reconciliation and audit CSV exports show the same fee changes as their JSON views (0.00 expected and charged, net = gross).",
+    entry(entry) {
+      if (entry.request.method !== "GET" || typeof entry.response !== "string") return entry;
+      const zeroIfSet = (cell) => (cell === "" ? cell : "0.00");
+      if (/^\/api\/finance\/journal\?/.test(entry.request.path)) {
+        entry.response = mapCsv(entry.response, ",", (cells, header) =>
+          cells.map((cell, i) => (["Frais attendus", "Frais prélevés"].includes(header[i]) ? zeroIfSet(cell) : cell)),
+        );
+      }
+      if (/^\/api\/finance\/reconciliation\?/.test(entry.request.path)) {
+        entry.response = mapCsv(entry.response, ",", (cells, header) => {
+          const at = (name) => header.indexOf(name);
+          const fee = toMinor(cells[at("Frais")]) - (cells[at("Frais attendus")] === "" ? toMinor(cells[at("Frais")]) : toMinor(cells[at("Frais attendus")]));
+          return cells
+            .with(at("Frais"), fromMinor(fee))
+            .with(at("Net"), fromMinor(toMinor(cells[at("Brut")]) - fee))
+            .with(at("Frais attendus"), zeroIfSet(cells[at("Frais attendus")]));
+        });
+      }
+      if (/^\/api\/admin\/audit\?/.test(entry.request.path)) {
+        entry.response = entry.response.replace(/(payment\.settled,.*""feeMinor"":)\d+/g, "$10");
       }
       return entry;
     },
