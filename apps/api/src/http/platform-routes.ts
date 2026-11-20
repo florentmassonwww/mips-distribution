@@ -9,10 +9,12 @@ import { iso } from "../core/time.ts";
 import { type App, type AppDeps, readJson, routeParam } from "./context.ts";
 import { auditLogResponse } from "./admin-routes.ts";
 
-/** A non-empty list of known module codes, without duplicates, returned in catalogue order. */
+/**
+ * Known module codes without duplicates, returned in catalogue order. A company may have none
+ * (only administration and audit stay open); a new company starts with at least one.
+ */
 const modulesSchema = z
   .array(z.enum(MODULES))
-  .min(1)
   .refine((modules) => new Set(modules).size === modules.length, "modules en double")
   .transform((modules): ModuleCode[] => inCatalogueOrder(modules));
 
@@ -45,7 +47,7 @@ export function registerPlatformRoutes(app: App, deps: AppDeps): void {
         slug: z.string().regex(/^[a-z0-9-]{2,30}$/),
         adminName: z.string().min(2).max(80),
         adminEmail: z.email().max(120),
-        modules: modulesSchema.optional(),
+        modules: modulesSchema.refine((modules) => modules.length > 0, "au moins un module").optional(),
         /** v0.1.0 field, still accepted when `modules` is absent: the company gets that one module. */
         vertical: z.enum(MODULES).optional(),
       }),
