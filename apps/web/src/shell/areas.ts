@@ -1,6 +1,9 @@
 // Areas of the back office: the navigation of each role and the home page of each profile.
+// What a user sees depends on their role and on the modules of their company: the areas of a
+// module the company has not enabled are never linked.
 // Labels are translated once, when the module loads: changing the language reloads the page.
 import { translate } from "../i18n/translate.ts";
+import { hasModule } from "../shared/modules.ts";
 
 /** [path, label] of a navigation link. */
 export type NavLink = readonly [path: string, label: string];
@@ -34,12 +37,21 @@ export const ADMIN_NAV: NavGroup = [
   translate("Administration"),
   [
     ["/admin/utilisateurs", translate("Utilisateurs")],
+    ["/admin/etablissements", translate("Établissements")],
     ["/admin/parametres", translate("Paramètres")],
     ["/admin/audit", translate("Journal d'audit")],
   ],
 ];
 
-/** Navigation of a distribution company (and of the platform team), per role. */
+const PLATFORM_NAV: NavGroup = [
+  translate("Plateforme"),
+  [
+    ["/plateforme", translate("Entreprises")],
+    ["/plateforme/audit", translate("Journal d'audit")],
+  ],
+];
+
+/** Navigation of the Distribution module, per role (administration excluded). */
 export const DISTRIBUTION_NAV: Record<string, readonly NavGroup[]> = {
   dispatcher: [CENTRALE_NAV],
   // Finance follows operations read-only.
@@ -54,16 +66,7 @@ export const DISTRIBUTION_NAV: Record<string, readonly NavGroup[]> = {
     ],
     FINANCE_NAV,
   ],
-  company_admin: [CENTRALE_NAV, FINANCE_NAV, ADMIN_NAV],
-  platform_admin: [
-    [
-      translate("Plateforme"),
-      [
-        ["/plateforme", translate("Entreprises")],
-        ["/plateforme/audit", translate("Journal d'audit")],
-      ],
-    ],
-  ],
+  company_admin: [CENTRALE_NAV, FINANCE_NAV],
 };
 
 /** Home of each role in a distribution company. */
@@ -97,12 +100,25 @@ export const CLUB_ACCOUNTING_NAV: NavGroup = [
   ],
 ];
 
-/** Navigation of a sports club, per role (the reception desk has its own full-screen page). */
+/** Navigation of the Club module, per role (administration excluded; the reception desk has its own full-screen page). */
 export const CLUB_NAV: Record<string, readonly NavGroup[]> = {
   dispatcher: [CLUB_NAV_GROUP],
   finance: [CLUB_NAV_GROUP, CLUB_ACCOUNTING_NAV],
-  company_admin: [CLUB_NAV_GROUP, CLUB_ACCOUNTING_NAV, ADMIN_NAV],
+  company_admin: [CLUB_NAV_GROUP, CLUB_ACCOUNTING_NAV],
 };
+
+/**
+ * Navigation of a profile: the groups of each enabled module, in catalogue order, then the
+ * administration for the company administrator (open whatever the modules).
+ */
+export function navigationFor(role: string, modules: readonly string[]): NavGroup[] {
+  if (role === "platform_admin") return [PLATFORM_NAV];
+  return [
+    ...(hasModule(modules, "distribution") ? (DISTRIBUTION_NAV[role] ?? []) : []),
+    ...(hasModule(modules, "club") ? (CLUB_NAV[role] ?? []) : []),
+    ...(role === "company_admin" ? [ADMIN_NAV] : []),
+  ];
+}
 
 /** Home of each role in a sports club. */
 export const CLUB_HOME: Record<string, string> = {
@@ -112,9 +128,19 @@ export const CLUB_HOME: Record<string, string> = {
   company_admin: "/club",
 };
 
-/** Home page of a profile; "/" when the role has none. */
-export const homePathFor = (role: string, vertical?: string | null): string =>
-  (vertical === "club" ? CLUB_HOME[role] : DISTRIBUTION_HOME[role]) ?? "/";
+/** Home of the company administrator whose company has no module: administration stays open. */
+const ADMIN_HOME = "/admin/utilisateurs";
+
+/**
+ * Home page of a profile: that of the first enabled module (catalogue order) that has one for the
+ * role; the administration for a company administrator without module; "/" when there is none.
+ */
+export function homePathFor(role: string, modules: readonly string[] | null | undefined): string {
+  if (role === "platform_admin") return DISTRIBUTION_HOME.platform_admin ?? "/";
+  if (hasModule(modules, "distribution") && DISTRIBUTION_HOME[role]) return DISTRIBUTION_HOME[role];
+  if (hasModule(modules, "club") && CLUB_HOME[role]) return CLUB_HOME[role];
+  return role === "company_admin" ? ADMIN_HOME : "/";
+}
 
 /** Navigation links whose highlight must not extend to their sub-pages (area dashboards). */
 export const EXACT_MATCH_PATHS: readonly string[] = ["/centrale", "/finance", "/plateforme", "/club"];

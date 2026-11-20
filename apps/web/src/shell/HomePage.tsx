@@ -6,6 +6,7 @@ import { useFeedback } from "../shared/Feedback.tsx";
 import { useApi } from "../shared/hooks.ts";
 import { roleLabel } from "../shared/labels.ts";
 import { LanguageToggle } from "../shared/LanguageToggle.tsx";
+import { inCatalogueOrder, MODULE_LABEL } from "../shared/modules.ts";
 import { QueryView } from "../shared/QueryView.tsx";
 import { useSession } from "../shared/session.ts";
 import { homePathFor } from "./areas.ts";
@@ -18,7 +19,8 @@ interface DemoUser {
   company_id: string | null;
   company_name: string | null;
   company_status: string | null;
-  company_vertical: string | null;
+  /** Modules of the company, in catalogue order; empty for platform users. */
+  company_modules: string[];
 }
 
 export function HomePage() {
@@ -31,7 +33,7 @@ export function HomePage() {
     ui.run(async () => {
       await apiRequest("POST", "/api/demo/login", { userId: user.id });
       await refresh();
-      navigate(homePathFor(user.role, user.company_vertical));
+      navigate(homePathFor(user.role, user.company_modules));
     });
 
   // Outside demo mode, sign-in goes through the company's identity provider (not wired yet).
@@ -58,8 +60,14 @@ export function HomePage() {
       </div>
       {session.user && (
         <div className="notice">
-          {translate("Connecté :")} {session.user.name}.{" "}
-          <Link to={homePathFor(session.user.role, session.user.vertical)}>{translate("Reprendre mon espace →")}</Link>
+          {translate("Connecté :")} {session.user.name}.
+          {/* No link when the profile has no area left (none of its company's modules serves the role). */}
+          {homePathFor(session.user.role, session.user.modules) !== "/" && (
+            <>
+              {" "}
+              <Link to={homePathFor(session.user.role, session.user.modules)}>{translate("Reprendre mon espace →")}</Link>
+            </>
+          )}
         </div>
       )}
       <h2>{translate("Connexion de démonstration : choisissez un profil")}</h2>
@@ -80,7 +88,13 @@ function DemoProfiles({ users, onSignIn }: { users: DemoUser[]; onSignIn: (user:
           <header>
             <h2>{company.company_name}</h2>
             <span className="row">
-              <span className="badge info">{company.company_vertical === "club" ? translate("Club de sport") : translate("Distribution")}</span>
+              {/* One badge per enabled module, in catalogue order. */}
+              {inCatalogueOrder(company.company_modules).map((module) => (
+                <span className="badge info" key={module}>
+                  {MODULE_LABEL[module]}
+                </span>
+              ))}
+              {company.company_modules.length === 0 && <span className="badge">{translate("Aucun module")}</span>}
               {company.company_status !== "active" && <span className="badge err">{translate("Accès suspendu")}</span>}
             </span>
           </header>
@@ -90,7 +104,7 @@ function DemoProfiles({ users, onSignIn }: { users: DemoUser[]; onSignIn: (user:
               .map((user) => (
                 // Field agents (mobile screen) stand out from the back-office profiles.
                 <button key={user.id} className={user.role === "agent" ? "" : "secondary"} onClick={() => onSignIn(user)}>
-                  {user.name.split(" (")[0]} · {roleLabel(user.role, user.company_vertical)}
+                  {user.name.split(" (")[0]} · {roleLabel(user.role, user.company_modules)}
                 </button>
               ))}
           </div>

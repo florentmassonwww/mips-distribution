@@ -35,7 +35,7 @@ const formatDetails = (details: Record<string, unknown>): string =>
     .join(" · ");
 
 export function AuditLogPage({ scope }: { scope: AuditScope }) {
-  const vertical = useSession().session.user?.vertical;
+  const modules = useSession().session.user?.modules;
   const entries = useApi<AuditEntry[]>(`/api/${scope}/audit`);
   const [filter, setFilter] = useState("");
 
@@ -47,7 +47,7 @@ export function AuditLogPage({ scope }: { scope: AuditScope }) {
       (entry) => (
         <>
           {entry.actor}
-          <div className="small muted">{roleLabel(entry.actor_role, vertical)}</div>
+          <div className="small muted">{roleLabel(entry.actor_role, modules)}</div>
         </>
       ),
     ],

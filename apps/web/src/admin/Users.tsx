@@ -8,6 +8,7 @@ import { useFeedback } from "../shared/Feedback.tsx";
 import { Field } from "../shared/Form.tsx";
 import { useApi } from "../shared/hooks.ts";
 import { roleLabel } from "../shared/labels.ts";
+import { hasModule } from "../shared/modules.ts";
 import { Card, PageHeader } from "../shared/Layout.tsx";
 import { QueryView } from "../shared/QueryView.tsx";
 import { useSession } from "../shared/session.ts";
@@ -35,8 +36,8 @@ const EMPTY_USER: NewUser = { name: "", email: "", role: "agent" };
 export function UsersPage() {
   const ui = useFeedback();
   const { session } = useSession();
-  const vertical = session.user?.vertical;
-  const roleLabels: Record<string, string> = Object.fromEntries(COMPANY_ROLES.map((role) => [role, roleLabel(role, vertical)]));
+  const modules = session.user?.modules ?? [];
+  const roleLabels: Record<string, string> = Object.fromEntries(COMPANY_ROLES.map((role) => [role, roleLabel(role, modules)]));
   const users = useApi<CompanyUser[]>("/api/admin/users");
   const [draft, setDraft] = useState<NewUser>(EMPTY_USER);
 
@@ -140,7 +141,9 @@ export function UsersPage() {
             )}
           </QueryView>
         </Card>
-        {vertical === "club" ? <ClubRolesCard /> : <DistributionRolesCard />}
+        {/* One card per enabled module; the distribution one when the company has none (v0.1.0 default). */}
+        {hasModule(modules, "distribution") || !hasModule(modules, "club") ? <DistributionRolesCard /> : null}
+        {hasModule(modules, "club") && <ClubRolesCard />}
       </div>
     </>
   );
