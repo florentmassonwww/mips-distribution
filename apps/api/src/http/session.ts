@@ -5,7 +5,7 @@ import { getCookie } from "hono/cookie";
 import { type Db, get } from "../core/db.ts";
 import type { Role, SessionUser } from "../core/actor.ts";
 import { ApiError, forbidden } from "../core/errors.ts";
-import { MODULE_NAMES, type ModuleCode, companyModules } from "../core/modules.ts";
+import { MODULE_NOT_ENABLED_MESSAGES, type ModuleCode, companyModules } from "../core/modules.ts";
 import type { AppConfig, AppEnv } from "./context.ts";
 
 export const SESSION_COOKIE = "md_session";
@@ -111,7 +111,7 @@ export function createSessionTools(db: Db, config: AppConfig, now: () => Date): 
     };
 
   const moduleNotEnabled = (module: ModuleCode): ApiError =>
-    new ApiError(403, "module_not_enabled", `Le module ${MODULE_NAMES[module]} n'est pas activé pour cette entreprise.`);
+    new ApiError(403, "module_not_enabled", MODULE_NOT_ENABLED_MESSAGES[module]);
 
   const requireModule =
     (module: ModuleCode): MiddlewareHandler<AppEnv> =>

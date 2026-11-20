@@ -7,10 +7,11 @@ import { iso } from "./time.ts";
 export const MODULES = ["distribution", "club"] as const;
 export type ModuleCode = (typeof MODULES)[number];
 
-/** Display names, used in the refusal message of a module route. */
-export const MODULE_NAMES: Record<ModuleCode, string> = { distribution: "Distribution", club: "Club" };
-
-export const isModuleCode = (value: string): value is ModuleCode => (MODULES as readonly string[]).includes(value);
+/** Refusal message of a module route for a company without the module (whole texts, for translation). */
+export const MODULE_NOT_ENABLED_MESSAGES: Record<ModuleCode, string> = {
+  distribution: "Le module Distribution n'est pas activé pour cette entreprise.",
+  club: "Le module Club n'est pas activé pour cette entreprise.",
+};
 
 /** Sorts module codes in catalogue order. */
 export const inCatalogueOrder = (modules: readonly ModuleCode[]): ModuleCode[] =>

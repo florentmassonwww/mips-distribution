@@ -34,8 +34,10 @@ ses routes (API, refus 403 vérifié par des tests automatisés), et de même po
   v0.1.0). Si l'entreprise de l'utilisateur n'a pas le module, réponse
   `403 module_not_enabled`, avec le message « Le module Distribution n'est pas activé pour cette
   entreprise. » ou « Le module Club n'est pas activé pour cette entreprise. ». Le contrôle
-  s'applique après l'authentification et le contrôle des rôles, avec le même ordre de vérification
-  que la v0.1.0.
+  garde le même ordre de vérification que la v0.1.0 : sur les routes Distribution, il précède
+  l'authentification et les rôles (un utilisateur anonyme ou de la plateforme passe et reçoit
+  ensuite 401 ou 403 `forbidden`) ; sur les routes Club, il suit l'authentification, les rôles et
+  la suspension.
 - **Désactivation** : désactiver un module ne supprime aucune donnée. L'entreprise n'y a plus accès
   jusqu'à réactivation. Une entreprise peut n'avoir aucun module : seuls l'administration et l'audit
   restent alors accessibles.
@@ -83,6 +85,32 @@ ses routes (API, refus 403 vérifié par des tests automatisés), et de même po
   - les frais à convenir.
 - **Comparaison visuelle** : les écrans touchés sont déclarés dans `tests/visual/divergences.mjs`
   (plateforme, réglages, accueil si le libellé change).
+
+## Mise en œuvre côté serveur : précisions et écarts
+
+- **Création d'entreprise** : le champ `vertical` de la v0.1.0 reste accepté quand `modules` est
+  absent (l'entreprise reçoit ce seul module). L'interface actuelle et la suite de caractérisation
+  l'envoient encore.
+- **`PUT /api/platform/companies/:id/modules`** accepte une liste vide (entreprise sans module) ;
+  la création exige au moins un module. Réponse : `{ ok: true, modules }` (ordre du catalogue).
+- **Établissements** : `POST` prend `type`, `code`, `name`, et en option `parentSiteId` (défaut
+  `null`), `address` (`""`), `timezone` (`Indian/Mauritius`, fuseau IANA vérifié), `status`
+  (`active`) ; `PATCH` prend les mêmes champs, tous facultatifs. Le code (lettres, chiffres, tirets,
+  20 caractères au plus) est enregistré en majuscules. Parent d'une autre entreprise, inconnu, ou
+  descendant de l'établissement : `400 invalid_parent`. Réponse : l'établissement, sans
+  `company_id`.
+- **Données de démonstration** : les modules et les dépôts reçoivent des identifiants fixes
+  (`site_bd_dep-01`, `site_go_dep-01`), sans tirage aléatoire, pour que les identifiants générés
+  existants ne bougent pas.
+- **Frais** : `fee_expected_known` est fixé dès la création de la tentative de paiement, puis à la
+  confirmation avec le taux alors en vigueur. Il est exposé à côté de `fee_expected_minor` (journal,
+  lignes de rapprochement, chaîne de commande). Les exports CSV gardent leurs colonnes : frais
+  attendus 0.00 quand ils sont à convenir.
+- **Routes publiques** (lien de paiement, page membre, lecteurs de barrière) : non soumises au
+  contrôle de module, comme les préfixes des gardes `vertical` de la v0.1.0.
+- **Suite de caractérisation** : une évolution peut aussi transformer la transcription entière quand
+  le changement retire des éléments et renumérote des repères (exception d'écart de frais du
+  scénario `finance-statement-anomalies`).
 
 ## Hors périmètre de l'étape 2
 
