@@ -40,6 +40,8 @@ export const DEMO_TABLES = [
   "price_lists",
   "counters",
   "users",
+  "sites",
+  "company_modules",
   "companies",
 ] as const;
 

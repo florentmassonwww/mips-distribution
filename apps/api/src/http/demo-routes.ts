@@ -3,6 +3,7 @@ import { setCookie } from "hono/cookie";
 import { z } from "zod";
 import { all, get, type Row } from "../core/db.ts";
 import { ApiError, notFound } from "../core/errors.ts";
+import { modulesByCompany } from "../core/modules.ts";
 import { resetDemo } from "../seed/index.ts";
 import { requireMemberByPortalToken as memberByToken } from "../modules/club/portal.ts";
 import { type SimulatedOutcome } from "../modules/connectors/types.ts";
@@ -14,15 +15,16 @@ import { ONE_MINUTE_MS } from "./rate-limit.ts";
 export function registerDemoRoutes(app: App, deps: AppDeps): void {
   const { db, connectors, session, rateLimit, now, syncErpIfAuto } = deps;
 
-  app.get("/api/demo/users", (c) =>
-    c.json(
-      all(
+  app.get("/api/demo/users", (c) => {
+    const modules = modulesByCompany(db);
+    return c.json(
+      all<Row & { company_id: string | null }>(
         db,
-        `SELECT u.id, u.name, u.role, c.id AS company_id, c.name AS company_name, c.status AS company_status, c.vertical AS company_vertical
+        `SELECT u.id, u.name, u.role, c.id AS company_id, c.name AS company_name, c.status AS company_status
       FROM users u LEFT JOIN companies c ON c.id = u.company_id WHERE u.active = 1 ORDER BY c.rowid, u.rowid`,
-      ),
-    ),
-  );
+      ).map((user) => ({ ...user, company_modules: user.company_id ? (modules.get(user.company_id) ?? []) : [] })),
+    );
+  });
 
   app.post("/api/demo/login", async (c) => {
     const { userId } = await readJson(c, z.object({ userId: z.string() }));

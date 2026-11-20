@@ -5,6 +5,7 @@ import { type Db, all, get, run, transaction } from "../core/db.ts";
 import { recordAudit } from "../core/audit.ts";
 import { ApiError, notFound } from "../core/errors.ts";
 import { newId } from "../core/ids.ts";
+import { companyModules } from "../core/modules.ts";
 import { iso } from "../core/time.ts";
 import { type CompanySettings, type PaymentMethod, readCompanySettings as companySettings } from "../modules/distribution/settings.ts";
 import { type App, type AppDeps, companyOf, paymentMethodSchema, readJson, routeParam } from "./context.ts";
@@ -143,11 +144,14 @@ export function registerAdminRoutes(app: App, deps: AppDeps): void {
   app.get("/api/admin/settings", adminOnly, (c) =>
     c.json({
       settings: companySettings(db, companyOf(c)),
-      subscription: get(
-        db,
-        "SELECT name, slug, plan, subscription_status, subscription_renews_at, status, currency, vertical FROM companies WHERE id = ?",
-        companyOf(c),
-      ),
+      subscription: {
+        ...get<Record<string, unknown>>(
+          db,
+          "SELECT name, slug, plan, subscription_status, subscription_renews_at, status, currency FROM companies WHERE id = ?",
+          companyOf(c),
+        ),
+        modules: companyModules(db, companyOf(c)),
+      },
     }),
   );
 

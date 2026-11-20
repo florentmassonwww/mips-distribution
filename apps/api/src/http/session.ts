@@ -1,10 +1,11 @@
-// Signed cookies, the signed-in user, and the role and vertical guards.
+// Signed cookies, the signed-in user, and the role and module guards.
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Context, MiddlewareHandler } from "hono";
 import { getCookie } from "hono/cookie";
 import { type Db, get } from "../core/db.ts";
 import type { Role, SessionUser } from "../core/actor.ts";
 import { ApiError, forbidden } from "../core/errors.ts";
+import { MODULE_NAMES, type ModuleCode, companyModules } from "../core/modules.ts";
 import type { AppConfig, AppEnv } from "./context.ts";
 
 export const SESSION_COOKIE = "md_session";
@@ -32,10 +33,14 @@ export interface SessionTools {
   currentUser(c: Context): SessionUser | null;
   /** Requires a signed-in user with one of the roles, of a company that is not suspended. */
   requireRole(...roles: Role[]): MiddlewareHandler<AppEnv>;
-  /** Same as requireRole, for club companies only. */
-  requireClubRole(...roles: Role[]): MiddlewareHandler<AppEnv>;
-  /** Refuses club users on distribution areas (no authentication required by itself). */
-  distributionOnly: MiddlewareHandler<AppEnv>;
+  /**
+   * Refuses a signed-in company user whose company has not enabled the module (403
+   * `module_not_enabled`). Requires no authentication by itself: anonymous and platform users go
+   * through, and the route's role guard decides for them.
+   */
+  requireModule(module: ModuleCode): MiddlewareHandler<AppEnv>;
+  /** requireRole, then requireModule: roles and suspension are checked before the module. */
+  requireModuleRole(module: ModuleCode, ...roles: Role[]): MiddlewareHandler<AppEnv>;
 }
 
 interface UserRow {
@@ -46,7 +51,6 @@ interface UserRow {
   company_id: string | null;
   company_name: string | null;
   company_status: string | null;
-  vertical: "distribution" | "club" | null;
 }
 
 export function createSessionTools(db: Db, config: AppConfig, now: () => Date): SessionTools {
@@ -76,7 +80,7 @@ export function createSessionTools(db: Db, config: AppConfig, now: () => Date): 
     if (!payload) return null;
     const row = get<UserRow>(
       db,
-      "SELECT u.*, c.name AS company_name, c.status AS company_status, c.vertical FROM users u LEFT JOIN companies c ON c.id = u.company_id WHERE u.id = ? AND u.active = 1",
+      "SELECT u.*, c.name AS company_name, c.status AS company_status FROM users u LEFT JOIN companies c ON c.id = u.company_id WHERE u.id = ? AND u.active = 1",
       payload.uid as string,
     );
     return row
@@ -88,7 +92,7 @@ export function createSessionTools(db: Db, config: AppConfig, now: () => Date): 
           companyId: row.company_id,
           companyName: row.company_name,
           companyStatus: row.company_status,
-          vertical: row.vertical,
+          modules: companyModules(db, row.company_id),
         }
       : null;
   };
@@ -106,21 +110,24 @@ export function createSessionTools(db: Db, config: AppConfig, now: () => Date): 
       await next();
     };
 
-  const requireClubRole =
-    (...roles: Role[]): MiddlewareHandler<AppEnv> =>
+  const moduleNotEnabled = (module: ModuleCode): ApiError =>
+    new ApiError(403, "module_not_enabled", `Le module ${MODULE_NAMES[module]} n'est pas activé pour cette entreprise.`);
+
+  const requireModule =
+    (module: ModuleCode): MiddlewareHandler<AppEnv> =>
+    async (c, next) => {
+      const user = c.get("user") ?? currentUser(c);
+      if (user?.companyId && !user.modules.includes(module)) throw moduleNotEnabled(module);
+      await next();
+    };
+
+  const requireModuleRole =
+    (module: ModuleCode, ...roles: Role[]): MiddlewareHandler<AppEnv> =>
     async (c, next) => {
       await requireRole(...roles)(c, async () => {
-        if (c.get("user").vertical !== "club") throw new ApiError(403, "wrong_vertical", "Cet espace est réservé aux clubs.");
-        await next();
+        await requireModule(module)(c, next);
       });
     };
 
-  const distributionOnly: MiddlewareHandler<AppEnv> = async (c, next) => {
-    if (currentUser(c)?.vertical === "club") {
-      throw new ApiError(403, "wrong_vertical", "Cet espace est réservé à la distribution.");
-    }
-    await next();
-  };
-
-  return { sign, verify, currentUser, requireRole, requireClubRole, distributionOnly };
+  return { sign, verify, currentUser, requireRole, requireModule, requireModuleRole };
 }

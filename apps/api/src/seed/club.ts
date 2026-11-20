@@ -4,7 +4,8 @@
 // The calls below go through the business functions and the simulated payment provider, in a
 // fixed order: that order determines every generated identifier and token, so it must not change.
 import { type Db, all, get, run, transaction } from "../core/db.ts";
-import type { Actor } from "../core/actor.ts";
+import { type Actor, SYSTEM_ACTOR } from "../core/actor.ts";
+import { setCompanyModules } from "../core/modules.ts";
 import { formatMinor } from "../core/format.ts";
 import { addDays, businessDay, iso } from "../core/time.ts";
 import { importStatement as importClubStatement } from "../modules/club/bank-reconciliation.ts";
@@ -199,22 +200,22 @@ export async function seedClub(db: Db, connectors: Connectors, now: Date = new D
   await syncErp(db, connectors, CLUB_COMPANY_ID, {}, undefined, now);
 }
 
-/** Club company, staff accounts, membership plans and the gate reader. */
+/** Club company (Club module, no site), staff accounts, membership plans and the gate reader. */
 function insertClubCompany(db: Db, settingsJson: string, now: Date): void {
   transaction(db, () => {
     run(
       db,
-      "INSERT INTO companies (id, name, slug, vertical, plan, subscription_status, subscription_renews_at, settings_json, created_at) VALUES (?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO companies (id, name, slug, plan, subscription_status, subscription_renews_at, settings_json, created_at) VALUES (?,?,?,?,?,?,?,?)",
       CLUB_COMPANY_ID,
       "Club Sportif Démo",
       "cs",
-      "club",
       "pilote",
       "essai",
       iso(addDays(now, 30)),
       settingsJson,
       iso(addDays(now, -700)),
     );
+    setCompanyModules(db, CLUB_COMPANY_ID, ["club"], SYSTEM_ACTOR.id, addDays(now, -700));
     for (const [key, name, role] of CLUB_USERS) {
       run(
         db,
