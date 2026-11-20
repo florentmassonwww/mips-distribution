@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { DataTable } from "../shared/DataTable.tsx";
 import { useFeedback } from "../shared/Feedback.tsx";
@@ -19,15 +19,18 @@ function CloseStatus({ preview }: { preview: ClosePreview }) {
   if (preview.closed)
     return (
       <div className="notice ok">
-        {translate(`Journée clôturée le`)} {formatDate(preview.closed.closed_at, true)} {translate(`par`)} {preview.closed.closed_by ?? `—`}.
+        {translate(`Journée clôturée le {0} par {1}.`, formatDate(preview.closed.closed_at, true), preview.closed.closed_by ?? `—`)}
       </div>
     );
   // A pending payment has no known outcome yet: the day cannot be frozen.
   if (preview.pending > 0)
     return (
       <div className="notice err" role="alert">
-        <strong>{translate(`Clôture bloquée :`)}</strong> {preview.pending}{" "}
-        {translate(`paiement(s) encore « en attente ». Interrogez le prestataire depuis le Journal pour connaître leur issue.`)}
+        <strong>{translate(`Clôture bloquée :`)}</strong> {translateCount(
+          preview.pending,
+          `{0} paiement encore « en attente ». Interrogez le prestataire depuis le Journal pour connaître son issue.`,
+          `{0} paiements encore « en attente ». Interrogez le prestataire depuis le Journal pour connaître leur issue.`,
+        )}
       </div>
     );
   return (
@@ -94,7 +97,7 @@ export function DailyClose() {
                 <Tile
                   label={translate(`Encaissé confirmé`)}
                   value={formatMoney(confirmed)}
-                  hint={translate(`{0} tentative(s) échouée(s)`, preview.failed)}
+                  hint={translateCount(preview.failed, `{0} tentative échouée`, `{0} tentatives échouées`)}
                 />
                 <Tile
                   label={translate(`Réglé en banque`)}
@@ -105,12 +108,11 @@ export function DailyClose() {
                   label={translate(`Points en suspens`)}
                   value={outstandingPoints}
                   kind={outstandingPoints ? `warn` : ``}
-                  hint={translate(
-                    `{0} à vérifier · {1} exception(s) · {2} écriture(s) ERP`,
-                    preview.toVerify,
-                    preview.openExceptions,
-                    preview.erpPending,
-                  )}
+                  hint={[
+                    translate(`{0} à vérifier`, preview.toVerify),
+                    translateCount(preview.openExceptions, `{0} exception`, `{0} exceptions`),
+                    translateCount(preview.erpPending, `{0} écriture ERP`, `{0} écritures ERP`),
+                  ].join(` · `)}
                 />
               </div>
               <Card title={translate(`Encaissements confirmés du {0}`, formatDayLong(preview.day))} flush>

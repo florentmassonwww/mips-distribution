@@ -12,7 +12,7 @@ import { Stock } from "../centrale/Stock.tsx";
 import { AccountingExport } from "../club/AccountingExport.tsx";
 import { ClubDashboard } from "../club/ClubDashboard.tsx";
 import { ClubReconciliation } from "../club/ClubReconciliation.tsx";
-import { DemoBanner } from "../club/DemoBanner.tsx";
+import { DemoBanner } from "./DemoBanner.tsx";
 import { Dues } from "../club/Dues.tsx";
 import { FrontDesk } from "../club/FrontDesk.tsx";
 import { Gate } from "../club/Gate.tsx";

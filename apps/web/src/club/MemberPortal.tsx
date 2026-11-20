@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { newIdempotencyKey } from "../admin/idempotency.ts";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { Badge } from "../shared/Badge.tsx";
 import { useFeedback } from "../shared/Feedback.tsx";
@@ -55,7 +55,7 @@ export function MemberPortal() {
                       <div className="amount">{formatMoney(data.dueMinor)}</div>
                       {data.overdueMinor > 0 && (
                         <div className="small">
-                          {translate("dont {0} en retard de {1} jour(s)", formatMoney(data.overdueMinor), data.overdueDays)}
+                          {translateCount(data.overdueDays, "dont {1} en retard de {0} jour", "dont {1} en retard de {0} jours", formatMoney(data.overdueMinor))}
                         </div>
                       )}
                     </div>

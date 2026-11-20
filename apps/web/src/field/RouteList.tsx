@@ -1,5 +1,5 @@
 // First screen of /terrain: the routes assigned to the agent.
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { StatusBadge } from "../shared/Badge.tsx";
 import { useFeedback } from "../shared/Feedback.tsx";
@@ -59,8 +59,8 @@ export function RouteList({ onPick, onLogout }: RouteListProps) {
                     <StatusBadge map={ROUTE_STATUS} value={route.status} />
                   </div>
                   <div className="small muted">
-                    {formatDayLong(route.day)} · {route.vehicle || translate("véhicule non précisé")} · {route.stops} {translate("arrêt(s) ·")}{" "}
-                    {route.orders_done}/{route.orders_total} {translate("commande(s)")}
+                    {formatDayLong(route.day)} · {route.vehicle || translate("véhicule non précisé")} · {translateCount(route.stops, "{0} arrêt", "{0} arrêts")} ·{" "}
+                    {translateCount(route.orders_total, "{1}/{0} commande", "{1}/{0} commandes", route.orders_done)}
                   </div>
                   <div style={{ marginTop: 8 }}>
                     {route.status === "planned" ? (

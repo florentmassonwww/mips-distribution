@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { Badge, StatusBadge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
@@ -46,12 +46,10 @@ export function Reconciliation() {
         { filename: filename || `releve.csv`, content },
       );
       feedback.toast(
-        translate(
-          `{0} ligne(s) rapprochée(s), {1} en exception, {2} déjà importée(s).`,
-          counts.matched,
+        `${translateCount(counts.matched, `{0} ligne rapprochée`, `{0} lignes rapprochées`)}, ${translate(
+          `{0} en exception`,
           counts.exceptions,
-          counts.skipped,
-        ),
+        )}, ${translateCount(counts.skipped, `{0} déjà importée.`, `{0} déjà importées.`)}`,
       );
       setContent(``);
       setFilename(``);

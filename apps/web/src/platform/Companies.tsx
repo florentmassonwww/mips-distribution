@@ -1,6 +1,6 @@
 // Platform administration: companies (tenants), their plan, subscription and access.
 import { useState } from "react";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { Badge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
@@ -8,6 +8,7 @@ import { useFeedback } from "../shared/Feedback.tsx";
 import { Field } from "../shared/Form.tsx";
 import { formatDate } from "../shared/format.ts";
 import { useApi } from "../shared/hooks.ts";
+import { forgetDemoData } from "../shared/offline.ts";
 import { Card, PageHeader } from "../shared/Layout.tsx";
 import { QueryView } from "../shared/QueryView.tsx";
 
@@ -63,13 +64,14 @@ export function CompaniesPage() {
     const confirmed = await ui.ask({
       kind: "confirm",
       title: translate("Réinitialiser la démonstration ?"),
-      text: translate("Toutes les données sont effacées et le jeu de données fictif est rechargé."),
+      text: translate("Toutes les données sont effacées pour tous les utilisateurs du serveur et le jeu de données fictif est rechargé."),
       danger: true,
       confirm: translate("Réinitialiser"),
     });
     if (confirmed) {
       await ui.run(async () => {
         await apiRequest("POST", "/api/demo/reset");
+        forgetDemoData();
         await companies.reload();
       }, translate("Données de démonstration rechargées."));
     }
@@ -152,7 +154,7 @@ export function CompaniesPage() {
                     ),
                   ],
                   [translate("Échéance"), (company) => formatDate(company.subscription_renews_at)],
-                  [translate("Utilisateurs"), (company) => translate("{0} (dont {1} agent(s))", company.users, company.agents), "right"],
+                  [translate("Utilisateurs"), (company) => translateCount(company.agents, "{1} (dont {0} agent)", "{1} (dont {0} agents)", company.users), "right"],
                   [
                     "",
                     (company) => (

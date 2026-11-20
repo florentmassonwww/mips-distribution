@@ -2,7 +2,7 @@
 // dues run of a period (accounting).
 import { useState } from "react";
 import { FINANCE_ROLES, useCurrentRole } from "../admin/roles.ts";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { DataTable } from "../shared/DataTable.tsx";
 import { useFeedback } from "../shared/Feedback.tsx";
@@ -43,12 +43,12 @@ export function Dues() {
           period,
         });
         ui.toast(
-          translate(
-            "{0} cotisation(s) facturée(s) pour {1}, {2} déjà facturée(s).",
+          `${translateCount(
             result.created,
+            "{0} cotisation facturée pour {1}",
+            "{0} cotisations facturées pour {1}",
             formatMoney(result.amountMinor),
-            result.skipped,
-          ),
+          )}, ${translateCount(result.skipped, "{0} déjà facturée.", "{0} déjà facturées.")}`,
         );
         await dues.reload();
       });

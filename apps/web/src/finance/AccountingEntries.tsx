@@ -1,4 +1,4 @@
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { StatusBadge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
@@ -32,7 +32,7 @@ export function AccountingEntries() {
     feedback.run(async () => {
       const result = await apiRequest<{ synced: number; failed: number }>(`POST`, `/api/finance/erp/sync`, ids ? { ids } : {});
       feedback.toast(
-        translate(`{0} écriture(s) synchronisée(s), {1} en erreur.`, result.synced, result.failed),
+        `${translateCount(result.synced, `{0} écriture synchronisée`, `{0} écritures synchronisées`)}, ${translate(`{0} en erreur.`, result.failed)}`,
         result.failed ? `err` : `ok`,
       );
       await accounting.reload();

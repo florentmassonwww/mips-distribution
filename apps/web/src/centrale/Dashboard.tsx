@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { AUDIT_ACTION_LABELS } from "../field/audit-labels.ts";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { StatusBadge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
 import { formatDate, formatDayLong, formatMoney, formatTime } from "../shared/format.ts";
@@ -34,12 +34,20 @@ export function Dashboard() {
               <Tile
                 label={translate(`Ventes du jour`)}
                 value={formatMoney(data.sales.invoiced)}
-                hint={translate(`{0} facture(s) · {1} vente(s) sur place`, data.sales.invoices, data.sales.routeSales)}
+                hint={`${translateCount(data.sales.invoices, `{0} facture`, `{0} factures`)} · ${translateCount(
+                  data.sales.routeSales,
+                  `{0} vente sur place`,
+                  `{0} ventes sur place`,
+                )}`}
               />
               <Tile
                 label={translate(`Livraisons`)}
                 value={`${data.deliveries.done}/${data.deliveries.planned}`}
-                hint={translate(`{0} partielle(s) · {1} non livrée(s)`, data.deliveries.partial, data.deliveries.refused)}
+                hint={`${translateCount(data.deliveries.partial, `{0} partielle`, `{0} partielles`)} · ${translateCount(
+                  data.deliveries.refused,
+                  `{0} non livrée`,
+                  `{0} non livrées`,
+                )}`}
               />
               <Tile
                 label={translate(`Encaissé confirmé (jour)`)}

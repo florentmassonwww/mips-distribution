@@ -297,3 +297,12 @@ export function applyQueuedActions(bundle: RouteBundle, queue: QueuedAction[]): 
   }
   return { ...bundle, stock, orders: [...bundle.orders, ...localSales], queuedOrders };
 }
+
+/** Forgets everything this browser kept for the demo (offline queue, cached routes…), except the language. */
+export function forgetDemoData(): void {
+  try {
+    for (const key of Object.keys(localStorage)) if (key.startsWith("md_") && key !== "md_lang") localStorage.removeItem(key);
+  } catch {
+    /* storage unavailable: nothing to forget */
+  }
+}
