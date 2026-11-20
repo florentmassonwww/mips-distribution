@@ -41,8 +41,12 @@ export interface InitiatePaymentResult {
   presentation: PaymentPresentation;
 }
 
-/** Status of a transaction as known by the provider; `unknown` when it has no such reference. */
-export type ProviderStatus = "pending" | "succeeded" | "failed" | "unknown";
+/**
+ * Status of a transaction as known by the provider (`unknown` when it has no such reference), with
+ * the amount it received. TODO(mips-team): fields of the real status endpoints (amount, currency).
+ */
+import type { StatusReport } from "@mips/core";
+export type { ProviderStatus, StatusReport } from "@mips/core";
 
 export type NotificationType = "payment.succeeded" | "payment.failed";
 
@@ -71,7 +75,7 @@ export interface PaymentProvider {
   /** Points to confirm with the real provider before going live (shown to administrators). */
   readonly toVerify: string[];
   initiate(request: InitiatePaymentRequest): Promise<InitiatePaymentResult>;
-  queryStatus(providerRef: string): Promise<ProviderStatus>;
+  queryStatus(providerRef: string): Promise<StatusReport>;
   /** True when the provider guarantees the pending request can no longer be paid. */
   cancel(providerRef: string): Promise<boolean>;
   refund(providerRef: string | null, amountMinor: number, idempotencyKey: string): Promise<{ refundRef: string }>;

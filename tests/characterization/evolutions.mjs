@@ -9,6 +9,11 @@
 //   { id, step, scenarios: RegExp, reason, transcript(entries) → entries } the whole transcript,
 //                                                                          for changes that remove
 //                                                                          or renumber items
+//
+// Pure renamings of the API (RENAMINGS, below) are not transcript evolutions: the runner translates
+// at the transport boundary instead, the scenario's request to the new names and the response back
+// to the v0.1.0 names, so the scenarios keep running unchanged. The translation refuses any v0.1.0
+// name still present in a response, which proves the renaming complete.
 
 /** v0.1.0 demonstration fees, in basis points (replaced by "to be agreed" in step 2). */
 const V010_FEE_BPS = { paystation: 100, card_tpe: 175, juice: 90, link: 150 };
@@ -385,7 +390,136 @@ export const EVOLUTIONS = [
       return entry;
     },
   },
+
+  // Step 3: business rules in @mips/core.
+  {
+    id: "price-mismatch-reported",
+    step: 3,
+    scenarios: /^agent-deliver-validation$/,
+    reason:
+      "A total shown on the phone that differs from the invoice (prices changed while offline) was accepted without telling the driver. The delivery result now carries priceMismatch { shownMinor, invoicedMinor }; the invoice keeps the server amount and the office exception is unchanged.",
+    entry(entry) {
+      if (!isCall(entry, "POST", "/api/agent/sync")) return entry;
+      entry.request.body.actions.forEach((action, index) => {
+        const result = entry.response.results?.[index];
+        const shownMinor = action.payload?.expectedTotalMinor;
+        if (result?.status === "applied" && shownMinor !== undefined && shownMinor !== result.result.amountMinor) {
+          result.result.priceMismatch = { shownMinor, invoicedMinor: result.result.amountMinor };
+        }
+      });
+      return entry;
+    },
+  },
+  {
+    id: "status-query-checks-amount",
+    step: 3,
+    scenarios: /^payment-wrong-amount-to-verify$/,
+    reason:
+      "A status query confirms a payment only for the amount requested, as a notification does. The simulated provider received 1.00 less: the payment stays to verify, its two finance exceptions stay open, and finance cannot resolve them by hand (409 needs_provider).",
+    transcript(entries) {
+      const at = (step) => entries.findIndex((entry) => entry.step === step);
+      const toVerify = entries[at("payment to verify")].response;
+      const exceptionBase = {
+        company_id: "co_bd",
+        domain: "finance",
+        status: "open",
+        entity: "payment",
+        entity_id: toVerify.id,
+        created_at: "2026-10-17T04:00:07.000Z",
+        resolution: null,
+        resolution_note: null,
+        resolved_by: null,
+        resolved_at: null,
+        resolved_by_name: null,
+      };
+      entries[at("status query on a payment to verify")].response = structuredClone(toVerify);
+      const list = at("finance exceptions");
+      entries[list].response = [
+        {
+          id: "<exc#1>",
+          ...exceptionBase,
+          type: "payment_to_verify",
+          message: `Paiement à vérifier sur FAC-000024 (paystation) : ${toVerify.verifyReason}`,
+          details: { invoice: "FAC-000024", method: "paystation", amountMinor: toVerify.amountMinor, providerRef: toVerify.providerRef },
+        },
+        {
+          id: "<exc#2>",
+          ...exceptionBase,
+          type: "amount_mismatch",
+          message: "Notification paystation incohérente : 12599 MUR notifié pour 12600 MUR demandé.",
+          details: { providerRef: toVerify.providerRef, notifiedMinor: toVerify.amountMinor - 100, expectedMinor: toVerify.amountMinor },
+        },
+      ];
+      entries.splice(list + 1, 0, {
+        step: "resolve exception",
+        as: "u_bd_finance",
+        request: { method: "POST", path: "/api/exceptions/<exc#1>/resolve", body: { resolution: "approved", note: "Vérifié avec le prestataire (démo)" } },
+        status: 409,
+        response: {
+          error: {
+            code: "needs_provider",
+            message: "Un paiement à vérifier se lève par l'interrogation du prestataire ou par le relevé bancaire, pas par validation manuelle.",
+          },
+        },
+      });
+      entries[at("payment after exception resolution")].response = structuredClone(toVerify);
+      return entries;
+    },
+  },
 ];
+
+// ───────── renamings (translated at the transport boundary) ─────────
+
+export const RENAMINGS = [
+  {
+    id: "customer-outlet",
+    step: 3,
+    reason:
+      "The businesses a distributor delivers are customer outlets (customer_outlet), as distinct from the company's own sites and the club's points of sale. Table, columns, JSON fields and inputs are renamed; values do not change.",
+    request: { customerId: "customerOutletId", customerIds: "customerOutletIds" },
+    response: {
+      customer_outlet_id: "customer_id",
+      customer_outlet: "customer",
+      customer_outlets: "customers",
+      customerOutletId: "customerId",
+      customerOutletIds: "customerIds",
+      customerOutlet: "customer",
+    },
+  },
+];
+
+const requestNames = Object.assign({}, ...RENAMINGS.map((r) => r.request));
+const responseNames = Object.assign({}, ...RENAMINGS.map((r) => r.response));
+const oldNames = new Set(Object.values(responseNames));
+
+function renameKeys(value, names, check) {
+  if (Array.isArray(value)) return value.map((item) => renameKeys(item, names, check));
+  if (typeof value === "string") return Object.hasOwn(names, value) ? names[value] : value;
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => {
+      check?.(key);
+      return [Object.hasOwn(names, key) ? names[key] : key, renameKeys(item, names, check)];
+    }),
+  );
+}
+
+/** Request body of a scenario (v0.1.0 names) as sent to apps/api. */
+export const toApiRequest = (body) => (body === undefined || typeof body === "string" ? body : renameKeys(body, requestNames));
+
+/**
+ * Response of apps/api translated back to the v0.1.0 names. Fails when a v0.1.0 name is still
+ * there. Text responses (CSV) carry JSON details with doubled quotes: their keys are mapped too.
+ */
+export function fromApiResponse(data, where) {
+  if (typeof data === "string") {
+    for (const name of oldNames) if (data.includes(`""${name}"":`)) throw new Error(`${where}: v0.1.0 name "${name}" still in the text response`);
+    return data.replace(/""(\w+)"":/g, (all, key) => (Object.hasOwn(responseNames, key) ? `""${responseNames[key]}"":` : all));
+  }
+  return renameKeys(data, responseNames, (key) => {
+    if (oldNames.has(key)) throw new Error(`${where}: v0.1.0 name "${key}" still in the response`);
+  });
+}
 
 /** The evolutions that apply to a scenario, in order. */
 export const evolutionsFor = (scenario) => EVOLUTIONS.filter((evolution) => evolution.scenarios.test(scenario));

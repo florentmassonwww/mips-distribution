@@ -1,6 +1,7 @@
 // Gate access: a badge is allowed, flagged (let in, but sent to the desk) or denied, depending on
 // the member's status and the age of the overdue amount. Decisions are taken at the desk
 // (attendant) or by a reader at the gate, whose requests are signed with a per-device key.
+import { gateDecision } from "@mips/core";
 import { createHmac } from "node:crypto";
 import { z } from "zod";
 import type { Actor } from "../../core/actor.ts";
@@ -48,16 +49,16 @@ export function accessDecision(db: Db, companyId: string, badge: string, now: Da
   const account = memberAccount(db, member.id, businessDay(now));
   const base = { memberId: member.id, overdueMinor: account.overdueMinor, overdueDays: account.overdueDays };
   const overdueAmount = formatMinor(account.overdueMinor);
-  const aboveThreshold = account.overdueMinor >= gate.minAmountMinor;
-  // denyAfterDays = 0 disables denial: late members are then only flagged.
-  if (aboveThreshold && gate.denyAfterDays > 0 && account.overdueDays >= gate.denyAfterDays) {
+  // Rule: gateDecision (denyAfterDays = 0 disables denial: late members are then only flagged).
+  const { decision } = gateDecision(member.status, account, gate);
+  if (decision === "deny") {
     return {
       ...base,
       decision: "deny",
       reason: `Retard de ${account.overdueDays} jour(s) : ${overdueAmount} MUR à régulariser avant l'entrée.`,
     };
   }
-  if (aboveThreshold && account.overdueDays >= gate.flagAfterDays) {
+  if (decision === "flag") {
     return {
       ...base,
       decision: "flag",

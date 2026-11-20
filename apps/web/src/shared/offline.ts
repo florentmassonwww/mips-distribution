@@ -30,7 +30,7 @@ export function writeStored(key: string, value: unknown): void {
 export type RouteStatus = "planned" | "loaded" | "in_progress" | "closed";
 
 export interface BundleStop {
-  customer_id: string;
+  customer_outlet_id: string;
   seq: number;
   name: string;
   code: string;
@@ -40,7 +40,7 @@ export interface BundleStop {
   price_list_id: string | null;
 }
 
-export interface BundleCustomer {
+export interface BundleCustomerOutlet {
   id: string;
   name: string;
   code: string;
@@ -72,7 +72,7 @@ export interface BundleOrder {
   number: string;
   kind: string;
   status: string;
-  customer_id: string;
+  customer_outlet_id: string;
   note: string;
   delivered_at: string | null;
   lines: BundleOrderLine[];
@@ -97,7 +97,7 @@ export interface BundleInvoice {
   id: string;
   number: string;
   order_id: string;
-  customer_id: string;
+  customer_outlet_id: string;
   amount_minor: number;
   paid_minor: number;
   refunded_minor: number;
@@ -123,7 +123,7 @@ export interface RouteBundle {
   priceLists: Record<string, Record<string, number>>;
   /** Quantity on the truck per product id. */
   stock: Record<string, number>;
-  customers: BundleCustomer[];
+  customer_outlets: BundleCustomerOutlet[];
   methods: PaymentMethodOption[];
 }
 
@@ -163,7 +163,7 @@ export interface DeliverPayload extends HandoverFields {
 
 export interface SalePayload extends HandoverFields {
   routeId: string;
-  customerId: string;
+  customerOutletId: string;
   lines: QuantityLine[];
 }
 
@@ -173,7 +173,7 @@ interface QueuedActionBase {
   /** "queued" until synced (then removed), "rejected" when the server refused it. */
   state: "queued" | "rejected";
   createdAt: string;
-  customerId: string;
+  customerOutletId: string;
   totalMinor: number;
   /** Products leaving the vehicle, to update the stock shown offline. */
   items: QuantityLine[];
@@ -198,9 +198,22 @@ export interface QueuedSale extends QueuedActionBase {
 export type QueuedAction = QueuedDelivery | QueuedSale;
 
 // Keys: md_queue_<user id>, md_bundle_<route id>, md_route_<user id>.
-export const readQueue = (userId: string): QueuedAction[] => readStored<QueuedAction[]>(`md_queue_${userId}`, []);
+// Actions queued and bundles saved before step 3 used the names "customerId" and "customers": a
+// queued action is carried over to the new name, an old bundle is dropped (downloaded again).
+const withOutletId = (action: QueuedAction): QueuedAction => {
+  const renamed = <T extends object>(value: T): T => {
+    if (!("customerId" in value)) return value;
+    const { customerId, ...rest } = value as T & { customerId: string };
+    return { ...rest, customerOutletId: customerId } as unknown as T;
+  };
+  return { ...renamed(action), payload: renamed(action.payload) } as QueuedAction;
+};
+export const readQueue = (userId: string): QueuedAction[] => readStored<QueuedAction[]>(`md_queue_${userId}`, []).map(withOutletId);
 export const writeQueue = (userId: string, queue: QueuedAction[]): void => writeStored(`md_queue_${userId}`, queue);
-export const readBundle = (routeId: string): RouteBundle | null => readStored<RouteBundle | null>(`md_bundle_${routeId}`, null);
+export const readBundle = (routeId: string): RouteBundle | null => {
+  const bundle = readStored<RouteBundle | null>(`md_bundle_${routeId}`, null);
+  return bundle && Array.isArray(bundle.customer_outlets) ? bundle : null;
+};
 export const writeBundle = (bundle: RouteBundle): void => writeStored(`md_bundle_${bundle.route.id}`, bundle);
 /** Route the driver is working on, kept across reloads. */
 export const readCurrentRoute = (userId: string): string | null => readStored<string | null>(`md_route_${userId}`, null);
@@ -254,9 +267,9 @@ export function useNetwork(): NetworkState {
 /** Unit price of a product for a customer: their price list when it has one, else the list price. */
 export const unitPrice = (
   bundle: RouteBundle,
-  customer: BundleCustomer | null | undefined,
+  outlet: BundleCustomerOutlet | null | undefined,
   product: BundleProduct,
-): number => (customer?.price_list_id ? bundle.priceLists[customer.price_list_id]?.[product.id] : undefined) ?? product.price_minor;
+): number => (outlet?.price_list_id ? bundle.priceLists[outlet.price_list_id]?.[product.id] : undefined) ?? product.price_minor;
 
 /**
  * Applies the actions still queued on the phone to the bundle, so the driver sees the truck stock
@@ -279,7 +292,7 @@ export function applyQueuedActions(bundle: RouteBundle, queue: QueuedAction[]): 
         number: translate("Vente à synchroniser"),
         kind: "route_sale",
         status: "delivered",
-        customer_id: action.customerId,
+        customer_outlet_id: action.customerOutletId,
         note: "",
         delivered_at: action.createdAt,
         local: true,

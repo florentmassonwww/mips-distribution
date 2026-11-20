@@ -1,5 +1,6 @@
 // Provider notifications (webhooks). Processing is idempotent on (provider, event id): a
 // notification delivered twice is recorded once and applied once.
+import { notificationDecision } from "@mips/core";
 import { SYSTEM_ACTOR } from "../../core/actor.ts";
 import { type Db, get, run, transaction } from "../../core/db.ts";
 import { newId } from "../../core/ids.ts";
@@ -42,8 +43,9 @@ function recordEvent(
 /** Applies a verified notification to an invoice payment and returns the recorded result. */
 function applyToPayment(db: Db, method: PaymentMethod, notification: PaymentNotification, payment: PaymentRow, now: Date): string {
   // Never confirm an amount or currency other than requested: a human checks it.
-  if (notification.amountMinor !== payment.amount_minor || notification.currency !== payment.currency) {
-    markToVerify(db, payment, "Montant ou devise notifié différent de la demande.", SYSTEM_ACTOR, now);
+  const decision = notificationDecision({ amountMinor: payment.amount_minor, currency: payment.currency }, notification);
+  if (decision.action === "to_verify") {
+    markToVerify(db, payment, decision.reason, SYSTEM_ACTOR, now);
     openException(
       db,
       payment.company_id,
@@ -57,10 +59,10 @@ function applyToPayment(db: Db, method: PaymentMethod, notification: PaymentNoti
     );
     return "amount_mismatch";
   }
-  if (notification.type === "payment.succeeded") {
+  if (decision.action === "confirm") {
     return confirmPayment(db, payment, "notification", SYSTEM_ACTOR, now) ? "confirmed" : "already_confirmed";
   }
-  if (failPayment(db, payment, notification.failureReason ?? "Refusé par le prestataire.", SYSTEM_ACTOR, now)) return "failed";
+  if (decision.action === "fail" && failPayment(db, payment, decision.reason, SYSTEM_ACTOR, now)) return "failed";
   if (payment.status === "confirmed") {
     openException(
       db,

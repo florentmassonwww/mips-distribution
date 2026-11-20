@@ -1,14 +1,30 @@
 // Field agent: route start, offline bundle, offline actions (delivery of a pre-order, on-the-spot
 // sale) replayed at reconnection, and route close.
+import {
+  type DeliveryOutcome,
+  type PriceMismatch,
+  checkDeliveredQty,
+  checkHandover,
+  deliveryOutcome,
+  fieldTime,
+  invoiceAmount,
+  isInvoiced,
+  isStockVariance,
+  orderStatusAfter,
+  priceMismatch,
+  replayDecision,
+  wasOffline,
+  OFFLINE_ACTION_TYPES,
+} from "@mips/core";
 import { z } from "zod";
 import { type Db, all, get, run, transaction } from "../../core/db.ts";
 import { newId } from "../../core/ids.ts";
 import { iso } from "../../core/time.ts";
 import { recordAudit } from "../../core/audit.ts";
-import { ApiError, notFound } from "../../core/errors.ts";
+import { ApiError, asApiError, notFound } from "../../core/errors.ts";
 import type { Actor } from "../../core/actor.ts";
 import { requireCompanyId } from "./access.ts";
-import { customerPrices, requireActiveCustomer } from "./catalog.ts";
+import { customerOutletPrices, requireActiveCustomerOutlet } from "./catalog.ts";
 import { nextNumber } from "./counters.ts";
 import { type RouteRow, addRouteStop, requireRoute, routeSummary } from "./delivery-routes.ts";
 import { queueErpEntry, raiseException } from "./exceptions.ts";
@@ -48,7 +64,7 @@ export const deliverOrderInput = z.object({
 
 export const routeSaleInput = z.object({
   routeId: z.string(),
-  customerId: z.string(),
+  customerOutletId: z.string(),
   lines: z
     .array(z.object({ productId: z.string(), qty: z.number().int().min(1).max(10000) }))
     .min(1)
@@ -62,7 +78,7 @@ export const routeSaleInput = z.object({
 /** One offline action, identified by the device so that a replay is applied only once. */
 export const syncActionInput = z.object({
   id: z.string().min(8).max(64),
-  type: z.enum(["deliver", "sale"]),
+  type: z.enum(OFFLINE_ACTION_TYPES),
   payload: z.unknown(),
 });
 export type SyncActionInput = z.output<typeof syncActionInput>;
@@ -102,13 +118,13 @@ export function routeBundle(db: Db, agent: Actor, routeId: string, now: Date = n
   const companyId = route.company_id;
   const stops = all<{ price_list_id: string | null }>(
     db,
-    `SELECT s.customer_id, s.seq, c.name, c.code, c.address, c.zone, c.phone, c.price_list_id
-    FROM route_stops s JOIN customers c ON c.id = s.customer_id WHERE s.route_id = ? ORDER BY s.seq`,
+    `SELECT s.customer_outlet_id, s.seq, c.name, c.code, c.address, c.zone, c.phone, c.price_list_id
+    FROM route_stops s JOIN customer_outlets c ON c.id = s.customer_outlet_id WHERE s.route_id = ? ORDER BY s.seq`,
     routeId,
   );
   const orders = all<{ id: string }>(
     db,
-    "SELECT o.id, o.number, o.kind, o.status, o.customer_id, o.note, o.delivered_at FROM orders o WHERE o.route_id = ? AND o.status != 'cancelled' ORDER BY o.created_at",
+    "SELECT o.id, o.number, o.kind, o.status, o.customer_outlet_id, o.note, o.delivered_at FROM orders o WHERE o.route_id = ? AND o.status != 'cancelled' ORDER BY o.created_at",
     routeId,
   );
   const lines = all<{ order_id: string }>(
@@ -118,7 +134,7 @@ export function routeBundle(db: Db, agent: Actor, routeId: string, now: Date = n
   );
   const invoices = all<{ id: string }>(
     db,
-    "SELECT id, number, order_id, customer_id, amount_minor, paid_minor, refunded_minor, status, issued_at FROM invoices WHERE route_id = ? ORDER BY issued_at",
+    "SELECT id, number, order_id, customer_outlet_id, amount_minor, paid_minor, refunded_minor, status, issued_at FROM invoices WHERE route_id = ? ORDER BY issued_at",
     routeId,
   );
   const payments = all<{ invoice_id: string }>(
@@ -153,9 +169,9 @@ export function routeBundle(db: Db, agent: Actor, routeId: string, now: Date = n
         row.qty,
       ]),
     ),
-    customers: all(
+    customer_outlets: all(
       db,
-      "SELECT id, name, code, zone, address, phone, price_list_id FROM customers WHERE company_id = ? AND active = 1 ORDER BY name",
+      "SELECT id, name, code, zone, address, phone, price_list_id FROM customer_outlets WHERE company_id = ? AND active = 1 ORDER BY name",
       companyId,
     ),
   };
@@ -186,7 +202,7 @@ interface Handover {
   expectedTotalMinor: number | undefined;
 }
 
-export type DeliveryOutcome = "full" | "partial" | "refused";
+export type { DeliveryOutcome } from "@mips/core";
 
 export interface DeliveryResult {
   orderId: string;
@@ -195,30 +211,8 @@ export interface DeliveryResult {
   invoiceId: string | null;
   invoiceNumber: string | null;
   amountMinor: number;
-}
-
-/** An action reaching the server more than two minutes after it happened was done offline. */
-const OFFLINE_THRESHOLD_MS = 120_000;
-
-function deliveryOutcome(deliveredQty: number, orderedQty: number): DeliveryOutcome {
-  if (deliveredQty === 0) return "refused";
-  return deliveredQty < orderedQty ? "partial" : "full";
-}
-
-function checkHandover(outcome: DeliveryOutcome, handover: Handover): void {
-  const reason = handover.reason.trim();
-  if (outcome === "refused" && reason.length < 3) {
-    throw new ApiError(400, "reason_required", "Indiquez le motif du refus ou de la non-livraison.");
-  }
-  if (outcome === "partial" && reason.length < 3) {
-    throw new ApiError(400, "reason_required", "Indiquez le motif de la livraison partielle.");
-  }
-  if (outcome !== "refused" && handover.pod.name.trim().length < 2) {
-    throw new ApiError(400, "pod_required", "Le nom du réceptionnaire est requis comme preuve de livraison.");
-  }
-  if (outcome === "refused" && handover.returns.length) {
-    throw new ApiError(400, "invalid_returns", "Un retour ne peut pas être saisi sur une livraison refusée.");
-  }
+  /** Only when the total shown on the phone differs from the invoice (prices changed while offline). */
+  priceMismatch?: PriceMismatch;
 }
 
 /**
@@ -230,22 +224,22 @@ function recordHandover(db: Db, handover: Handover): DeliveryResult {
   const companyId = route.company_id;
   const deliveredQty = handover.delivered.reduce((sum, line) => sum + line.qty, 0);
   const outcome = deliveryOutcome(deliveredQty, handover.ordered);
-  checkHandover(outcome, handover);
+  checkHandover(outcome, { reason: handover.reason, receiverName: handover.pod.name, returnLines: handover.returns.length });
 
   // Returns are credited at the customer's current prices.
-  const prices = customerPrices(db, companyId, order.customer_id);
+  const prices = customerOutletPrices(db, companyId, order.customer_outlet_id);
   const productNames = new Map(
     all<{ id: string; name: string }>(db, "SELECT id, name FROM products WHERE company_id = ?", companyId).map((p) => [p.id, p.name]),
   );
-  let returnsMinor = 0;
   const returns = handover.returns.map((line) => {
     const unitPriceMinor = prices.get(line.productId);
     if (unitPriceMinor === undefined) throw notFound("Produit retourné");
-    returnsMinor += unitPriceMinor * line.qty;
     return { ...line, product: productNames.get(line.productId), unitPriceMinor };
   });
-  const amountMinor = handover.delivered.reduce((sum, line) => sum + line.qty * line.price, 0) - returnsMinor;
-  if (amountMinor < 0) throw new ApiError(400, "returns_exceed_delivery", "La valeur des retours dépasse celle de la livraison.");
+  const { amountMinor, returnsMinor } = invoiceAmount(
+    handover.delivered.map((line) => ({ qty: line.qty, unitPriceMinor: line.price })),
+    returns,
+  );
 
   const orderNumber = order.number;
   for (const line of handover.delivered) {
@@ -261,7 +255,7 @@ function recordHandover(db: Db, handover: Handover): DeliveryResult {
     recordStockMovement(db, companyId, line.productId, route.id, order.kind === "route_sale" ? "sale" : "delivery", -line.qty, orderNumber, agent.id, handover.at);
     // The delivery is accepted even beyond the vehicle stock (the goods were handed over): the gap is flagged.
     const { qty } = get<{ qty: number }>(db, "SELECT qty FROM vehicle_stock WHERE route_id = ? AND product_id = ?", route.id, line.productId)!;
-    if (qty < 0) {
+    if (isStockVariance(qty)) {
       raiseException(
         db,
         companyId,
@@ -287,9 +281,8 @@ function recordHandover(db: Db, handover: Handover): DeliveryResult {
     recordStockMovement(db, companyId, line.productId, route.id, "return", line.qty, orderNumber, agent.id, handover.at);
   }
 
-  const orderStatus = outcome === "full" ? "delivered" : outcome === "partial" ? "partially_delivered" : "refused";
-  run(db, "UPDATE orders SET status = ?, delivered_at = ? WHERE id = ?", orderStatus, iso(handover.at), order.id);
-  const offline = Number(now.getTime() - handover.at.getTime() > OFFLINE_THRESHOLD_MS);
+  run(db, "UPDATE orders SET status = ?, delivered_at = ? WHERE id = ?", orderStatusAfter(outcome), iso(handover.at), order.id);
+  const offline = Number(wasOffline(handover.at, now));
   const reason = handover.reason.trim();
   run(
     db,
@@ -314,18 +307,18 @@ function recordHandover(db: Db, handover: Handover): DeliveryResult {
 
   // Nothing is invoiced when nothing is owed (refusal, or returns worth the whole delivery).
   let invoice: { id: string; number: string } | null = null;
-  if (amountMinor > 0) {
+  if (isInvoiced({ amountMinor, returnsMinor })) {
     const invoiceId = newId("inv");
     invoice = { id: invoiceId, number: nextNumber(db, companyId, "invoice", "FAC") };
     const { currency } = get<{ currency: string }>(db, "SELECT currency FROM companies WHERE id = ?", companyId)!;
     run(
       db,
-      "INSERT INTO invoices (id, company_id, number, order_id, customer_id, route_id, agent_id, currency, amount_minor, issued_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+      "INSERT INTO invoices (id, company_id, number, order_id, customer_outlet_id, route_id, agent_id, currency, amount_minor, issued_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
       invoice.id,
       companyId,
       invoice.number,
       order.id,
-      order.customer_id,
+      order.customer_outlet_id,
       route.id,
       agent.id,
       currency,
@@ -339,36 +332,37 @@ function recordHandover(db: Db, handover: Handover): DeliveryResult {
       invoice.id,
       `Facture ${invoice.number}`,
       amountMinor,
-      { invoice: invoice.number, order: orderNumber, customerId: order.customer_id, amountMinor, returnsMinor, currency },
+      { invoice: invoice.number, order: orderNumber, customerOutletId: order.customer_outlet_id, amountMinor, returnsMinor, currency },
       now,
     );
   }
 
-  const { name: customer } = get<{ name: string }>(db, "SELECT name FROM customers WHERE id = ?", order.customer_id)!;
+  const { name: customerOutlet } = get<{ name: string }>(db, "SELECT name FROM customer_outlets WHERE id = ?", order.customer_outlet_id)!;
   if (outcome === "partial") {
-    raiseException(db, companyId, "ops", "delivery_partial", "order", order.id, `Livraison partielle de ${orderNumber} chez ${customer} : ${reason}`, {
+    raiseException(db, companyId, "ops", "delivery_partial", "order", order.id, `Livraison partielle de ${orderNumber} chez ${customerOutlet} : ${reason}`, {
       order: orderNumber,
-      customer,
+      customerOutlet,
       reason,
     }, now);
   }
   if (outcome === "refused") {
-    raiseException(db, companyId, "ops", "delivery_refused", "order", order.id, `${orderNumber} non livrée chez ${customer} : ${reason}`, {
+    raiseException(db, companyId, "ops", "delivery_refused", "order", order.id, `${orderNumber} non livrée chez ${customerOutlet} : ${reason}`, {
       order: orderNumber,
-      customer,
+      customerOutlet,
       reason,
     }, now);
   }
   // Returns need a credit note, validated by the office.
   if (returns.length) {
-    raiseException(db, companyId, "ops", "return", "delivery", order.id, `Retour de marchandise chez ${customer} sur ${orderNumber} : avoir à valider.`, {
+    raiseException(db, companyId, "ops", "return", "delivery", order.id, `Retour de marchandise chez ${customerOutlet} sur ${orderNumber} : avoir à valider.`, {
       order: orderNumber,
-      customer,
+      customerOutlet,
       returns,
       returnsMinor,
     }, now);
   }
-  if (handover.expectedTotalMinor !== undefined && handover.expectedTotalMinor !== amountMinor) {
+  const mismatch = priceMismatch(handover.expectedTotalMinor, amountMinor);
+  if (mismatch) {
     raiseException(
       db,
       companyId,
@@ -377,11 +371,11 @@ function recordHandover(db: Db, handover: Handover): DeliveryResult {
       "invoice",
       invoice?.id ?? order.id,
       `Montant affiché à l'agent différent du montant facturé sur ${orderNumber} (prix mis à jour pendant le hors-ligne).`,
-      { order: orderNumber, shownMinor: handover.expectedTotalMinor, invoicedMinor: amountMinor },
+      { order: orderNumber, ...mismatch },
       now,
     );
   }
-  recordAudit(db, agent, `delivery.${outcome}`, "order", order.id, { order: orderNumber, customer, amountMinor, offline: !!offline }, companyId, now);
+  recordAudit(db, agent, `delivery.${outcome}`, "order", order.id, { order: orderNumber, customerOutlet, amountMinor, offline: !!offline }, companyId, now);
   return {
     orderId: order.id,
     orderNumber,
@@ -389,13 +383,9 @@ function recordHandover(db: Db, handover: Handover): DeliveryResult {
     invoiceId: invoice?.id ?? null,
     invoiceNumber: invoice?.number ?? null,
     amountMinor,
+    // The driver is told at once: the invoice, not the phone's total, is what the outlet owes.
+    ...(mismatch ? { priceMismatch: mismatch } : {}),
   };
-}
-
-/** Field time of an action: the device time, unless it is unreadable, in the future or older than a week. */
-function fieldTime(at: string, now: Date): Date {
-  const date = new Date(at);
-  return Number.isNaN(date.getTime()) || date > now || now.getTime() - date.getTime() > 604_800_000 ? now : date;
 }
 
 /** Delivery of a loaded pre-order. */
@@ -419,7 +409,7 @@ function deliverOrder(db: Db, agent: Actor, payload: unknown, now: Date): Delive
     // Lines the agent did not mention count as not delivered.
     delivered: lines.map((line) => {
       const qty = deliveredByLine.get(line.id) ?? 0;
-      if (qty > line.qty_ordered) throw new ApiError(400, "qty_exceeds_order", "Quantité livrée supérieure à la quantité commandée.");
+      checkDeliveredQty(qty, line.qty_ordered);
       run(db, "UPDATE order_lines SET qty_delivered = ? WHERE id = ?", qty, line.id);
       return { productId: line.product_id, qty, price: line.unit_price_minor };
     }),
@@ -439,23 +429,23 @@ function sellOnRoute(db: Db, agent: Actor, payload: unknown, now: Date): Deliver
   const route = requireOwnRoute(db, agent, input.routeId);
   const companyId = route.company_id;
   if (route.status !== "in_progress") throw new ApiError(409, "route_not_started", "La tournée n'est pas en cours.");
-  requireActiveCustomer(db, companyId, input.customerId);
-  const prices = customerPrices(db, companyId, input.customerId);
+  requireActiveCustomerOutlet(db, companyId, input.customerOutletId);
+  const prices = customerOutletPrices(db, companyId, input.customerOutletId);
   const at = fieldTime(input.at, now);
   const orderId = newId("ord");
   const number = nextNumber(db, companyId, "order", "CMD");
   run(
     db,
-    "INSERT INTO orders (id, company_id, number, customer_id, route_id, kind, status, created_by, created_at) VALUES (?,?,?,?,?,'route_sale','loaded',?,?)",
+    "INSERT INTO orders (id, company_id, number, customer_outlet_id, route_id, kind, status, created_by, created_at) VALUES (?,?,?,?,?,'route_sale','loaded',?,?)",
     orderId,
     companyId,
     number,
-    input.customerId,
+    input.customerOutletId,
     route.id,
     agent.id,
     iso(at),
   );
-  addRouteStop(db, companyId, route.id, input.customerId);
+  addRouteStop(db, companyId, route.id, input.customerOutletId);
   const delivered = input.lines.map((line) => {
     const price = prices.get(line.productId);
     if (price === undefined) throw notFound("Produit");
@@ -479,7 +469,7 @@ function sellOnRoute(db: Db, agent: Actor, payload: unknown, now: Date): Deliver
       id: orderId,
       company_id: companyId,
       number,
-      customer_id: input.customerId,
+      customer_outlet_id: input.customerOutletId,
       route_id: route.id,
       kind: "route_sale",
       status: "loaded",
@@ -511,7 +501,8 @@ export function applySyncAction(db: Db, agent: Actor, action: SyncActionInput, n
     companyId,
     action.id,
   );
-  if (applied) return { id: action.id, status: "duplicate", result: JSON.parse(applied.result_json) };
+  const replay = replayDecision<DeliveryResult>(applied && JSON.parse(applied.result_json));
+  if (replay.replay) return { id: action.id, status: "duplicate", result: replay.result };
   try {
     const result = transaction(db, () => {
       const outcome = action.type === "deliver" ? deliverOrder(db, agent, action.payload, now) : sellOnRoute(db, agent, action.payload, now);
@@ -529,7 +520,8 @@ export function applySyncAction(db: Db, agent: Actor, action: SyncActionInput, n
     });
     return { id: action.id, status: "applied", result };
   } catch (error) {
-    if (error instanceof ApiError) return { id: action.id, status: "rejected", code: error.code, message: error.message };
+    const refused = asApiError(error);
+    if (refused) return { id: action.id, status: "rejected", code: refused.code, message: refused.message };
     if (error instanceof z.ZodError) {
       return { id: action.id, status: "rejected", code: "invalid_input", message: "Action illisible : données invalides." };
     }

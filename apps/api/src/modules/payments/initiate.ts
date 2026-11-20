@@ -1,9 +1,10 @@
 // Payment initiation. Two guards against double debits: the idempotency key (a retried request
 // returns the same attempt) and at most one attempt in progress per invoice.
+import { attemptDeadline, checkNewAttempt, checkReplay } from "@mips/core";
 import { type Actor, companyOf } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, get, run, transaction } from "../../core/db.ts";
-import { ApiError, notFound } from "../../core/errors.ts";
+import { notFound } from "../../core/errors.ts";
 import { newId, newToken } from "../../core/ids.ts";
 import { iso } from "../../core/time.ts";
 import type { ConnectorSet } from "../connectors/index.ts";
@@ -12,7 +13,7 @@ import { requireCompanyPayment as getCompanyPayment } from "./payment-view.ts";
 import { failPayment, refreshInvoiceStatus } from "./lifecycle.ts";
 import { assertInvoiceAccess } from "./lookups.ts";
 import type { CreatePaymentInput } from "./schemas.ts";
-import type { InvoiceRow, PaymentRow, PaymentStatus } from "./types.ts";
+import type { InvoiceRow, PaymentRow } from "./types.ts";
 
 export interface InitiatePaymentResult {
   payment: PaymentRow;
@@ -42,32 +43,24 @@ function createAttempt(
 
   const previous = get<PaymentRow>(db, "SELECT * FROM payments WHERE company_id = ? AND idempotency_key = ?", companyId, input.idempotencyKey);
   if (previous) {
-    if (previous.invoice_id !== invoice.id || previous.amount_minor !== input.amountMinor || previous.method !== input.method) {
-      throw new ApiError(409, "idempotency_conflict", "Cette clé d'idempotence a déjà servi pour une autre demande.");
-    }
+    checkReplay(
+      { invoiceId: previous.invoice_id, method: previous.method, amountMinor: previous.amount_minor },
+      { invoiceId: invoice.id, method: input.method, amountMinor: input.amountMinor },
+    );
     return { payment: previous, invoice, replayed: true };
   }
 
-  if (!settings.payments.methods[input.method].enabled) {
-    throw new ApiError(400, "method_disabled", "Ce moyen de paiement n'est pas activé pour l'entreprise.");
-  }
-  const inProgress = get<{ status: PaymentStatus }>(
+  const inProgress = get<{ status: "pending" | "to_verify" }>(
     db,
     "SELECT status FROM payments WHERE invoice_id = ? AND status IN ('pending','to_verify')",
     invoice.id,
   );
-  if (inProgress) {
-    throw new ApiError(
-      409,
-      "attempt_in_progress",
-      inProgress.status === "pending"
-        ? "Un paiement est déjà en attente pour cette facture. Vérifiez son statut avant d'en lancer un autre."
-        : "Un paiement est à vérifier pour cette facture : nouvelle tentative bloquée pour éviter un double débit.",
-    );
-  }
-  const balance = invoice.amount_minor - (invoice.paid_minor - invoice.refunded_minor);
-  if (balance <= 0) throw new ApiError(409, "already_paid", "Cette facture est déjà payée.");
-  if (input.amountMinor > balance) throw new ApiError(400, "amount_exceeds_balance", "Le montant dépasse le solde restant dû.");
+  checkNewAttempt({
+    methodEnabled: settings.payments.methods[input.method].enabled,
+    inProgress: inProgress?.status ?? null,
+    invoice: { amountMinor: invoice.amount_minor, paidMinor: invoice.paid_minor, refundedMinor: invoice.refunded_minor },
+    amountMinor: input.amountMinor,
+  });
 
   // Random draws, in this order: payment id, then the public link token (link method only).
   const paymentId = newId("pay");
@@ -121,7 +114,7 @@ export async function initiatePayment(
   const companyId = companyOf(user);
   const settings = companySettings(db, companyId);
   const provider = connectors.payments[input.method];
-  const expiresAt = new Date(now.getTime() + settings.payments.attemptMinutes * 60_000);
+  const expiresAt = attemptDeadline(now, settings.payments.attemptMinutes);
   const attempt = transaction(db, () => createAttempt(db, user, input, settings, expiresAt, now));
   if (attempt.replayed) return { payment: attempt.payment, replayed: true };
 

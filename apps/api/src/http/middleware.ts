@@ -5,7 +5,7 @@ import type { ErrorHandler, MiddlewareHandler } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { z } from "zod";
-import { ApiError } from "../core/errors.ts";
+import { ApiError, asApiError } from "../core/errors.ts";
 import { type App, type AppDeps, type AppEnv, clientKey, readJson } from "./context.ts";
 import { COOKIE_LIFETIME_SECONDS, GATE_COOKIE } from "./session.ts";
 import { ONE_MINUTE_MS } from "./rate-limit.ts";
@@ -20,8 +20,9 @@ const GATE_EXEMPT_PREFIXES = ["/api/webhooks/", "/api/access/", "/api/public/", 
 
 /** API errors keep their status and code; invalid input is a 400; anything else a generic 500. */
 export const errorHandler: ErrorHandler<AppEnv> = (error, c) => {
-  if (error instanceof ApiError) {
-    return c.json({ error: { code: error.code, message: error.message } }, error.status as ContentfulStatusCode);
+  const known = asApiError(error);
+  if (known) {
+    return c.json({ error: { code: known.code, message: known.message } }, known.status as ContentfulStatusCode);
   }
   if (error instanceof z.ZodError) {
     const details = error.issues.map((issue) => `${issue.path.join(".")} ${issue.message}`).join(" ; ");

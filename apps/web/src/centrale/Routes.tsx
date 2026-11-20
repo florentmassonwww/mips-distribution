@@ -29,7 +29,7 @@ export function RouteList() {
     day: session.today,
     agentId: ``,
     vehicle: ``,
-    customerIds: [],
+    customerOutletIds: [],
   });
 
   const createRoute = () =>
@@ -42,12 +42,12 @@ export function RouteList() {
     }, translate(`Tournée créée.`));
 
   // Ticking appends the outlet (its rank is its visiting order); unticking removes it.
-  const toggleCustomer = (customerId: string) =>
+  const toggleCustomerOutlet = (customerOutletId: string) =>
     setDraft((current) => ({
       ...current,
-      customerIds: current.customerIds.includes(customerId)
-        ? current.customerIds.filter((id) => id !== customerId)
-        : [...current.customerIds, customerId],
+      customerOutletIds: current.customerOutletIds.includes(customerOutletId)
+        ? current.customerOutletIds.filter((id) => id !== customerOutletId)
+        : [...current.customerOutletIds, customerOutletId],
     }));
 
   return (
@@ -63,7 +63,7 @@ export function RouteList() {
                 reference={referenceData}
                 draft={draft}
                 onChange={setDraft}
-                onToggleCustomer={toggleCustomer}
+                onToggleCustomerOutlet={toggleCustomerOutlet}
                 onSubmit={createRoute}
               />
             )}

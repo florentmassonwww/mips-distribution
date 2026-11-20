@@ -1,4 +1,5 @@
 // Dispatch office ("centrale"): orders, routes, loading and warehouse stock.
+import { ADJUSTMENT_REASON_MIN } from "@mips/core";
 import { z } from "zod";
 import { all } from "../core/db.ts";
 import { dashboard as centraleDashboard } from "../modules/distribution/dashboard.ts";
@@ -19,9 +20,9 @@ export function registerCentraleRoutes(app: App, deps: AppDeps): void {
 
   app.get("/api/centrale/reference", viewers, (c) =>
     c.json({
-      customers: all(
+      customer_outlets: all(
         db,
-        "SELECT c.id, c.code, c.name, c.zone, c.address, pl.name AS price_list FROM customers c LEFT JOIN price_lists pl ON pl.id = c.price_list_id WHERE c.company_id = ? AND c.active = 1 ORDER BY c.name",
+        "SELECT c.id, c.code, c.name, c.zone, c.address, pl.name AS price_list FROM customer_outlets c LEFT JOIN price_lists pl ON pl.id = c.price_list_id WHERE c.company_id = ? AND c.active = 1 ORDER BY c.name",
         companyOf(c),
       ),
       products: all(
@@ -67,7 +68,7 @@ export function registerCentraleRoutes(app: App, deps: AppDeps): void {
       ...routeSummary(db, companyOf(c), routeParam(c)),
       stops: all(
         db,
-        "SELECT s.customer_id, s.seq, c.name, c.zone FROM route_stops s JOIN customers c ON c.id = s.customer_id WHERE s.route_id = ? AND s.company_id = ? ORDER BY s.seq",
+        "SELECT s.customer_outlet_id, s.seq, c.name, c.zone FROM route_stops s JOIN customer_outlets c ON c.id = s.customer_outlet_id WHERE s.route_id = ? AND s.company_id = ? ORDER BY s.seq",
         routeParam(c),
         companyOf(c),
       ),
@@ -108,7 +109,7 @@ export function registerCentraleRoutes(app: App, deps: AppDeps): void {
           .min(-1e5)
           .max(1e5)
           .refine((delta) => delta !== 0),
-        reason: z.string().min(3).max(200),
+        reason: z.string().min(ADJUSTMENT_REASON_MIN).max(200),
       }),
     );
     adjustStock(db, c.get("user"), adjustment.productId, adjustment.delta, adjustment.reason, now());

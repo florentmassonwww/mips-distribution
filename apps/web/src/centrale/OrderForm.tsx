@@ -6,14 +6,14 @@ import { ProductQuantities } from "./ProductQuantities.tsx";
 import type { QuantityLines, ReferenceData, RouteSummary } from "./types.ts";
 
 export interface OrderDraft {
-  customerId: string;
+  customerOutletId: string;
   /** Empty: the order is assigned to a route later. */
   routeId: string;
   note: string;
   lines: QuantityLines;
 }
 
-export const EMPTY_ORDER_DRAFT: OrderDraft = { customerId: ``, routeId: ``, note: ``, lines: {} };
+export const EMPTY_ORDER_DRAFT: OrderDraft = { customerOutletId: ``, routeId: ``, note: ``, lines: {} };
 
 interface OrderFormProps {
   reference: ReferenceData;
@@ -32,12 +32,12 @@ export function OrderForm({ reference, plannedRoutes, draft, onChange, onSubmit 
       <div className="stack">
         <div className="grid g3">
           <Field label={translate(`Commerce`)}>
-            <select value={draft.customerId} onChange={(event) => onChange({ ...draft, customerId: event.target.value })}>
+            <select value={draft.customerOutletId} onChange={(event) => onChange({ ...draft, customerOutletId: event.target.value })}>
               <option value="">{translate(`Choisir…`)}</option>
-              {reference.customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name} · {customer.zone}
-                  {customer.price_list ? ` · ${customer.price_list}` : ``}
+              {reference.customer_outlets.map((outlet) => (
+                <option key={outlet.id} value={outlet.id}>
+                  {outlet.name} · {outlet.zone}
+                  {outlet.price_list ? ` · ${outlet.price_list}` : ``}
                 </option>
               ))}
             </select>
@@ -66,7 +66,7 @@ export function OrderForm({ reference, plannedRoutes, draft, onChange, onSubmit 
           {translate(`Le prix appliqué est celui de la liste de prix du commerce, fixé à la création de la commande.`)}
         </div>
         <div>
-          <button disabled={!draft.customerId || !hasQuantity} onClick={onSubmit}>
+          <button disabled={!draft.customerOutletId || !hasQuantity} onClick={onSubmit}>
             {translate(`Créer la commande`)}
           </button>
         </div>

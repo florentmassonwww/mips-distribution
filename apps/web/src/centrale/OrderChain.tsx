@@ -83,7 +83,7 @@ export function OrderChain({ back }: OrderChainProps) {
         return (
           <>
             <PageHeader
-              title={`${order.number} · ${order.customer}`}
+              title={`${order.number} · ${order.customer_outlet}`}
               sub={
                 <>
                   <Link to={back}>{translate(`← Retour`)}</Link>

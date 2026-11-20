@@ -126,7 +126,7 @@ export function Dashboard() {
                         <strong>{AUDIT_ACTION_LABELS[entry.action] ?? entry.action}</strong>
                         {` · `}
                         {entry.details.order ?? entry.details.invoice ?? entry.details.name ?? ``}
-                        {entry.details.customer ? ` · ${entry.details.customer}` : ``}
+                        {entry.details.customerOutlet ? ` · ${entry.details.customerOutlet}` : ``}
                         {entry.details.method ? ` · ${PAYMENT_CHANNEL[entry.details.method]}` : ``}
                         {entry.details.amountMinor ? ` · ${formatMoney(entry.details.amountMinor)}` : ``}
                       </span>

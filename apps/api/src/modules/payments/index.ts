@@ -8,4 +8,4 @@ export { settlePayment, type SettlementLine } from "./settlement.ts";
 export { refundPayment } from "./refunds.ts";
 export { getReceipt, type Receipt } from "./receipt.ts";
 export { assertInvoiceAccess, getPaymentForUser } from "./lookups.ts";
-export { confirmPayment, expectedFee, failPayment, markToVerify, refreshInvoiceStatus, touchPayment } from "./lifecycle.ts";
+export { confirmPayment, failPayment, markToVerify, refreshInvoiceStatus, touchPayment } from "./lifecycle.ts";

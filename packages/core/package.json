@@ -2,7 +2,7 @@
   "name": "@mips/core",
   "version": "0.1.0",
   "private": true,
-  "description": "Pure business rules (no I/O). Filled in step 3, extracted from apps/api.",
+  "description": "Pure business rules (no I/O), applied by apps/api and tested by the acceptance scenarios.",
   "type": "module",
   "exports": "./src/index.ts"
 }

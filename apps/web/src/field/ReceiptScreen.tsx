@@ -14,7 +14,7 @@ import type { Receipt } from "./types.ts";
 interface ReceiptScreenProps {
   invoiceId: string;
   online: boolean;
-  onBack: (customerId?: string) => void;
+  onBack: (customerOutletId?: string) => void;
   onPay: () => void;
 }
 
@@ -40,7 +40,7 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
         return (
           <div className="stack">
             <div className="noprint">
-              <BackButton onClick={() => onBack(invoice.customer_id)}>{invoice.customer}</BackButton>
+              <BackButton onClick={() => onBack(invoice.customer_outlet_id)}>{invoice.customer_outlet}</BackButton>
             </div>
             <div className="receipt">
               <div className="row spread">
@@ -55,7 +55,7 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
               {session.demoMode && <div className="small muted">{translate("Document de démonstration, sans valeur fiscale.")}</div>}
               <hr />
               <div>
-                <strong>{invoice.customer}</strong>
+                <strong>{invoice.customer_outlet}</strong>
                 <div className="small muted">
                   {invoice.address} · {formatDate(invoice.issued_at, true)}
                 </div>
@@ -152,7 +152,7 @@ export function ReceiptScreen({ invoiceId, online, onBack, onPay }: ReceiptScree
                           "{0} - {1} - {2}\nMontant : {3}\nÉtat : {4}\nEncaissé (confirmé) : {5}",
                           invoice.company,
                           invoice.number,
-                          invoice.customer,
+                          invoice.customer_outlet,
                           formatMoney(invoice.amount_minor),
                           INVOICE_STATUS[invoice.status]?.[0],
                           formatMoney(collected),

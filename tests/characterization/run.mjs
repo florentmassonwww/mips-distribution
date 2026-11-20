@@ -15,7 +15,7 @@ import { launchReference } from "./lib/reference-client.mjs";
 import { launchApi } from "./lib/api-client.mjs";
 import { createApi } from "./lib/api.mjs";
 import { scenarios } from "./scenarios/index.mjs";
-import { evolutionsFor, evolveTranscript } from "./evolutions.mjs";
+import { evolutionsFor, evolveTranscript, fromApiResponse, toApiRequest } from "./evolutions.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const goldenDir = path.join(here, "golden");
@@ -56,6 +56,15 @@ const started = Date.now();
 try {
   for (const s of selected) {
     const inst = await ref.open(seedOf(s.name));
+    if (target === "api") {
+      // Renamings of the API: requests go out with the new names, responses come back with the
+      // v0.1.0 names (see RENAMINGS in evolutions.mjs).
+      const request = inst.request.bind(inst);
+      inst.request = async (method, url, body, headers) => {
+        const res = await request(method, url, toApiRequest(body), headers);
+        return { ...res, data: fromApiResponse(res.data, `${method} ${url}`) };
+      };
+    }
     const api = createApi(inst);
     let error = null;
     try {

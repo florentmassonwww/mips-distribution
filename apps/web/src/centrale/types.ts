@@ -34,7 +34,7 @@ export interface DashboardData {
       order?: string;
       invoice?: string;
       name?: string;
-      customer?: string;
+      customerOutlet?: string;
       method?: string;
       amountMinor?: number;
     };
@@ -46,7 +46,7 @@ export interface OrderSummary {
   number: string;
   kind: OrderKind;
   status: string;
-  customer: string;
+  customer_outlet: string;
   zone: string;
   route_id: string | null;
   route: string | null;
@@ -68,7 +68,7 @@ export interface Product {
 
 /** Reference data for the forms: outlets, catalogue with warehouse stock, field agents. */
 export interface ReferenceData {
-  customers: { id: string; name: string; zone: string; price_list: string | null }[];
+  customer_outlets: { id: string; name: string; zone: string; price_list: string | null }[];
   products: Product[];
   agents: { id: string; name: string }[];
 }
@@ -79,7 +79,7 @@ export type QuantityLines = Record<string, number>;
 export interface OrderChainData {
   order: {
     number: string;
-    customer: string;
+    customer_outlet: string;
     kind: OrderKind;
     status: string;
     route: string | null;
@@ -158,7 +158,7 @@ export interface RouteDetailData {
   };
   orders: { total: number; delivered: number; partial: number; refused: number; routeSales: number };
   money: { invoiced: number; confirmed: number; settled: number; pending: number; toVerify: number };
-  stops: { customer_id: string; seq: number; name: string; zone: string }[];
+  stops: { customer_outlet_id: string; seq: number; name: string; zone: string }[];
   stock: { product_id: string; name: string; loaded_qty: number; qty: number; returned_qty: number }[];
   orderList: OrderSummary[];
 }

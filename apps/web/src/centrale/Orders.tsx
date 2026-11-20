@@ -43,7 +43,7 @@ export function Orders() {
         .filter(([, qty]) => qty > 0)
         .map(([productId, qty]) => ({ productId, qty }));
       const created = await apiRequest<{ number: string }>(`POST`, `/api/centrale/orders`, {
-        customerId: draft.customerId,
+        customerOutletId: draft.customerOutletId,
         routeId: draft.routeId || null,
         note: draft.note,
         lines,
@@ -124,7 +124,7 @@ export function Orders() {
                     translate(`Commerce`),
                     (order) => (
                       <>
-                        {order.customer}
+                        {order.customer_outlet}
                         <div className="small muted">{order.zone}</div>
                       </>
                     ),

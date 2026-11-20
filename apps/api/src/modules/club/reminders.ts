@@ -1,6 +1,7 @@
 // Payment reminders: a run sends, to every member with an overdue amount above the threshold,
 // the reminder of the level reached by the age of the debt. One reminder per member, per cycle
 // (the oldest overdue charge) and per level: running the engine twice sends nothing new.
+import { reminderLevel } from "@mips/core";
 import type { Actor } from "../../core/actor.ts";
 import { recordAudit } from "../../core/audit.ts";
 import { type Db, all, get, run, transaction } from "../../core/db.ts";
@@ -57,9 +58,8 @@ export function runReminders(db: Db, actor: Actor, origin: string, now: Date = n
     const members = all<MemberRow>(db, "SELECT * FROM members WHERE company_id = ? ORDER BY number", companyId);
     for (const member of members) {
       const account = memberAccount(db, member.id, day);
-      if (!account.oldestOverdueId || account.overdueMinor < club.reminders.minAmountMinor) continue;
-      // Level = number of thresholds (in days overdue) reached.
-      const level = club.reminders.levels.filter((days) => account.overdueDays >= days).length;
+      // Level = number of thresholds (in days overdue) reached, above the amount threshold.
+      const level = reminderLevel(account, club.reminders.minAmountMinor, club.reminders.levels);
       if (!level) continue;
       const alreadySent = get(
         db,

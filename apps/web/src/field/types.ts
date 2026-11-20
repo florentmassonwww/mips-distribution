@@ -18,7 +18,13 @@ export interface AgentRoute {
 export interface SyncResult {
   id: string;
   status: "applied" | "duplicate" | "rejected";
-  result?: { orderId: string; orderNumber: string; invoiceId: string | null };
+  result?: {
+    orderId: string;
+    orderNumber: string;
+    invoiceId: string | null;
+    /** The total shown on the phone differed from the invoice (prices changed while offline). */
+    priceMismatch?: { shownMinor: number; invoicedMinor: number };
+  };
   code?: string;
   message?: string;
 }
@@ -47,8 +53,8 @@ export interface Receipt {
   invoice: {
     id: string;
     number: string;
-    customer_id: string;
-    customer: string;
+    customer_outlet_id: string;
+    customer_outlet: string;
     company: string;
     address: string;
     order_number: string;

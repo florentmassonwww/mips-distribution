@@ -26,7 +26,7 @@ interface PaymentPanelProps {
   methods: PaymentMethodOption[];
   online: boolean;
   /** Back to the invoice's stop (or to the route when unknown). */
-  onBack: (customerId?: string) => void;
+  onBack: (customerOutletId?: string) => void;
   onReceipt: () => void;
 }
 
@@ -106,7 +106,7 @@ export function PaymentPanel({ invoiceId, methods, online, onBack, onReceipt }: 
         const amountValid = amountMinor !== null && amountMinor > 0 && amountMinor <= due;
         return (
           <div className="stack">
-            <BackButton onClick={() => onBack(invoice.customer_id)}>{invoice.customer}</BackButton>
+            <BackButton onClick={() => onBack(invoice.customer_outlet_id)}>{invoice.customer_outlet}</BackButton>
             <div className="row spread">
               <h1>{invoice.number}</h1>
               <StatusBadge map={INVOICE_STATUS} value={invoice.status} />

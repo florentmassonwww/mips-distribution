@@ -175,7 +175,7 @@ export function RouteDetail() {
                 <Card title={translate(`Arrêts`)} flush>
                   <DataTable
                     rows={data.stops}
-                    rowKey={(stop) => stop.customer_id}
+                    rowKey={(stop) => stop.customer_outlet_id}
                     empty={translate(`Aucun arrêt.`)}
                     cols={[
                       [`#`, (stop) => stop.seq],
@@ -209,7 +209,7 @@ export function RouteDetail() {
                   cols={[
                     [`N°`, (order) => <strong>{order.number}</strong>],
                     [translate(`Type`), (order) => (order.kind === `route_sale` ? translate(`Vente sur place`) : translate(`Commande`))],
-                    [translate(`Commerce`), (order) => order.customer],
+                    [translate(`Commerce`), (order) => order.customer_outlet],
                     [translate(`État`), (order) => <StatusBadge map={ORDER_STATUS} value={order.status} />],
                     [translate(`Commandé`), (order) => formatMoney(order.ordered_minor), `right`],
                     [

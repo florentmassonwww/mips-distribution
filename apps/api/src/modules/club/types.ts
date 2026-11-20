@@ -1,4 +1,5 @@
 // Database rows, company settings and connector contracts used by the club module.
+import type { StatusReport } from "@mips/core";
 
 export type MemberStatus = "active" | "suspended" | "resigned";
 export type ChargeKind = "dues" | "consumption" | "fee";
@@ -154,7 +155,7 @@ export interface ClubConnectors {
   payments: {
     link: {
       initiate(request: LinkInitiateRequest): Promise<{ providerRef: string }>;
-      queryStatus(providerRef: string): Promise<string>;
+      queryStatus(providerRef: string): Promise<StatusReport>;
     };
   };
   bank: { parse(content: string): ParsedBankLine[] };
