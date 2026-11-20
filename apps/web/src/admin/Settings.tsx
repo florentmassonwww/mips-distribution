@@ -254,7 +254,6 @@ function PaymentMethodsCard({ settings, setSettings, connectors, linksOnly }: Pa
                       min={0}
                       max={1000}
                       value={methodSettings.feeBps ?? ""}
-                      placeholder={translate("à convenir")}
                       onChange={(event) => updateMethod(method, { feeBps: parseFeeBps(event.target.value) })}
                       aria-label={translate("Frais {0}", label)}
                       aria-describedby={`fee-${method}`}

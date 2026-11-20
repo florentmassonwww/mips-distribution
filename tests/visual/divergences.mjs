@@ -24,4 +24,36 @@ export const DIVERGENCES = [
   { ids: /^(club-barriere\.en\.1280|club-barriere\.en\.1366|club-barriere\.en\.1920|club-barriere\.en\.390|club-barriere\.fr\.1280|club-barriere\.fr\.1366|club-barriere\.fr\.1920|club-barriere\.fr\.390)$/, reason: "real plurals and translated texts (step 1c)" },
   { ids: /^(club-export\.en\.1280|club-export\.en\.1366|club-export\.en\.1920|club-export\.en\.390|club-export\.fr\.1280|club-export\.fr\.1366|club-export\.fr\.1920|club-export\.fr\.390)$/, reason: "real plurals and translated texts (step 1c)" },
   { ids: /^(membre-public\.en\.1280|membre-public\.en\.1366|membre-public\.en\.1920|membre-public\.en\.390|membre-public\.fr\.1280|membre-public\.fr\.1366|membre-public\.fr\.1920|membre-public\.fr\.390)$/, reason: "real plurals and translated texts (step 1c)" },
+  // Step 2: modules, sites and fees to be agreed. Each list holds the exact captures that differ;
+  // the diff images were reviewed one by one.
+  // finance: journal: expected fees read "to be agreed", fees charged by the demo bank are 0.
+  { ids: /^(finance\.en\.1280|finance\.en\.1366|finance\.en\.1920|finance\.fr\.1280|finance\.fr\.1366|finance\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // finance-rapprochement: statement lines: no fee deducted, expected fee "to be agreed".
+  { ids: /^(finance-rapprochement\.en\.1280|finance-rapprochement\.en\.1366|finance-rapprochement\.en\.1920|finance-rapprochement\.fr\.1280|finance-rapprochement\.fr\.1366|finance-rapprochement\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // finance-erp: bank settlements booked without fees (demo statements charge none while fees are to be agreed).
+  { ids: /^(finance-erp\.en\.1280|finance-erp\.en\.1366|finance-erp\.en\.1920|finance-erp\.fr\.1280|finance-erp\.fr\.1366|finance-erp\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // admin-utilisateurs: Sites link in the administration navigation.
+  { ids: /^(admin-utilisateurs\.en\.1280|admin-utilisateurs\.en\.1366|admin-utilisateurs\.en\.1920|admin-utilisateurs\.fr\.1280|admin-utilisateurs\.fr\.1366|admin-utilisateurs\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // admin-parametres: Sites link; subscription modules; fees "to be agreed".
+  { ids: /^(admin-parametres\.en\.1280|admin-parametres\.en\.1366|admin-parametres\.en\.1920|admin-parametres\.fr\.1280|admin-parametres\.fr\.1366|admin-parametres\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // admin-audit: Sites link in the administration navigation; settlement fees of 0 in the audit details.
+  { ids: /^(admin-audit\.en\.1280|admin-audit\.en\.1366|admin-audit\.en\.1920|admin-audit\.fr\.1280|admin-audit\.fr\.1366|admin-audit\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // plateforme: modules per company, Modules action and module checkboxes on creation.
+  { ids: /^(plateforme\.en\.390|plateforme\.fr\.390)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // club-membres: Sites link in the administration navigation.
+  { ids: /^(club-membres\.en\.1280|club-membres\.en\.1366|club-membres\.en\.1920|club-membres\.fr\.1280|club-membres\.fr\.1366|club-membres\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // club-membre: Sites link in the administration navigation.
+  { ids: /^(club-membre\.en\.1280|club-membre\.en\.1366|club-membre\.en\.1920|club-membre\.fr\.1280|club-membre\.fr\.1366|club-membre\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // club-cotisations: Sites link in the administration navigation.
+  { ids: /^(club-cotisations\.en\.1280|club-cotisations\.en\.1366|club-cotisations\.en\.1920|club-cotisations\.fr\.1280|club-cotisations\.fr\.1366|club-cotisations\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // club-relances: Sites link in the administration navigation.
+  { ids: /^(club-relances\.en\.1280|club-relances\.en\.1366|club-relances\.en\.1920|club-relances\.fr\.1280|club-relances\.fr\.1366|club-relances\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // club-encaissements: Sites link in the administration navigation; the demo bank charges no fee while fees are to be agreed (Rs 0, gross settlements).
+  { ids: /^(club-encaissements\.en\.1280|club-encaissements\.en\.1366|club-encaissements\.en\.1920|club-encaissements\.fr\.1280|club-encaissements\.fr\.1366|club-encaissements\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // club-rapprochement: Sites link in the administration navigation; the demo bank charges no fee while fees are to be agreed (Rs 0, gross settlements).
+  { ids: /^(club-rapprochement\.en\.1280|club-rapprochement\.en\.1366|club-rapprochement\.en\.1920|club-rapprochement\.fr\.1280|club-rapprochement\.fr\.1366|club-rapprochement\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // club-exceptions: Sites link in the administration navigation.
+  { ids: /^(club-exceptions\.en\.1280|club-exceptions\.en\.1366|club-exceptions\.en\.1920|club-exceptions\.fr\.1280|club-exceptions\.fr\.1366|club-exceptions\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
+  // club-erp: Sites link in the administration navigation; the demo bank charges no fee while fees are to be agreed (Rs 0, gross settlements).
+  { ids: /^(club-erp\.en\.1280|club-erp\.en\.1366|club-erp\.en\.1920|club-erp\.fr\.1280|club-erp\.fr\.1366|club-erp\.fr\.1920)$/, reason: "modules, sites and fees to be agreed (step 2)" },
 ];
