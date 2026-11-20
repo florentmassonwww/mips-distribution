@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { formatOverdueDays } from "../admin/clubLabels.ts";
 import { FINANCE_ROLES, useCurrentRole } from "../admin/roles.ts";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { DataTable } from "../shared/DataTable.tsx";
 import { useFeedback } from "../shared/Feedback.tsx";
@@ -30,14 +30,14 @@ export function Reminders() {
     ui.run(async () => {
       const run = await apiRequest<ReminderRun>("POST", "/api/club/reminders/run");
       ui.toast(
-        translate(
-          "{0} relance(s) envoyée(s) (niveaux 1 / 2 / 3 : {1} / {2} / {3}), {4} déjà faite(s).",
+        `${translateCount(
           run.sent,
+          "{0} relance envoyée (niveaux 1 / 2 / 3 : {1} / {2} / {3})",
+          "{0} relances envoyées (niveaux 1 / 2 / 3 : {1} / {2} / {3})",
           run.byLevel[1] ?? 0,
           run.byLevel[2] ?? 0,
           run.byLevel[3] ?? 0,
-          run.alreadySent,
-        ),
+        )}, ${translateCount(run.alreadySent, "{0} déjà faite.", "{0} déjà faites.")}`,
       );
       await reminders.reload();
     });

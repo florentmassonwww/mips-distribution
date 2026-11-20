@@ -1,7 +1,7 @@
 // The route open on the phone: sync bar, then the tabs (stops, catalogue, history, summary) or
 // one of the sub-screens (stop, delivery, sale, payment, receipt).
 import { useMemo, useState } from "react";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { localizeErrorMessage } from "../shared/errors.ts";
 import { useFeedback } from "../shared/Feedback.tsx";
 import { formatDate, formatDayLong, formatTime } from "../shared/format.ts";
@@ -106,7 +106,7 @@ export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
         <div>
           <strong>{network.online ? translate("En ligne") : translate("Hors ligne")}</strong>
           {" · "}
-          {pendingCount ? translate("{0} action(s) à synchroniser", pendingCount) : translate("tout est synchronisé")}
+          {pendingCount ? translateCount(pendingCount, "{0} action à synchroniser", "{0} actions à synchroniser") : translate("tout est synchronisé")}
           <div className="small">
             {syncing
               ? translate("Synchronisation…")
@@ -130,7 +130,11 @@ export function RouteScreen({ routeId, onLeave }: RouteScreenProps) {
       </div>
       {rejected.length > 0 && (
         <div className="notice err" role="alert">
-          {rejected.length} {translate("action(s) refusée(s) par le serveur : voir l'onglet Historique.")}
+          {translateCount(
+            rejected.length,
+            "{0} action refusée par le serveur : voir l'onglet Historique.",
+            "{0} actions refusées par le serveur : voir l'onglet Historique.",
+          )}
         </div>
       )}
       {view.name === "home" && (

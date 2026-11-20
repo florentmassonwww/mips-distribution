@@ -1,6 +1,6 @@
 // "Summary" tab: money and orders of the route, collections by method, vehicle stock, and the
 // route close (once everything is synced and every order delivered or declared not delivered).
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { useFeedback } from "../shared/Feedback.tsx";
 import { formatDate, formatMoney } from "../shared/format.ts";
@@ -66,8 +66,9 @@ export function RouteSummary({ routeId, online, pending, closed, onClosed }: Rou
                   {data.orders.delivered + data.orders.partial}/{data.orders.total}
                 </div>
                 <div className="hint">
-                  {data.orders.partial} {translate("partielle(s) ·")} {data.orders.refused} {translate("non livrée(s) ·")} {data.orders.routeSales}{" "}
-                  {translate("vente(s) sur place")}
+                  {translateCount(data.orders.partial, "{0} partielle", "{0} partielles")} ·{" "}
+                  {translateCount(data.orders.refused, "{0} non livrée", "{0} non livrées")} ·{" "}
+                  {translateCount(data.orders.routeSales, "{0} vente sur place", "{0} ventes sur place")}
                 </div>
               </div>
             </div>
@@ -121,8 +122,9 @@ export function RouteSummary({ routeId, online, pending, closed, onClosed }: Rou
             </div>
             {closed || data.route.status === "closed" ? (
               <div className="notice ok">
-                {translate("Tournée clôturée")}
-                {data.route.closed_at ? ` le ${formatDate(data.route.closed_at, true)}` : ""}.
+                {data.route.closed_at
+                  ? translate("Tournée clôturée le {0}.", formatDate(data.route.closed_at, true))
+                  : translate("Tournée clôturée.")}
               </div>
             ) : (
               <>
@@ -132,7 +134,11 @@ export function RouteSummary({ routeId, online, pending, closed, onClosed }: Rou
                 {blocked && (
                   <div className="small muted">
                     {pending > 0 ? translate("Synchronisez d'abord les actions en attente. ") : ""}
-                    {data.orders.toDeliver > 0 ? translate("{0} commande(s) restent à livrer ou à déclarer non livrées.", data.orders.toDeliver) : ""}
+                    {data.orders.toDeliver > 0 ? translateCount(
+                          data.orders.toDeliver,
+                          "{0} commande reste à livrer ou à déclarer non livrée.",
+                          "{0} commandes restent à livrer ou à déclarer non livrées.",
+                        ) : ""}
                   </div>
                 )}
               </>

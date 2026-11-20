@@ -2,7 +2,7 @@
 // transfers that could not be matched, online payments awaiting settlement, lines and statements.
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { StatusBadge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
@@ -67,7 +67,7 @@ export function ClubReconciliation() {
         content,
       });
       ui.toast(
-        translate("{0} ligne(s) rapprochée(s), {1} en exception, {2} déjà importée(s).", result.matched, result.exceptions, result.skipped),
+        `${translateCount(result.matched, "{0} ligne rapprochée", "{0} lignes rapprochées")}, ${translate("{0} en exception", result.exceptions)}, ${translateCount(result.skipped, "{0} déjà importée.", "{0} déjà importées.")}`,
       );
       setContent("");
       setFilename("");
