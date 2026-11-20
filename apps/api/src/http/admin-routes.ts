@@ -21,7 +21,7 @@ const settingsSchema = z.object({
   payments: z.object({
     methods: z.record(
       paymentMethodSchema,
-      z.object({ enabled: z.boolean(), feeBps: z.number().int().min(0).max(1e3), merchantRef: z.string().max(60) }),
+      z.object({ enabled: z.boolean(), feeBps: z.number().int().min(0).max(1e3).nullable(), merchantRef: z.string().max(60) }),
     ),
     settlementAccountLabel: z.string().max(120),
     attemptMinutes: z.number().int().min(1).max(60),

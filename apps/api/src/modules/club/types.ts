@@ -122,7 +122,7 @@ export interface ClubSettings extends ClubAccounting {
 export interface CompanySettings {
   payments: {
     attemptMinutes: number;
-    methods: { link: { enabled: boolean; merchantRef: string; feeBps: number } };
+    methods: { link: { enabled: boolean; merchantRef: string; feeBps: number | null } };
   };
   club: ClubSettings;
 }

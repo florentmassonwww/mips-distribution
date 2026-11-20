@@ -16,7 +16,7 @@ export function getReconciliation(db: Db, companyId: string): ReconciliationView
     ),
     lines: all(
       db,
-      `SELECT b.id, b.value_date, b.reference, b.label, b.gross_minor, b.fee_minor, b.net_minor, b.match_status, i.number AS invoice, p.fee_expected_minor, p.method
+      `SELECT b.id, b.value_date, b.reference, b.label, b.gross_minor, b.fee_minor, b.net_minor, b.match_status, i.number AS invoice, p.fee_expected_minor, p.fee_expected_known, p.method
     FROM bank_lines b LEFT JOIN payments p ON p.id = b.payment_id LEFT JOIN invoices i ON i.id = p.invoice_id WHERE b.company_id = ? ORDER BY b.rowid DESC LIMIT 300`,
       companyId,
     ),

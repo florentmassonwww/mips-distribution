@@ -107,7 +107,7 @@ export async function seedClub(db: Db, connectors: Connectors, now: Date = new D
       "SELECT provider_ref, amount_minor FROM member_payments WHERE company_id = ? AND method = 'link' AND status = 'confirmed' AND settlement_status = 'unsettled'",
       CLUB_COMPANY_ID,
     ).map(({ provider_ref, amount_minor }) => {
-      const fee = Math.round((amount_minor * feeBps) / 1e4);
+      const fee = feeBps === null ? 0 : Math.round((amount_minor * feeBps) / 1e4);
       return `${day};${provider_ref};REGLEMENT PAIEMENTS EN LIGNE;${formatMinor(amount_minor)};${formatMinor(fee)};${formatMinor(amount_minor - fee)}`;
     });
     transfers.forEach(([memberIndex, amount], index) =>

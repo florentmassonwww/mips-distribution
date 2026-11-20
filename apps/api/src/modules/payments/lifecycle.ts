@@ -43,21 +43,25 @@ export function touchPayment(db: Db, paymentId: string, now: Date): void {
   run(db, "UPDATE payments SET updated_at = ? WHERE id = ?", iso(now), paymentId);
 }
 
-/** Expected provider fee, rounded to the minor unit, on the full amount of the attempt. */
-export function expectedFee(amountMinor: number, feeBps: number): number {
-  return Math.round((amountMinor * feeBps) / 1e4);
+/**
+ * Expected provider fee, rounded to the minor unit, on the full amount of the attempt; 0 while the
+ * fee is to be agreed (`feeBps` null).
+ */
+export function expectedFee(amountMinor: number, feeBps: number | null): number {
+  return feeBps === null ? 0 : Math.round((amountMinor * feeBps) / 1e4);
 }
 
 /** Confirms the payment (provider proof only). False when it was already confirmed or refunded. */
 export function confirmPayment(db: Db, payment: PaymentRow, via: ConfirmationSource, actor: Actor, now: Date): boolean {
   if (payment.status === "confirmed" || payment.status === "refunded") return false;
-  const fee = expectedFee(payment.amount_minor, companySettings(db, payment.company_id).payments.methods[payment.method].feeBps);
+  const feeBps = companySettings(db, payment.company_id).payments.methods[payment.method].feeBps;
   run(
     db,
-    "UPDATE payments SET status = 'confirmed', confirmed_at = ?, confirmed_via = ?, fee_expected_minor = ?, failure_reason = NULL, verify_reason = NULL WHERE id = ?",
+    "UPDATE payments SET status = 'confirmed', confirmed_at = ?, confirmed_via = ?, fee_expected_minor = ?, fee_expected_known = ?, failure_reason = NULL, verify_reason = NULL WHERE id = ?",
     iso(now),
     via,
-    fee,
+    expectedFee(payment.amount_minor, feeBps),
+    Number(feeBps !== null),
     payment.id,
   );
   touchPayment(db, payment.id, now);

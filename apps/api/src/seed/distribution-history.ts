@@ -15,7 +15,7 @@ import { resolveException } from "../modules/distribution/exceptions.ts";
 import { type CreateOrderInput as OrderInput, createOrder, setOrderStatus } from "../modules/distribution/orders.ts";
 import { type PaymentMethod, defaultCompanySettings as defaultSettings } from "../modules/distribution/settings.ts";
 import { closeDay, generateDemoStatement as demoBankStatement, importStatement as importBankStatement, syncAccountingEntries as syncErp } from "../modules/finance/index.ts";
-import { initiatePayment as requestPayment, processNotification as handleNotification } from "../modules/payments/index.ts";
+import { expectedFee, initiatePayment as requestPayment, processNotification as handleNotification } from "../modules/payments/index.ts";
 import { CUSTOMERS, PRODUCTS } from "./catalog.ts";
 import { productIdOf, providerRef, seedActor } from "./companies.ts";
 
@@ -217,7 +217,7 @@ export async function seedDistributionHistory(db: Db, connectors: Connectors, no
 
   const juiceRef = get<{ provider_ref: string }>(db, "SELECT provider_ref FROM payments WHERE invoice_id = ?", corailSale.invoiceId)!
     .provider_ref;
-  const juiceFee = Math.round((corailSale.amountMinor * defaultSettings().payments.methods.juice.feeBps) / 1e4);
+  const juiceFee = expectedFee(corailSale.amountMinor, defaultSettings().payments.methods.juice.feeBps);
   importBankStatement(
     db,
     connectors,

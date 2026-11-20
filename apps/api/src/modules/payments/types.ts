@@ -23,6 +23,8 @@ export interface PaymentRow {
   failure_reason: string | null;
   verify_reason: string | null;
   fee_expected_minor: number;
+  /** 0 when the fee was to be agreed at confirmation: fee_expected_minor (0) is then not an expectation. */
+  fee_expected_known: number;
   fee_actual_minor: number | null;
   settlement_status: "unsettled" | "settled";
   settled_at: string | null;

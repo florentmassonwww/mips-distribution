@@ -34,7 +34,7 @@ export function listJournal(db: Db, companyId: string, filters: JournalFilters =
   return all(
     db,
     `SELECT p.id, p.created_at, p.updated_at, p.confirmed_at, p.settled_at, p.method, p.amount_minor, p.refunded_minor, p.currency, p.status, p.settlement_status,
-      p.provider_ref, p.failure_reason, p.verify_reason, p.confirmed_via, p.fee_expected_minor, p.fee_actual_minor,
+      p.provider_ref, p.failure_reason, p.verify_reason, p.confirmed_via, p.fee_expected_minor, p.fee_expected_known, p.fee_actual_minor,
       i.number AS invoice, i.id AS invoice_id, o.number AS order_number, o.id AS order_id, c.name AS customer, u.name AS agent, co.name AS company
     FROM payments p JOIN invoices i ON i.id = p.invoice_id JOIN orders o ON o.id = p.order_id JOIN customers c ON c.id = i.customer_id
     JOIN companies co ON co.id = p.company_id LEFT JOIN users u ON u.id = p.agent_id
