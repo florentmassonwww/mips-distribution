@@ -6,14 +6,16 @@ import { apiRequest } from "../shared/api.ts";
 import { roleLabel } from "../shared/labels.ts";
 import { LanguageToggle } from "../shared/LanguageToggle.tsx";
 import { useSession } from "../shared/session.ts";
-import { CLUB_NAV, DISTRIBUTION_NAV, EXACT_MATCH_PATHS } from "./areas.ts";
+import { isClubOnly } from "../shared/modules.ts";
+import { EXACT_MATCH_PATHS, navigationFor } from "./areas.ts";
 import { RequireRole, type RequireRoleProps } from "./RequireRole.tsx";
 
-export function AreaLayout({ roles, children, vertical }: RequireRoleProps & { children: ReactNode }) {
+export function AreaLayout({ roles, children, module }: RequireRoleProps & { children: ReactNode }) {
   const { session, refresh } = useSession();
   const navigate = useNavigate();
   const user = session.user;
-  const isClub = user?.vertical === "club";
+  // The brand follows the area; outside a module area (administration), the company's modules.
+  const isClub = module ? module === "club" : isClubOnly(user?.modules);
 
   // "Switch profile": sign out, then back to the demo profile list.
   const switchProfile = async () => {
@@ -23,7 +25,7 @@ export function AreaLayout({ roles, children, vertical }: RequireRoleProps & { c
   };
 
   return (
-    <RequireRole roles={roles} vertical={vertical}>
+    <RequireRole roles={roles} module={module}>
       {user && (
         <div className="shell">
           <aside className="side noprint">
@@ -32,7 +34,7 @@ export function AreaLayout({ roles, children, vertical }: RequireRoleProps & { c
               <small>{user.companyName ?? translate("Plateforme SaaS")}</small>
             </div>
             <nav aria-label={translate("Navigation principale")}>
-              {((isClub ? CLUB_NAV : DISTRIBUTION_NAV)[user.role] ?? []).map(([title, links]) => (
+              {navigationFor(user.role, user.modules).map(([title, links]) => (
                 <div className="group" key={title}>
                   <span>{title}</span>
                   {links.map(([path, label]) => (
@@ -47,7 +49,7 @@ export function AreaLayout({ roles, children, vertical }: RequireRoleProps & { c
               <div>
                 {user.name}
                 <br />
-                {roleLabel(user.role, user.vertical)}
+                {roleLabel(user.role, user.modules)}
               </div>
               <button className="sm ghost" onClick={switchProfile}>
                 {translate("Changer de profil")}

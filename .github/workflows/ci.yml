@@ -20,9 +20,12 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:i18n
       - run: npm run test:api
+      - run: npm run test:api-unit
       - run: npx playwright install --with-deps chromium
       - run: npm run test:reference
       - run: npm run build
       # The full comparison (4 widths, 288 screenshots) runs locally with npm run test:visual;
       # CI checks the narrowest and a laptop width to stay within its time budget.
       - run: node --no-warnings tests/visual/run.mjs --widths=1366,390
+      # Browser checks of modules, sites and fees to be agreed (1366 and 390 px, EN and FR).
+      - run: node --no-warnings tests/e2e/check.mjs

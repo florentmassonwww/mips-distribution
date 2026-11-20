@@ -18,8 +18,11 @@ export interface JournalEntry {
   verify_reason: string | null;
   settlement_status: string;
   fee_expected_minor: number;
+  /** 0 when the fee was to be agreed: fee_expected_minor (0) is then not an expectation. */
+  fee_expected_known: number;
   fee_actual_minor: number | null;
   provider_ref: string | null;
+  confirmed_at: string | null;
 }
 
 export interface Invoice {
@@ -56,6 +59,8 @@ export interface ReconciliationData {
     gross_minor: number;
     fee_minor: number;
     fee_expected_minor: number | null;
+    /** 0 when the matched payment's fee is to be agreed; null for an unmatched line. */
+    fee_expected_known: number | null;
     net_minor: number;
     match_status: string;
     invoice: string | null;

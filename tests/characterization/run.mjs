@@ -4,8 +4,9 @@
 //   node tests/characterization/run.mjs --only=<name>   run matching scenarios only
 //   node tests/characterization/run.mjs --print         print transcripts instead of comparing
 //   node tests/characterization/run.mjs --target=api    run against the rebuilt server (apps/api)
-// The target is the compiled v0.1.0 reference (reference/v0.1.0). Step 1 adds the rebuilt server
-// as a second target: the same golden files must then pass unchanged.
+// The target is the compiled v0.1.0 reference (reference/v0.1.0). The rebuilt server is a second
+// target: it is compared with the same golden files, after the intended changes listed in
+// evolutions.mjs are applied to them (the golden files themselves are never modified).
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,6 +15,7 @@ import { launchReference } from "./lib/reference-client.mjs";
 import { launchApi } from "./lib/api-client.mjs";
 import { createApi } from "./lib/api.mjs";
 import { scenarios } from "./scenarios/index.mjs";
+import { evolutionsFor, evolveTranscript } from "./evolutions.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const goldenDir = path.join(here, "golden");
@@ -89,11 +91,14 @@ try {
       continue;
     }
     const golden = JSON.parse(fs.readFileSync(file, "utf8"));
+    const evolutions = target === "api" ? evolutionsFor(s.name) : [];
+    if (evolutions.length) golden.transcript = evolveTranscript(s.name, golden.transcript);
     const diff = firstDiff(record, golden);
+    const note = evolutions.length ? `, evolutions: ${evolutions.map((e) => e.id).join(", ")}` : "";
     if (diff) {
       failed++;
-      console.log(`✗ ${s.name}\n    ${diff}`);
-    } else console.log(`✓ ${s.name} (${api.transcript.length} steps)`);
+      console.log(`✗ ${s.name}${note}\n    ${diff}`);
+    } else console.log(`✓ ${s.name} (${api.transcript.length} steps${note})`);
   }
 } finally {
   await ref.close();

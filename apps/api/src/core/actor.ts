@@ -1,4 +1,5 @@
 // Who performs an action: a signed-in user, a public member link, or the system itself.
+import type { ModuleCode } from "./modules.ts";
 
 export type Role = "platform_admin" | "company_admin" | "dispatcher" | "finance" | "agent";
 
@@ -17,7 +18,8 @@ export interface SessionUser extends Actor {
   companyId: string | null;
   companyName: string | null;
   companyStatus: string | null;
-  vertical: "distribution" | "club" | null;
+  /** Active modules of the user's company, in catalogue order (none for the platform team). */
+  modules: ModuleCode[];
 }
 
 /** Actor of automatic actions (provider notifications, scheduled runs, seed). */

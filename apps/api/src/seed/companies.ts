@@ -1,6 +1,7 @@
 // Demo distribution companies: company row, users, catalogue, warehouse stock and customers.
 import { type Db, get, run } from "../core/db.ts";
-import type { Actor } from "../core/actor.ts";
+import { type Actor, SYSTEM_ACTOR } from "../core/actor.ts";
+import { setCompanyModules } from "../core/modules.ts";
 import { addDays, iso } from "../core/time.ts";
 import { defaultCompanySettings as defaultSettings } from "../modules/distribution/settings.ts";
 import { CUSTOMERS, PRODUCTS, type CustomerSpec, type ProductSpec, type UserSpec } from "./catalog.ts";
@@ -17,7 +18,10 @@ export interface CompanySeed {
   customers?: readonly CustomerSpec[];
 }
 
-/** Inserts a distribution company with its users, products (and stock), key-account price list and customers. */
+/**
+ * Inserts a distribution company (Distribution module, one depot) with its users, products (and
+ * stock), key-account price list and customers. Fixed identifiers only: no random draw.
+ */
 export function seedCompany(db: Db, company: CompanySeed, now: Date): void {
   const { id: companyId, slug, products = PRODUCTS, customers = CUSTOMERS } = company;
   run(
@@ -30,6 +34,16 @@ export function seedCompany(db: Db, company: CompanySeed, now: Date): void {
     company.subscriptionStatus,
     iso(addDays(now, 30)),
     JSON.stringify(defaultSettings()),
+    iso(now),
+  );
+  setCompanyModules(db, companyId, ["distribution"], SYSTEM_ACTOR.id, now);
+  run(
+    db,
+    "INSERT INTO sites (id, company_id, type, code, name, created_at) VALUES (?,?,'depot',?,?,?)",
+    `site_${slug}_dep-01`,
+    companyId,
+    "DEP-01",
+    "Dépôt central (démo)",
     iso(now),
   );
   for (const [key, name, role] of company.users) {

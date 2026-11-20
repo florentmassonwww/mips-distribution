@@ -2,7 +2,7 @@
 //
 // Hono matches middleware and handlers in registration order, so the order of the calls below is
 // part of the behaviour: the CSRF/no-store and access-gate middleware come first, the
-// distribution-only guards come before the routes they protect, and the /api/* catch-all is last.
+// Distribution module guards come before the routes they protect, and the /api/* catch-all is last.
 import { Hono } from "hono";
 import type { Db } from "../core/db.ts";
 import { notFound } from "../core/errors.ts";
@@ -27,7 +27,7 @@ import { registerPlatformRoutes } from "./platform-routes.ts";
 
 export type { AppConfig } from "./context.ts";
 
-/** Areas reserved to distribution companies: club users get 403 `wrong_vertical` there. */
+/** Areas of the Distribution module: users of a company without it get 403 `module_not_enabled`. */
 const DISTRIBUTION_PATHS = [
   "/api/agent/*",
   "/api/centrale/*",
@@ -66,7 +66,8 @@ export function createApp(db: Db, config: AppConfig, connectors: Connectors, now
   if (config.demoMode) registerDemoRoutes(app, deps);
   registerPublicPaymentRoutes(app, deps);
 
-  for (const path of DISTRIBUTION_PATHS) app.use(path, deps.session.distributionOnly);
+  const distributionModule = deps.session.requireModule("distribution");
+  for (const path of DISTRIBUTION_PATHS) app.use(path, distributionModule);
   registerAgentRoutes(app, deps);
   registerPaymentRoutes(app, deps);
   registerCentraleRoutes(app, deps);

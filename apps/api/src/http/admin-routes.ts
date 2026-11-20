@@ -1,10 +1,12 @@
-// Company administration: users, settings and the company's audit log.
+// Company administration: users, settings, sites and the company's audit log.
 import { z } from "zod";
 import type { Context } from "hono";
 import { type Db, all, get, run, transaction } from "../core/db.ts";
 import { recordAudit } from "../core/audit.ts";
 import { ApiError, notFound } from "../core/errors.ts";
 import { newId } from "../core/ids.ts";
+import { companyModules } from "../core/modules.ts";
+import { createSite, listSites, newSiteSchema, siteChangesSchema, updateSite } from "../core/sites.ts";
 import { iso } from "../core/time.ts";
 import { type CompanySettings, type PaymentMethod, readCompanySettings as companySettings } from "../modules/distribution/settings.ts";
 import { type App, type AppDeps, companyOf, paymentMethodSchema, readJson, routeParam } from "./context.ts";
@@ -19,7 +21,7 @@ const settingsSchema = z.object({
   payments: z.object({
     methods: z.record(
       paymentMethodSchema,
-      z.object({ enabled: z.boolean(), feeBps: z.number().int().min(0).max(1e3), merchantRef: z.string().max(60) }),
+      z.object({ enabled: z.boolean(), feeBps: z.number().int().min(0).max(1e3).nullable(), merchantRef: z.string().max(60) }),
     ),
     settlementAccountLabel: z.string().max(120),
     attemptMinutes: z.number().int().min(1).max(60),
@@ -143,11 +145,14 @@ export function registerAdminRoutes(app: App, deps: AppDeps): void {
   app.get("/api/admin/settings", adminOnly, (c) =>
     c.json({
       settings: companySettings(db, companyOf(c)),
-      subscription: get(
-        db,
-        "SELECT name, slug, plan, subscription_status, subscription_renews_at, status, currency, vertical FROM companies WHERE id = ?",
-        companyOf(c),
-      ),
+      subscription: {
+        ...get<Record<string, unknown>>(
+          db,
+          "SELECT name, slug, plan, subscription_status, subscription_renews_at, status, currency FROM companies WHERE id = ?",
+          companyOf(c),
+        ),
+        modules: companyModules(db, companyOf(c)),
+      },
     }),
   );
 
@@ -182,6 +187,17 @@ export function registerAdminRoutes(app: App, deps: AppDeps): void {
     });
     return c.json({ ok: true });
   });
+
+  // Sites of the company (stores, warehouses, depots).
+  app.get("/api/admin/sites", adminOnly, (c) => c.json(listSites(db, companyOf(c))));
+
+  app.post("/api/admin/sites", adminOnly, async (c) =>
+    c.json(createSite(db, c.get("user"), companyOf(c), await readJson(c, newSiteSchema), now())),
+  );
+
+  app.patch("/api/admin/sites/:id", adminOnly, async (c) =>
+    c.json(updateSite(db, c.get("user"), companyOf(c), routeParam(c), await readJson(c, siteChangesSchema), now())),
+  );
 
   app.get("/api/admin/audit", adminOnly, (c) => auditLogResponse(c, db, companyOf(c)));
 }

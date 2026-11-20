@@ -10,11 +10,13 @@ import { useApi } from "../shared/hooks.ts";
 import { PAYMENT_CHANNEL } from "../shared/labels.ts";
 import { Card, PageHeader } from "../shared/Layout.tsx";
 import { QueryView } from "../shared/QueryView.tsx";
+import { hasModule, inCatalogueOrder, isClubOnly, MODULE_LABEL } from "../shared/modules.ts";
 import { useSession } from "../shared/session.ts";
 
 interface PaymentMethodSettings {
   enabled: boolean;
-  feeBps: number;
+  /** Provider fee in basis points; null while it is to be agreed with the provider. */
+  feeBps: number | null;
   merchantRef: string;
 }
 
@@ -50,6 +52,8 @@ interface SettingsResponse {
     plan: string;
     subscription_status: string;
     subscription_renews_at: string | null;
+    /** Enabled modules, in catalogue order. */
+    modules: string[];
   };
 }
 
@@ -83,6 +87,10 @@ type ClubDayField = number | "dueDays" | "flagAfterDays" | "denyAfterDays";
 
 type SetSettings = Dispatch<SetStateAction<CompanySettings | null>>;
 
+/** Fee typed in basis points: empty means "to be agreed" (null); otherwise a whole number of 0 to 1000. */
+const parseFeeBps = (value: string): number | null =>
+  value.trim() === "" ? null : Math.max(0, Math.min(1000, Math.trunc(Number(value) || 0)));
+
 const CAPABILITY_LABELS: Record<string, string> = {
   onSite: translate("sur place"),
   remote: translate("à distance"),
@@ -95,7 +103,10 @@ export function SettingsPage() {
   const ui = useFeedback();
   const settingsQuery = useApi<SettingsResponse>("/api/admin/settings");
   const connectorsQuery = useApi<Connectors>("/api/connectors");
-  const isClub = useSession().session.user?.vertical === "club";
+  const modules = useSession().session.user?.modules ?? [];
+  const hasClub = hasModule(modules, "club");
+  // A club alone collects through payment links only; with Distribution, every method is shown.
+  const linksOnly = isClubOnly(modules);
   const [amounts, setAmounts] = useState<AmountDrafts | null>(null);
   // The form is initialised once from the server, then edited locally until saved.
   useEffect(() => {
@@ -120,8 +131,8 @@ export function SettingsPage() {
             gate: { ...current.club.gate, minAmountMinor: parseMoney(drafts.gate) ?? 0 },
           }
         : undefined;
-      // Club rules are sent by club companies only; the server merges them into the stored settings.
-      await apiRequest("PUT", "/api/admin/settings", { payments: current.payments, erp: current.erp, ...(isClub ? { club } : {}) });
+      // Club rules are sent by companies with the Club module only; the server merges them into the stored settings.
+      await apiRequest("PUT", "/api/admin/settings", { payments: current.payments, erp: current.erp, ...(hasClub ? { club } : {}) });
       await settingsQuery.reload();
     }, translate("Paramètres enregistrés."));
 
@@ -133,16 +144,16 @@ export function SettingsPage() {
           settings ? (
             <div className="stack">
               <SubscriptionCard subscription={data.subscription} />
-              <PaymentMethodsCard settings={settings} setSettings={setSettings} connectors={connectorsQuery.data} isClub={isClub} />
+              <PaymentMethodsCard settings={settings} setSettings={setSettings} connectors={connectorsQuery.data} linksOnly={linksOnly} />
               <SettlementCard settings={settings} setSettings={setSettings} />
-              {isClub && amounts && (
+              {hasClub && amounts && (
                 <ClubRulesCard settings={settings} setSettings={setSettings} amounts={amounts} setAmounts={setAmounts} />
               )}
               <ErpCard settings={settings} setSettings={setSettings} />
               <div>
                 <button onClick={() => save(settings, amounts)}>{translate("Enregistrer les paramètres")}</button>
               </div>
-              <QueryView q={connectorsQuery}>{(connectors) => <ConnectorsCard connectors={connectors} isClub={isClub} />}</QueryView>
+              <QueryView q={connectorsQuery}>{(connectors) => <ConnectorsCard connectors={connectors} linksOnly={linksOnly} gate={hasClub} />}</QueryView>
             </div>
           ) : null
         }
@@ -164,6 +175,20 @@ function SubscriptionCard({ subscription }: { subscription: SettingsResponse["su
           <Badge kind="info">{translate(subscription.plan)}</Badge> {translate("· état :")} {translate(subscription.subscription_status)}{" "}
           {translate("· échéance :")} {formatDate(subscription.subscription_renews_at)}
         </dd>
+        <dt>{translate("Modules")}</dt>
+        <dd>
+          {subscription.modules.length === 0 ? (
+            <span className="muted">{translate("Aucun module activé : seules l'administration et l'audit restent accessibles.")}</span>
+          ) : (
+            inCatalogueOrder(subscription.modules).map((module, index) => (
+              <span key={module}>
+                {index > 0 && " "}
+                <Badge kind="info">{MODULE_LABEL[module]}</Badge>
+              </span>
+            ))
+          )}{" "}
+          <span className="small muted">{translate("· tarif à convenir · activés depuis l'espace plateforme")}</span>
+        </dd>
         <dt>{translate("Facturation")}</dt>
         <dd className="muted">{translate("Fictive : aucun prix ni prélèvement n'est défini. La formule se modifie depuis l'espace plateforme.")}</dd>
       </dl>
@@ -175,10 +200,11 @@ interface PaymentMethodsCardProps {
   settings: CompanySettings;
   setSettings: SetSettings;
   connectors: Connectors | null;
-  isClub: boolean;
+  /** Only the payment link is offered (a club without the Distribution module). */
+  linksOnly: boolean;
 }
 
-function PaymentMethodsCard({ settings, setSettings, connectors, isClub }: PaymentMethodsCardProps) {
+function PaymentMethodsCard({ settings, setSettings, connectors, linksOnly }: PaymentMethodsCardProps) {
   const updateMethod = (method: string, patch: Partial<PaymentMethodSettings>) =>
     setSettings((current) => {
       if (!current) return current;
@@ -189,7 +215,7 @@ function PaymentMethodsCard({ settings, setSettings, connectors, isClub }: Payme
       };
     });
   // A club only collects through payment links.
-  const methods = Object.entries(settings.payments.methods).filter(([method]) => !isClub || method === "link");
+  const methods = Object.entries(settings.payments.methods).filter(([method]) => !linksOnly || method === "link");
   return (
     <Card title={translate("Moyens de paiement")} flush>
       <div className="table-wrap">
@@ -222,17 +248,19 @@ function PaymentMethodsCard({ settings, setSettings, connectors, isClub }: Payme
                     />
                   </td>
                   <td>
+                    {/* Empty: the fee is to be agreed with the provider (null); no figure is assumed. */}
                     <input
                       type="number"
                       min={0}
                       max={1000}
-                      value={methodSettings.feeBps}
-                      onChange={(event) => updateMethod(method, { feeBps: Math.trunc(Number(event.target.value) || 0) })}
+                      value={methodSettings.feeBps ?? ""}
+                      onChange={(event) => updateMethod(method, { feeBps: parseFeeBps(event.target.value) })}
                       aria-label={translate("Frais {0}", label)}
+                      aria-describedby={`fee-${method}`}
                       style={{ width: 110 }}
                     />{" "}
-                    <span className="small muted">
-                      = {(methodSettings.feeBps / 100).toFixed(2)} %
+                    <span className="small muted" id={`fee-${method}`}>
+                      {methodSettings.feeBps === null ? translate("à convenir") : `= ${(methodSettings.feeBps / 100).toFixed(2)} %`}
                     </span>
                   </td>
                   <td>
@@ -425,13 +453,13 @@ function ErpCard({ settings, setSettings }: { settings: CompanySettings; setSett
   );
 }
 
-function ConnectorsCard({ connectors, isClub }: { connectors: Connectors; isClub: boolean }) {
+function ConnectorsCard({ connectors, linksOnly, gate }: { connectors: Connectors; linksOnly: boolean; gate: boolean }) {
   // A club uses payment links, the bank, the ERP and the gate; a distributor every payment method.
   const shown = [
-    ...connectors.payments.filter((connector) => !isClub || connector.method === "link"),
+    ...connectors.payments.filter((connector) => !linksOnly || connector.method === "link"),
     connectors.bank,
     connectors.erp,
-    ...(isClub ? [connectors.access] : []),
+    ...(gate ? [connectors.access] : []),
   ];
   return (
     <Card title={translate("Connecteurs : capacités à vérifier auprès de chaque prestataire")}>

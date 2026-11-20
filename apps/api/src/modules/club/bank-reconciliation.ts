@@ -35,7 +35,7 @@ const payerName = (name: string): string => name.replace(/\s*\(.*\)$/, "").split
 
 /**
  * Demo statement for today: the settlement of every unsettled online payment (provider fee at the
- * configured rate), then transfers from the four oldest debtors showing each matching case: exact
+ * configured rate, none while it is to be agreed), then transfers from the four oldest debtors showing each matching case: exact
  * reference, compact reference with a partial amount, wrong check digits, no reference at all.
  */
 export function demoStatement(db: Db, companyId: string, now: Date = new Date()): string {
@@ -47,7 +47,7 @@ export function demoStatement(db: Db, companyId: string, now: Date = new Date())
     companyId,
   );
   const lines = settlements.map((payment) => {
-    const fee = Math.round((payment.amount_minor * feeBps) / 1e4);
+    const fee = feeBps === null ? 0 : Math.round((payment.amount_minor * feeBps) / 1e4);
     return [
       day,
       payment.provider_ref,

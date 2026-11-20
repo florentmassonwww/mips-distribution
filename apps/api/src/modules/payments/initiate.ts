@@ -73,8 +73,8 @@ function createAttempt(
   const paymentId = newId("pay");
   run(
     db,
-    `INSERT INTO payments (id, company_id, invoice_id, order_id, agent_id, method, amount_minor, currency, status, idempotency_key, link_token, created_at, updated_at, expires_at)
-      VALUES (?,?,?,?,?,?,?,?,'pending',?,?,?,?,?)`,
+    `INSERT INTO payments (id, company_id, invoice_id, order_id, agent_id, method, amount_minor, currency, status, idempotency_key, link_token, fee_expected_known, created_at, updated_at, expires_at)
+      VALUES (?,?,?,?,?,?,?,?,'pending',?,?,?,?,?,?)`,
     paymentId,
     companyId,
     invoice.id,
@@ -85,6 +85,8 @@ function createAttempt(
     invoice.currency,
     input.idempotencyKey,
     input.method === "link" ? newToken() : null,
+    // Set again at confirmation, with the fee then in force.
+    Number(settings.payments.methods[input.method].feeBps !== null),
     iso(now),
     iso(now),
     iso(expiresAt),

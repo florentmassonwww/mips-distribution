@@ -8,6 +8,7 @@ import {
   BANK_SETTLEMENT_STATUS,
   CONFIRMATION_SOURCE,
   ERP_SYNC_STATUS,
+  FEE_TO_BE_AGREED,
   INVOICE_STATUS,
   ORDER_STATUS,
   PAYMENT_CHANNEL,
@@ -238,7 +239,13 @@ export function OrderChain({ back }: OrderChainProps) {
                         payment.fee_actual_minor === null ? (
                           payment.status === `confirmed` ? (
                             <span className="muted">
-                              {formatMoney(payment.fee_expected_minor)} {translate(`attendu`)}
+                              {payment.fee_expected_known ? (
+                                <>
+                                  {formatMoney(payment.fee_expected_minor)} {translate(`attendu`)}
+                                </>
+                              ) : (
+                                FEE_TO_BE_AGREED
+                              )}
                             </span>
                           ) : (
                             `—`
@@ -246,10 +253,14 @@ export function OrderChain({ back }: OrderChainProps) {
                         ) : (
                           <>
                             {formatMoney(payment.fee_actual_minor)}
-                            {payment.fee_actual_minor !== payment.fee_expected_minor && (
-                              <div className="small muted">
-                                {translate(`attendu`)} {formatMoney(payment.fee_expected_minor)}
-                              </div>
+                            {!payment.fee_expected_known ? (
+                              <div className="small muted">{translate(`frais attendus à convenir`)}</div>
+                            ) : (
+                              payment.fee_actual_minor !== payment.fee_expected_minor && (
+                                <div className="small muted">
+                                  {translate(`attendu`)} {formatMoney(payment.fee_expected_minor)}
+                                </div>
+                              )
                             )}
                           </>
                         ),

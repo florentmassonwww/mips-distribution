@@ -18,7 +18,8 @@ export const isClubOutlet = (value: string): value is ClubOutlet => (CLUB_OUTLET
 
 export interface PaymentMethodSettings {
   enabled: boolean;
-  feeBps: number;
+  /** Provider fee in basis points (0 to 1000); null while it is still to be agreed. */
+  feeBps: number | null;
   merchantRef: string;
 }
 
@@ -66,16 +67,14 @@ interface StoredSettings {
   };
 }
 
-/** Demonstration fees per method, in basis points. */
-const DEFAULT_FEE_BPS: Record<PaymentMethod, number> = { paystation: 100, card_tpe: 175, juice: 90, link: 150 };
-
 export function defaultCompanySettings(): CompanySettings {
   return {
     payments: {
       methods: Object.fromEntries(
         PAYMENT_METHODS.map((method) => [
           method,
-          { enabled: true, feeBps: DEFAULT_FEE_BPS[method], merchantRef: `DEMO-${method.toUpperCase()}` },
+          // Fees are to be agreed with each provider until the company sets them.
+          { enabled: true, feeBps: null, merchantRef: `DEMO-${method.toUpperCase()}` },
         ]),
       ) as Record<PaymentMethod, PaymentMethodSettings>,
       settlementAccountLabel: "Compte courant MCB du distributeur (libellé de démonstration)",

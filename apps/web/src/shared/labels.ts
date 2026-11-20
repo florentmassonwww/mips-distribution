@@ -1,6 +1,7 @@
 // Display labels of the API's enumerations. Status maps give [label, badge kind] for StatusBadge.
 // Labels are translated once at startup (the language never changes without a reload).
 import { translate } from "../i18n/translate.ts";
+import { isClubOnly } from "./modules.ts";
 import type { BadgeKind } from "./Badge.tsx";
 
 export type StatusEntry = readonly [label: string, kind: BadgeKind];
@@ -104,6 +105,9 @@ export const CONFIRMATION_SOURCE: LabelMap = {
   manual_assignment: translate("affectation par la comptabilité"),
 };
 
+/** Shown instead of an expected fee while the provider's fee is to be agreed: no figure is assumed. */
+export const FEE_TO_BE_AGREED = translate("à convenir");
+
 /** A club names the same roles after its own departments. */
 const CLUB_ROLE: LabelMap = {
   company_admin: translate("Direction du club"),
@@ -112,9 +116,9 @@ const CLUB_ROLE: LabelMap = {
   agent: translate("Accueil et barrière"),
 };
 
-/** Role label for the company's business ("club" or distribution); unknown roles shown as is. */
-export const roleLabel = (role: string, vertical?: string | null): string =>
-  (vertical === "club" ? CLUB_ROLE[role] : undefined) ?? ROLE[role] ?? role;
+/** Role label for the company's modules (club names for a club alone); unknown roles shown as is. */
+export const roleLabel = (role: string, modules?: readonly string[] | null): string =>
+  (isClubOnly(modules) ? CLUB_ROLE[role] : undefined) ?? ROLE[role] ?? role;
 
 export const MEMBER_STATUS: StatusMap = {
   active: [translate("Actif"), "ok"],

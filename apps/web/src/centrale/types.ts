@@ -128,6 +128,8 @@ export interface OrderChainData {
     settlement_status: string;
     settled_at: string | null;
     fee_expected_minor: number;
+    /** 0 when the fee was to be agreed: fee_expected_minor (0) is then not an expectation. */
+    fee_expected_known: number;
     fee_actual_minor: number | null;
     provider_ref: string | null;
     agent: string | null;

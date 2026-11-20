@@ -183,7 +183,7 @@ export function orderChain(db: Db, companyId: string, orderId: string) {
     ? all<Row & { id: string }>(
         db,
         `SELECT p.id, p.method, p.amount_minor, p.refunded_minor, p.status, p.provider_ref, p.created_at, p.confirmed_at, p.confirmed_via, p.failure_reason, p.verify_reason,
-    p.settlement_status, p.settled_at, p.fee_expected_minor, p.fee_actual_minor, u.name AS agent FROM payments p LEFT JOIN users u ON u.id = p.agent_id WHERE p.invoice_id = ? ORDER BY p.created_at`,
+    p.settlement_status, p.settled_at, p.fee_expected_minor, p.fee_expected_known, p.fee_actual_minor, u.name AS agent FROM payments p LEFT JOIN users u ON u.id = p.agent_id WHERE p.invoice_id = ? ORDER BY p.created_at`,
         invoice.id,
       )
     : [];

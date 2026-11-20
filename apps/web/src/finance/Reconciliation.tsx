@@ -105,8 +105,12 @@ export function Reconciliation() {
                       <>
                         {formatMoney(line.fee_minor)}
                         {/* Fee deducted by the bank differs from the provider's tariff. */}
+                        {line.fee_expected_minor !== null && line.match_status === `matched` && line.fee_expected_known === 0 && (
+                          <div className="small muted">{translate(`frais attendus à convenir`)}</div>
+                        )}
                         {line.fee_expected_minor !== null &&
                           line.match_status === `matched` &&
+                          line.fee_expected_known !== 0 &&
                           line.fee_expected_minor !== line.fee_minor && (
                             <div>
                               <Badge kind="warn">

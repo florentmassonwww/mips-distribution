@@ -20,7 +20,7 @@ const ANOMALY_EXTRA_FEE_MINOR = 500;
 
 /**
  * Demo statement (CSV) that settles the company's confirmed, unsettled payments today, with the
- * expected fees. With `withAnomalies` (and at least 3 payments): a fee variance on the first
+ * expected fees (none while a fee is to be agreed). With `withAnomalies` (and at least 3 payments): a fee variance on the first
  * line, a short credit on the second, and a credit without reference.
  */
 export function generateDemoStatement(db: Db, companyId: string, withAnomalies: boolean, now: Date = new Date()): string {
@@ -138,10 +138,14 @@ function matchLine(
 
   settlePayment(db, payment, { id: bankLineId, feeMinor: line.feeMinor, valueDate: line.valueDate }, user, now);
   // Read after settlement: a payment confirmed by this very line just got its expected fee.
-  const expectedFeeMinor = get<{ fee_expected_minor: number }>(db, "SELECT fee_expected_minor FROM payments WHERE id = ?", payment.id)!
-    .fee_expected_minor;
-  // A fee variance does not prevent the match.
-  if (line.feeMinor !== expectedFeeMinor) {
+  const expected = get<{ fee_expected_minor: number; fee_expected_known: number }>(
+    db,
+    "SELECT fee_expected_minor, fee_expected_known FROM payments WHERE id = ?",
+    payment.id,
+  )!;
+  const expectedFeeMinor = expected.fee_expected_minor;
+  // A fee variance does not prevent the match. A fee still to be agreed has no expected amount.
+  if (expected.fee_expected_known && line.feeMinor !== expectedFeeMinor) {
     openException(
       db,
       companyId,

@@ -2,6 +2,7 @@
 import { Link, Route, Routes } from "react-router-dom";
 import { AuditLogPage } from "../admin/AuditLog.tsx";
 import { SettingsPage } from "../admin/Settings.tsx";
+import { SitesPage } from "../admin/Sites.tsx";
 import { UsersPage } from "../admin/Users.tsx";
 import { Dashboard } from "../centrale/Dashboard.tsx";
 import { OrderChain } from "../centrale/OrderChain.tsx";
@@ -57,7 +58,7 @@ export function AppRoutes() {
             <Route
               path="/club/accueil"
               element={
-                <RequireRole roles={["agent", "dispatcher", "company_admin"]} vertical="club">
+                <RequireRole roles={["agent", "dispatcher", "company_admin"]} module="club">
                   <FrontDesk />
                 </RequireRole>
               }
@@ -65,7 +66,7 @@ export function AppRoutes() {
             <Route
               path="/club/*"
               element={
-                <AreaLayout roles={BACK_OFFICE_ROLES} vertical="club">
+                <AreaLayout roles={BACK_OFFICE_ROLES} module="club">
                   <Routes>
                     <Route index element={<ClubDashboard />} />
                     <Route path="membres" element={<Members />} />
@@ -85,7 +86,7 @@ export function AppRoutes() {
             <Route
               path="/terrain"
               element={
-                <RequireRole roles={["agent"]} vertical="distribution">
+                <RequireRole roles={["agent"]} module="distribution">
                   <FieldApp />
                 </RequireRole>
               }
@@ -93,7 +94,7 @@ export function AppRoutes() {
             <Route
               path="/centrale/*"
               element={
-                <AreaLayout roles={BACK_OFFICE_ROLES} vertical="distribution">
+                <AreaLayout roles={BACK_OFFICE_ROLES} module="distribution">
                   <Routes>
                     <Route index element={<Dashboard />} />
                     <Route path="commandes" element={<Orders />} />
@@ -109,7 +110,7 @@ export function AppRoutes() {
             <Route
               path="/finance/*"
               element={
-                <AreaLayout roles={FINANCE_AREA_ROLES} vertical="distribution">
+                <AreaLayout roles={FINANCE_AREA_ROLES} module="distribution">
                   <Routes>
                     <Route index element={<TransactionJournal />} />
                     <Route path="factures" element={<Invoices />} />
@@ -122,13 +123,14 @@ export function AppRoutes() {
                 </AreaLayout>
               }
             />
-            {/* Administration is shared by both businesses: no vertical restriction. */}
+            {/* Administration is open whatever the modules of the company. */}
             <Route
               path="/admin/*"
               element={
                 <AreaLayout roles={["company_admin"]}>
                   <Routes>
                     <Route path="utilisateurs" element={<UsersPage />} />
+                    <Route path="etablissements" element={<SitesPage />} />
                     <Route path="parametres" element={<SettingsPage />} />
                     <Route path="audit" element={<AuditLogPage scope="admin" />} />
                   </Routes>

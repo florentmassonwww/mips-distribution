@@ -1,5 +1,5 @@
 // Club back office: members, charges, dues, reminders, member payments, bank reconciliation,
-// accounting export and the entrance gate. Reserved to club companies.
+// accounting export and the entrance gate. Reserved to companies with the Club module.
 import { z } from "zod";
 import { all } from "../core/db.ts";
 import { businessDay, iso } from "../core/time.ts";
@@ -36,10 +36,10 @@ const memberInputSchema = z.object({
 
 export function registerClubRoutes(app: App, deps: AppDeps): void {
   const { db, config, connectors, session, now, syncErpIfAuto } = deps;
-  const staff = session.requireClubRole("company_admin", "dispatcher", "finance");
-  const secretariat = session.requireClubRole("company_admin", "dispatcher");
-  const accounting = session.requireClubRole("company_admin", "finance");
-  const frontDesk = session.requireClubRole("company_admin", "dispatcher", "agent");
+  const staff = session.requireModuleRole("club", "company_admin", "dispatcher", "finance");
+  const secretariat = session.requireModuleRole("club", "company_admin", "dispatcher");
+  const accounting = session.requireModuleRole("club", "company_admin", "finance");
+  const frontDesk = session.requireModuleRole("club", "company_admin", "dispatcher", "agent");
 
   app.get("/api/club/dashboard", staff, (c) => c.json(clubDashboard(db, companyOf(c), now())));
 
@@ -229,7 +229,7 @@ export function registerClubRoutes(app: App, deps: AppDeps): void {
     ),
   );
 
-  app.get("/api/club/gate/devices", session.requireClubRole("company_admin"), (c) =>
+  app.get("/api/club/gate/devices", session.requireModuleRole("club", "company_admin"), (c) =>
     c.json(all(db, "SELECT id, name, active, created_at FROM gate_devices WHERE company_id = ? ORDER BY created_at", companyOf(c))),
   );
 }

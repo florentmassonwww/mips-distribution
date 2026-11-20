@@ -5,13 +5,36 @@ import { DataTable } from "../shared/DataTable.tsx";
 import { useFeedback } from "../shared/Feedback.tsx";
 import { formatDate, formatDayLong, formatMoney } from "../shared/format.ts";
 import { useApi } from "../shared/hooks.ts";
-import { PAYMENT_CHANNEL } from "../shared/labels.ts";
+import { FEE_TO_BE_AGREED, PAYMENT_CHANNEL } from "../shared/labels.ts";
 import { Card, CsvExportLink, PageHeader, Tile } from "../shared/Layout.tsx";
 import { QueryView } from "../shared/QueryView.tsx";
 import { useSession } from "../shared/session.ts";
-import type { DailyCloseData } from "./types.ts";
+import type { DailyCloseData, JournalEntry } from "./types.ts";
 
 type ClosePreview = DailyCloseData["preview"];
+
+/** Start of a business day (Mauritius time, UTC+4 all year round), as the server counts it. */
+const dayStart = (day: string): number => new Date(`${day}T00:00:00+04:00`).getTime();
+
+/**
+ * Methods with at least one payment confirmed on `day` whose fee was to be agreed: their expected
+ * fee total is not a figure (the server counts those payments as 0).
+ */
+function methodsWithFeeToBeAgreed(journal: JournalEntry[] | null, day: string): Set<string> {
+  const start = dayStart(day);
+  return new Set(
+    (journal ?? [])
+      .filter(
+        (entry) =>
+          !entry.fee_expected_known &&
+          [`confirmed`, `refunded`].includes(entry.status) &&
+          entry.confirmed_at !== null &&
+          new Date(entry.confirmed_at).getTime() >= start &&
+          new Date(entry.confirmed_at).getTime() < start + 86_400_000,
+      )
+      .map((entry) => entry.method),
+  );
+}
 
 /** Banner above the totals: closed, blocked by pending payments, or open. */
 function CloseStatus({ preview }: { preview: ClosePreview }) {
@@ -49,6 +72,8 @@ export function DailyClose() {
   const { session } = useSession();
   const [day, setDay] = useState(session.today);
   const close = useApi<DailyCloseData>(`/api/finance/close?day=${day}`);
+  // The day's totals do not say which expected fees are to be agreed: the journal does.
+  const journal = useApi<JournalEntry[]>(`/api/finance/journal`);
 
   const closeDay = async () => {
     const confirmed = await feedback.ask({
@@ -85,6 +110,7 @@ export function DailyClose() {
           const confirmed = preview.byMethod.reduce((sum, row) => sum + row.confirmed_minor - row.refunded_minor, 0);
           const settled = preview.byMethod.reduce((sum, row) => sum + row.settled_minor, 0);
           const outstandingPoints = preview.toVerify + preview.openExceptions + preview.erpPending;
+          const feeToBeAgreed = methodsWithFeeToBeAgreed(journal.data, preview.day);
           return (
             <div className="stack">
               <CloseStatus preview={preview} />
@@ -125,7 +151,16 @@ export function DailyClose() {
                     [translate(`Nombre`), (row) => row.count, `right`],
                     [translate(`Confirmé`), (row) => formatMoney(row.confirmed_minor), `right`],
                     [translate(`Remboursé`), (row) => formatMoney(row.refunded_minor), `right`],
-                    [translate(`Frais attendus`), (row) => formatMoney(row.fee_expected_minor), `right`],
+                    [
+                      translate(`Frais attendus`),
+                      (row) =>
+                        !feeToBeAgreed.has(row.method)
+                          ? formatMoney(row.fee_expected_minor)
+                          : row.fee_expected_minor === 0
+                            ? FEE_TO_BE_AGREED
+                            : translate(`{0} + à convenir`, formatMoney(row.fee_expected_minor)),
+                      `right`,
+                    ],
                     [translate(`Réglé en banque`), (row) => formatMoney(row.settled_minor), `right`],
                     [translate(`Frais prélevés`), (row) => formatMoney(row.fee_actual_minor), `right`],
                   ]}

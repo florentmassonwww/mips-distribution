@@ -19,7 +19,7 @@ export function registerSessionRoutes(app: App, { config, session, now }: AppDep
             role: user.role,
             companyId: user.companyId,
             companyName: user.companyName,
-            vertical: user.vertical,
+            modules: user.modules,
           }
         : null,
     });

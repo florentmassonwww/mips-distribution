@@ -9,8 +9,8 @@ export interface SessionUser {
   role: Role;
   companyId: string | null;
   companyName: string | null;
-  /** Business of the company ("club" or distribution); null for the platform administrator. */
-  vertical: string | null;
+  /** Modules enabled for the company, in catalogue order; empty for the platform administrator. */
+  modules: string[];
 }
 
 /** Answer of GET /api/session. */
