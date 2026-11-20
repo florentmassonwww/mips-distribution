@@ -9,6 +9,7 @@ characterization suite passes against both, the rebuilt server after those trans
 npm run start -w @mips/api          # http://localhost:8788, in-memory database, demo data
 npm run test:api                    # 52 characterization scenarios against apps/api (with evolutions)
 npm run test:api-unit               # API tests of step 2 and later (tests/api, node:test, in-process)
+npm run test:core                   # 30 acceptance scenarios against @mips/core
 npm run typecheck
 ```
 
@@ -20,7 +21,8 @@ Node 22.13+ runs the `.ts` files directly (type stripping); there is no build st
 
 | Path | Content |
 |---|---|
-| `src/core/` | Database (node:sqlite, transactions, migrations), identifiers, random source, dates, errors, actors, audit, CSV |
+| `packages/core` (`@mips/core`) | The business rules as pure functions, applied by the modules below: see [`ETAPE-3-CORE.md`](ETAPE-3-CORE.md) and the acceptance scenarios [`CAHIER-DE-RECETTE.md`](CAHIER-DE-RECETTE.md) |
+| `src/core/` | Database (node:sqlite, transactions, migrations), identifiers, random source, dates, errors (`asApiError` maps a rule refusal to 400/409), actors, audit, CSV |
 | `src/core/modules.ts` | Module catalogue (`distribution`, `club`, in display order) and the company subscriptions (`company_modules`) |
 | `src/core/sites.ts` | Sites of a company (store, warehouse, depot): validation, unique code, parent rule, audit |
 | `src/modules/distribution/` | Settings, counters, exceptions, catalogue, orders, delivery routes, stock, driver sync, dashboard |
@@ -30,7 +32,7 @@ Node 22.13+ runs the `.ts` files directly (type stripping); there is no build st
 | `src/modules/club/` | Members, dues, charges, allocation, member payments, reminders, portal, gate, bank reconciliation, accounting export |
 | `src/seed/` | Fictitious demo data (modules of each company and the depots use fixed identifiers: no random draw) |
 | `src/http/` | Hono application: middleware, session, role and module guards, one router per area |
-| `migrations/` | SQL schema: `001`–`002` copied verbatim from v0.1.0, then one file per step (`003_modules_sites.sql`) |
+| `migrations/` | SQL schema: `001`–`002` copied verbatim from v0.1.0, then one file per step (`003_modules_sites.sql`, `004_step3.sql`) |
 
 ## Modules
 
@@ -95,3 +97,18 @@ by the company admin). While it is null, a payment's expected fee is 0 with
 `payments.fee_expected_known = 0` (exposed next to `fee_expected_minor` in the journal, the
 reconciliation lines and the order chain), no fee-variance exception is raised, and the demo bank
 statements charge no fee. The CSV exports print the expected fee as 0.00 in that case.
+
+## Customer outlets (step 3)
+
+The businesses a distributor delivers are `customer_outlet`: table `customer_outlets`, columns and
+JSON fields `customer_outlet_id`, the outlet's name as `customer_outlet`, the list as
+`customer_outlets`, inputs `customerOutletId` / `customerOutletIds`, audit and exception details
+`customerOutlet`. The characterization suite translates these names at the transport boundary
+(`RENAMINGS` in `tests/characterization/evolutions.mjs`) and fails if a v0.1.0 name is left.
+
+## Status queries report the amount (step 3)
+
+`queryStatus` returns a `StatusReport` `{ status, amountMinor, currency }`. A success is confirmed
+only for the amount and currency requested; otherwise the attempt stays (or goes) to verify. The
+simulated provider stores what it received in `demo_provider_tx.received_minor`.
+TODO(mips-team): the real providers' status fields.

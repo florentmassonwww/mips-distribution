@@ -8,8 +8,9 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "test": "npm run typecheck && npm run test:i18n && npm run test:reference && npm run test:api && npm run test:api-unit && npm run test:e2e",
+    "test": "npm run typecheck && npm run test:i18n && npm run test:core && npm run test:reference && npm run test:api && npm run test:api-unit && npm run test:e2e",
     "typecheck": "tsc -p apps/api && tsc -p apps/web && tsc -p packages",
+    "test:core": "node --no-warnings --test \"packages/core/test/*.test.ts\"",
     "test:reference": "node --no-warnings tests/characterization/run.mjs",
     "test:i18n": "node --no-warnings tests/i18n/check.mjs",
     "test:api": "node --no-warnings tests/characterization/run.mjs --target=api",

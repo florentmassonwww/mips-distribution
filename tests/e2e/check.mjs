@@ -1,4 +1,4 @@
-// Browser checks of step 2 (modules, sites, fees to be agreed) on the built interface.
+// Browser checks of steps 2 and 3 (modules, sites, fees to be agreed, price change told to the driver)
 //   node --no-warnings tests/e2e/check.mjs           (requires npm run build -w @mips/web)
 // Serves apps/api in this process on a free port with fresh demo data for each viewport and
 // language (1366 and 390 px, EN and FR), then checks through Chromium:
@@ -8,7 +8,9 @@
 //      has no Distribution area; adding it back restores it;
 //  (d) the company admin creates a site, edits it, and sees the duplicate-code error;
 //  (e) the settings show the fees "to be agreed" by default;
-//  (f) no horizontal overflow and no console error on these screens.
+//  (f) no horizontal overflow and no console error on these screens;
+//  (g) step 3: the driver delivers with prices that changed on the server since the phone's
+//      download, and is told the amount invoiced (priceMismatch).
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -47,6 +49,11 @@ const T = {
     removeModule: "Remove the module",
     keptData: "data is kept",
     sportsClub: "Sports club",
+    startRoute: "Start route",
+    deliverOrder: "Deliver this order",
+    receiver: "Receiver's name",
+    confirmDelivery: "Confirm delivery",
+    pricesChanged: /recorded\. Amount invoiced: .+ \(shown: .+\), prices have changed\./,
   },
   fr: {
     noDistribution: "Le module Distribution n'est pas activé pour cette entreprise.",
@@ -61,6 +68,11 @@ const T = {
     removeModule: "Retirer le module",
     keptData: "données du module sont conservées",
     sportsClub: "Club de sport",
+    startRoute: "Démarrer la tournée",
+    deliverOrder: "Livrer cette commande",
+    receiver: "Nom du réceptionnaire",
+    confirmDelivery: "Confirmer la livraison",
+    pricesChanged: /enregistrée\. Montant facturé : .+ \(affiché : .+\), les prix ont changé\./,
   },
 };
 
@@ -279,6 +291,26 @@ async function run(viewport, lang) {
     assert.equal(await page.locator("td", { hasText: /\d+\.\d\d %/ }).count(), 0, "no percentage invented");
     assert.ok((await page.locator(".card", { hasText: "Distribution" }).first().innerText()).length > 0);
     await assertClean("settings");
+  });
+
+  await check("(g) driver told when the invoice differs from the total shown", async () => {
+    // The phone's copy of the route shows each order line 1.00 dearer than the server's price.
+    await page.route(/\/api\/agent\/routes\/[^/]+\/bundle$/, async (route) => {
+      const response = await route.fetch();
+      const bundle = await response.json();
+      for (const order of bundle.orders) for (const line of order.lines) line.unit_price_minor += 100;
+      await route.fulfill({ response, json: bundle });
+    });
+    await signIn("u_bd_agent1");
+    await open("/terrain");
+    await page.getByRole("button", { name: t.startRoute }).first().click();
+    await page.locator(".stopbtn").first().click();
+    await page.getByRole("button", { name: t.deliverOrder }).first().click();
+    await page.getByLabel(t.receiver).fill("Réceptionnaire (test)");
+    await page.getByRole("button", { name: t.confirmDelivery }).click();
+    await page.locator(".toast", { hasText: t.pricesChanged }).first().waitFor();
+    await assertClean("delivery with changed prices");
+    await page.unroute(/\/api\/agent\/routes\/[^/]+\/bundle$/);
   });
 
   await context.close();

@@ -114,6 +114,6 @@ ses routes (API, refus 403 vérifié par des tests automatisés), et de même po
 
 ## Hors périmètre de l'étape 2
 
-- Le renommage des commerces clients (`customer_outlet`) : décision en attente sur son étendue.
+- Le renommage des commerces clients (`customer_outlet`) : fait à l'étape 3, partout (voir `ETAPE-3-CORE.md`).
 - Le stock par établissement (étape 5).
 - Les tarifs des modules, affichés « to be agreed ».

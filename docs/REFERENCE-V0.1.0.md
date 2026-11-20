@@ -106,9 +106,9 @@ dans l'étape indiquée, avec mise à jour explicite des fichiers de référence
 
 | Constat | Scénario qui le montre | Étape proposée |
 |---|---|---|
-| Les frais par défaut sont des chiffres inventés : PayStation 1,00 %, carte 1,75 %, Juice 0,90 %, lien 1,50 % (`feeBps`). La règle est « to be agreed ». | `admin-settings-methods` | 2 (réglages) |
+| Les frais par défaut sont des chiffres inventés : PayStation 1,00 %, carte 1,75 %, Juice 0,90 %, lien 1,50 % (`feeBps`). La règle est « to be agreed ». | `admin-settings-methods` | 2 — **corrigé** |
 | Une vente sur place peut dépasser le stock à bord : le stock du véhicule devient négatif (−3). | `agent-sale-on-the-spot` | 5 (stock) |
-| Le type d'entreprise (`vertical` : distribution ou club) tient lieu d'abonnement aux modules. | `verticals-separated` | 2 (abonnements) |
-| Un montant total attendu différent de celui du serveur (`expectedTotalMinor`) est accepté sans signalement : la facture prend le montant du serveur. | `agent-deliver-validation` | 3 (règles métier) |
-| Après une notification au mauvais montant (« à vérifier »), l'interrogation de statut confirme le paiement. C'est conforme à la règle (le statut du prestataire fait foi), mais le contrôle du montant lors de cette interrogation est à vérifier. | `payment-wrong-amount-to-verify` | 3 (règles métier) |
+| Le type d'entreprise (`vertical` : distribution ou club) tient lieu d'abonnement aux modules. | `verticals-separated` | 2 — **corrigé** |
+| Un montant total attendu différent de celui du serveur (`expectedTotalMinor`) est accepté sans prévenir le livreur : la facture prend le montant du serveur. | `agent-deliver-validation` | 3 — **corrigé** (`priceMismatch`, voir `ETAPE-3-CORE.md`) |
+| Après une notification au mauvais montant (« à vérifier »), l'interrogation de statut confirme le paiement. C'est conforme à la règle (le statut du prestataire fait foi), mais le contrôle du montant lors de cette interrogation est à vérifier. | `payment-wrong-amount-to-verify` | 3 — **corrigé** (le statut ne confirme qu'au montant demandé) |
 | Espèces, chèque, QR et Push to Phone n'existent pas encore côté distribution. | `payment-one-pending-attempt` | 4 (moyens de paiement) |

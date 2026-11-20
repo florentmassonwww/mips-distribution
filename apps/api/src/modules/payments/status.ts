@@ -1,5 +1,5 @@
 // Following up a payment attempt: status query to the provider, cancellation, customer claim.
-import { checkCancel, claimDecision, statusQueryDecision } from "@mips/core";
+import { checkCancel, claimDecision, isInProgress, statusQueryDecision } from "@mips/core";
 import { type Actor, companyOf } from "../../core/actor.ts";
 import { type Db, transaction } from "../../core/db.ts";
 import type { ConnectorSet, StatusReport } from "../connectors/index.ts";
@@ -30,7 +30,7 @@ export async function checkPaymentStatus(
 ): Promise<PaymentRow> {
   const companyId = companyOf(user);
   const payment = getPaymentForUser(db, user, paymentId);
-  if ((payment.status === "pending" || payment.status === "to_verify") && payment.provider_ref) {
+  if (isInProgress(payment.status) && payment.provider_ref) {
     const report = await connectors.payments[payment.method].queryStatus(payment.provider_ref);
     transaction(db, () => applyProviderStatus(db, getCompanyPayment(db, companyId, paymentId), report, user, now));
   }
