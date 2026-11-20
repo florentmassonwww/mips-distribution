@@ -1,5 +1,5 @@
 // Labels of the club collections screens (reminder levels, overdue ages, gate decisions).
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { formatMoney } from "../shared/format.ts";
 import type { StatusEntry } from "../shared/labels.ts";
 
@@ -28,10 +28,15 @@ export interface GateDecision {
 export const describeGateDecision = (check: GateDecision): string => {
   const overdueMinor = check.overdueMinor ?? check.overdue_minor ?? 0;
   const overdueDays = check.overdueDays ?? check.overdue_days ?? 0;
-  if (check.decision === "flag") return translate("Signalée : {0} en retard de {1} jour(s).", formatMoney(overdueMinor), overdueDays);
+  if (check.decision === "flag") return translateCount(overdueDays, "Signalée : {1} en retard de {0} jour.", "Signalée : {1} en retard de {0} jours.", formatMoney(overdueMinor));
   // Only a refusal caused by the debt gets the amount; other refusals (suspended, unknown badge) keep their reason.
   if (check.decision === "deny" && overdueMinor > 0 && check.reason.startsWith("Retard")) {
-    return translate("Refusée : {0} en retard de {1} jour(s), à régulariser avant l'entrée.", formatMoney(overdueMinor), overdueDays);
+    return translateCount(
+      overdueDays,
+      "Refusée : {1} en retard de {0} jour, à régulariser avant l'entrée.",
+      "Refusée : {1} en retard de {0} jours, à régulariser avant l'entrée.",
+      formatMoney(overdueMinor),
+    );
   }
   return translate(check.reason);
 };

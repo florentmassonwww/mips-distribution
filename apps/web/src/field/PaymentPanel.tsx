@@ -304,7 +304,7 @@ function PaymentLink({ link, payment, invoice, onCopy }: PaymentLinkProps) {
               void navigator
                 .share({
                   title: translate("Paiement {0}", invoice.number),
-                  text: `${invoice.company} : ${formatMoney(payment.amountMinor)} pour ${invoice.number}`,
+                  text: translate("{0} : {1} pour {2}", invoice.company, formatMoney(payment.amountMinor), invoice.number),
                   url: link,
                 })
                 .catch(() => null)

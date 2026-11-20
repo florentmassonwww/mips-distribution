@@ -2,7 +2,7 @@
 // import into the club's accounting software.
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { Badge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
 import { formatMoney } from "../shared/format.ts";
@@ -62,7 +62,7 @@ export function AccountingExport() {
                   value={
                     data.totals.balanced ? <Badge kind="ok">{translate("Équilibré")}</Badge> : <Badge kind="err">{translate("Déséquilibré")}</Badge>
                   }
-                  hint={translate("{0} ligne(s)", data.lines.length)}
+                  hint={translateCount(data.lines.length, "{0} ligne", "{0} lignes")}
                 />
               </div>
               <Card

@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { Badge, StatusBadge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
 import { formatDate, formatMoney } from "../shared/format.ts";
@@ -46,7 +46,7 @@ function chainSteps(chain: OrderChainData): ChainStep[] {
     ],
     [
       translate(`Transaction`),
-      payments.length ? `${payments.length} tentative(s)` : `—`,
+      payments.length ? translateCount(payments.length, `{0} tentative`, `{0} tentatives`) : `—`,
       invoice ? translate(`{0} confirmé`, formatMoney(invoice.paid_minor - invoice.refunded_minor)) : ``,
     ],
     [
@@ -56,7 +56,7 @@ function chainSteps(chain: OrderChainData): ChainStep[] {
     ],
     [
       `ERP`,
-      `${erp.filter((entry) => entry.status === `synced`).length}/${erp.length} écriture(s)`,
+      translateCount(erp.length, `{1}/{0} écriture`, `{1}/{0} écritures`, erp.filter((entry) => entry.status === `synced`).length),
       erp.some((entry) => entry.status === `failed`)
         ? translate(`En erreur`)
         : erp.length && erp.every((entry) => entry.status === `synced`)
@@ -89,7 +89,7 @@ export function OrderChain({ back }: OrderChainProps) {
                   {` · `}
                   {order.kind === `route_sale` ? translate(`Vente sur place`) : translate(`Commande`)}
                   {order.route ? ` · ${order.route}` : ``} {translate(`· créée le`)} {formatDate(order.created_at, true)}
-                  {order.created_by_name ? ` par ${order.created_by_name}` : ``}
+                  {order.created_by_name ? ` ${translate(`par {0}`, order.created_by_name)}` : ``}
                 </>
               }
             />

@@ -1,7 +1,7 @@
 // Club dashboard (/club): who owes what, since when, and what came in this month.
 import { Link, useNavigate } from "react-router-dom";
 import { AGEING_BUCKETS } from "../admin/clubLabels.ts";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { Badge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
 import { formatDate, formatMoney } from "../shared/format.ts";
@@ -32,13 +32,13 @@ export function ClubDashboard() {
                 <Tile
                   label={translate("Total dû par les membres")}
                   value={formatMoney(data.totals.owedMinor)}
-                  hint={translate("{0} membre(s) actif(s)", data.totals.members)}
+                  hint={translateCount(data.totals.members, "{0} membre actif", "{0} membres actifs")}
                 />
                 <Tile
                   label={translate("Dont en retard")}
                   value={formatMoney(data.totals.overdueMinor)}
                   kind={data.totals.overdueMinor ? "warn" : ""}
-                  hint={translate("{0} membre(s) en retard", data.totals.inArrears)}
+                  hint={translateCount(data.totals.inArrears, "{0} membre en retard", "{0} membres en retard")}
                 />
                 <Tile
                   label={translate("Encaissé ce mois-ci")}
@@ -82,13 +82,13 @@ export function ClubDashboard() {
                     <dt>{translate("Barrière")}</dt>
                     <dd>
                       <Badge kind="ok">
-                        {data.gateToday.allow} {translate("autorisée(s)")}
+                        {translateCount(data.gateToday.allow, "{0} autorisée", "{0} autorisées")}
                       </Badge>{" "}
                       <Badge kind="warn">
-                        {data.gateToday.flag} {translate("signalée(s)")}
+                        {translateCount(data.gateToday.flag, "{0} signalée", "{0} signalées")}
                       </Badge>{" "}
                       <Badge kind="err">
-                        {data.gateToday.deny} {translate("refusée(s)")}
+                        {translateCount(data.gateToday.deny, "{0} refusée", "{0} refusées")}
                       </Badge>
                     </dd>
                     <dt>{translate("Relances ce mois-ci")}</dt>

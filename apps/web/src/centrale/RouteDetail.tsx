@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { apiRequest } from "../shared/api.ts";
 import { Badge, StatusBadge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
@@ -137,12 +137,11 @@ export function RouteDetail() {
                 <Tile
                   label={translate(`Commandes traitées`)}
                   value={`${data.orders.delivered + data.orders.partial + data.orders.refused}/${data.orders.total}`}
-                  hint={translate(
-                    `{0} partielle(s) · {1} non livrée(s) · {2} vente(s) sur place`,
-                    data.orders.partial,
-                    data.orders.refused,
-                    data.orders.routeSales,
-                  )}
+                  hint={[
+                    translateCount(data.orders.partial, `{0} partielle`, `{0} partielles`),
+                    translateCount(data.orders.refused, `{0} non livrée`, `{0} non livrées`),
+                    translateCount(data.orders.routeSales, `{0} vente sur place`, `{0} ventes sur place`),
+                  ].join(` · `)}
                 />
                 <Tile label={translate(`Facturé`)} value={formatMoney(data.money.invoiced)} />
                 <Tile

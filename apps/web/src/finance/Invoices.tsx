@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { translate } from "../i18n/translate.ts";
+import { translate, translateCount } from "../i18n/translate.ts";
 import { StatusBadge } from "../shared/Badge.tsx";
 import { DataTable } from "../shared/DataTable.tsx";
 import { formatDate, formatMoney } from "../shared/format.ts";
@@ -33,7 +33,7 @@ export function Invoices() {
           return (
             <div className="stack">
               <div className="grid g4">
-                <Tile label={translate(`Facturé`)} value={formatMoney(total(`amount_minor`))} hint={`${rows.length} facture(s)`} />
+                <Tile label={translate(`Facturé`)} value={formatMoney(total(`amount_minor`))} hint={translateCount(rows.length, `{0} facture`, `{0} factures`)} />
                 <Tile label={translate(`Encaissé confirmé`)} value={formatMoney(collected)} />
                 <Tile
                   label={translate(`Réglé en banque`)}
