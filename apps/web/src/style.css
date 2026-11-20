@@ -4,9 +4,8 @@
 @media (max-width: 860px) {
   .shell { grid-template-columns: minmax(0, 1fr); }
   /* The area navigation wraps onto several rows instead of scrolling sideways. */
-  .side nav { flex-wrap: wrap; gap: 4px; overflow-x: visible; }
-  .side nav .group { flex-wrap: wrap; gap: 4px; }
-  .side nav a { padding: 7px 10px; }
+  .side nav { flex-wrap: wrap; row-gap: 4px; overflow-x: visible; }
+  .side nav .group { flex-wrap: wrap; row-gap: 4px; }
   /* Long unbroken hints (such as a file format) wrap inside their card. */
   label.field > span { overflow-wrap: anywhere; }
 }
